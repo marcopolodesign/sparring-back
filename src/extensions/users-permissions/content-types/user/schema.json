@@ -81,6 +81,9 @@
     },
     "lastName": {
       "type": "string"
+    },
+    "description": {
+      "type": "string"
     }
   }
 }
