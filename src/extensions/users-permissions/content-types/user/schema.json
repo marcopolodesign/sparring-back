@@ -84,6 +84,21 @@
     },
     "description": {
       "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "friends_added": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "friends_received"
+    },
+    "friends_received": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "friends_added"
     }
   }
 }

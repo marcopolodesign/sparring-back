@@ -758,6 +758,17 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     firstName: Attribute.String;
     lastName: Attribute.String;
     description: Attribute.String;
+    address: Attribute.String;
+    friends_added: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    friends_received: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
