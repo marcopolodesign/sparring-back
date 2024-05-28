@@ -4,7 +4,8 @@
   "info": {
     "singularName": "match",
     "pluralName": "matches",
-    "displayName": "Matches"
+    "displayName": "Matches",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -14,10 +15,11 @@
     "Date": {
       "type": "datetime"
     },
-    "User": {
+    "members": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "admin::user"
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "matches"
     }
   }
 }

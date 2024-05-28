@@ -368,13 +368,18 @@ export interface ApiMatchMatch extends Schema.CollectionType {
     singularName: 'match';
     pluralName: 'matches';
     displayName: 'Matches';
+    description: '';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
     Date: Attribute.DateTime;
-    User: Attribute.Relation<'api::match.match', 'oneToOne', 'admin::user'>;
+    members: Attribute.Relation<
+      'api::match.match',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -815,6 +820,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'plugin::users-permissions.user',
       'manyToMany',
       'plugin::users-permissions.user'
+    >;
+    matches: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'api::match.match'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
