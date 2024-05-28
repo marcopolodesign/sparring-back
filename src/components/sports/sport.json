@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_sports_sports",
+  "info": {
+    "displayName": "Sport",
+    "icon": "typhoon"
+  },
+  "options": {},
+  "attributes": {
+    "sport": {
+      "type": "enumeration",
+      "enum": [
+        "Tennis",
+        "Paddle",
+        "Pickleball"
+      ]
+    }
+  }
+}

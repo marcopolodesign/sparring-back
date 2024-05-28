@@ -380,6 +380,14 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'manyToMany',
       'plugin::users-permissions.user'
     >;
+    location: Attribute.Component<'location.location'>;
+    match_owner: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    description: Attribute.String;
+    sport: Attribute.Component<'sports.sport'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

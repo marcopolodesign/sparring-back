@@ -20,6 +20,24 @@
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",
       "inversedBy": "matches"
+    },
+    "location": {
+      "type": "component",
+      "repeatable": false,
+      "component": "location.location"
+    },
+    "match_owner": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sport": {
+      "type": "component",
+      "repeatable": false,
+      "component": "sports.sport"
     }
   }
 }
