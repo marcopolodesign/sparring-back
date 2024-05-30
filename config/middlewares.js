@@ -13,16 +13,16 @@ module.exports = [
             "data:",
             "blob:",
             "strapi.io",
-            "sparring.s3.nyc3.amazonaws.com",
-            "https://sparring.s3.nyc3.amazonaws.com"
+            "sparring.s3.nyc3.cdn.amazonaws.com",
+            "https://sparring.s3.nyc3.cdn.amazonaws.com"
           ],
           "media-src": [
             "'self'",
             "data:",
             "blob:",
             "strapi.io",
-            "sparring.s3.nyc3.amazonaws.com",
-            "https://sparring.s3.nyc3.amazonaws.com"
+            "sparring.s3.nyc3.cdn.amazonaws.com",
+            "https://sparring.s3.nyc3.cdn.amazonaws.com"
           ],
           upgradeInsecureRequests: null,
         },

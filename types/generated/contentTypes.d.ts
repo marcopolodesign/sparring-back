@@ -362,6 +362,41 @@ export interface AdminTransferTokenPermission extends Schema.CollectionType {
   };
 }
 
+export interface ApiCourtCourt extends Schema.CollectionType {
+  collectionName: 'courts';
+  info: {
+    singularName: 'court';
+    pluralName: 'courts';
+    displayName: 'Courts';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.String;
+    gallery: Attribute.Media;
+    location: Attribute.Component<'location.location'>;
+    available_sports: Attribute.Component<'sports.sport'>;
+    amenities: Attribute.Component<'ammenities.ammenities', true>;
+    cover: Attribute.Media;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::court.court',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::court.court',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiMatchMatch extends Schema.CollectionType {
   collectionName: 'matches';
   info: {
@@ -862,6 +897,7 @@ declare module '@strapi/types' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
+      'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;

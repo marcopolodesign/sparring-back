@@ -1,5 +1,13 @@
 import type { Schema, Attribute } from '@strapi/strapi';
 
+export interface AmmenitiesAmmenities extends Schema.Component {
+  collectionName: 'components_ammenities_ammenities';
+  info: {
+    displayName: 'ammenities';
+  };
+  attributes: {};
+}
+
 export interface LocationLocation extends Schema.Component {
   collectionName: 'components_location_locations';
   info: {
@@ -28,6 +36,7 @@ export interface SportsSport extends Schema.Component {
 declare module '@strapi/types' {
   export module Shared {
     export interface Components {
+      'ammenities.ammenities': AmmenitiesAmmenities;
       'location.location': LocationLocation;
       'sports.sport': SportsSport;
     }
