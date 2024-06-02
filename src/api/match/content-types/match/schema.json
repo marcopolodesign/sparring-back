@@ -38,6 +38,9 @@
       "type": "component",
       "repeatable": false,
       "component": "sports.sport"
+    },
+    "ammount_players": {
+      "type": "integer"
     }
   }
 }

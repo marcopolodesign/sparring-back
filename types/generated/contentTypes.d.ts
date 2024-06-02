@@ -423,6 +423,7 @@ export interface ApiMatchMatch extends Schema.CollectionType {
     >;
     description: Attribute.String;
     sport: Attribute.Component<'sports.sport'>;
+    ammount_players: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
