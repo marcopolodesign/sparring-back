@@ -424,6 +424,21 @@ export interface ApiMatchMatch extends Schema.CollectionType {
     description: Attribute.String;
     sport: Attribute.Component<'sports.sport'>;
     ammount_players: Attribute.Integer;
+    member_2: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    member_3: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    member_4: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
