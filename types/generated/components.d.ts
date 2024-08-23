@@ -8,6 +8,20 @@ export interface AmmenitiesAmmenities extends Schema.Component {
   attributes: {};
 }
 
+export interface AttributesAttributes extends Schema.Component {
+  collectionName: 'components_attributes_attributes';
+  info: {
+    displayName: 'attributes';
+    icon: 'chartBubble';
+  };
+  attributes: {
+    utm_term: Attribute.String;
+    utm_source: Attribute.String;
+    utm_campaign: Attribute.String;
+    utm_medium: Attribute.String;
+  };
+}
+
 export interface LocationLocation extends Schema.Component {
   collectionName: 'components_location_locations';
   info: {
@@ -37,6 +51,7 @@ declare module '@strapi/types' {
   export module Shared {
     export interface Components {
       'ammenities.ammenities': AmmenitiesAmmenities;
+      'attributes.attributes': AttributesAttributes;
       'location.location': LocationLocation;
       'sports.sport': SportsSport;
     }

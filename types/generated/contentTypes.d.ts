@@ -457,6 +457,52 @@ export interface ApiMatchMatch extends Schema.CollectionType {
   };
 }
 
+export interface ApiTournamentTournament extends Schema.CollectionType {
+  collectionName: 'tournaments';
+  info: {
+    singularName: 'tournament';
+    pluralName: 'tournaments';
+    displayName: 'Tournament';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    start_date: Attribute.Date;
+    end_date: Attribute.Date;
+    location: Attribute.Component<'location.location', true>;
+    sport: Attribute.Component<'sports.sport', true>;
+    name: Attribute.String;
+    description: Attribute.String;
+    participants: Attribute.Relation<
+      'api::tournament.tournament',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    matches: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToMany',
+      'api::match.match'
+    >;
+    sponsors: Attribute.Media;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface PluginUploadFile extends Schema.CollectionType {
   collectionName: 'files';
   info: {
@@ -886,6 +932,12 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'api::match.match'
     >;
     coach: Attribute.Boolean;
+    tournaments: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'api::tournament.tournament'
+    >;
+    attributes: Attribute.Component<'attributes.attributes', true>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -915,6 +967,7 @@ declare module '@strapi/types' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
+      'api::tournament.tournament': ApiTournamentTournament;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::content-releases.release': PluginContentReleasesRelease;

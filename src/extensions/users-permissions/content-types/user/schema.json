@@ -108,6 +108,18 @@
     },
     "coach": {
       "type": "boolean"
+    },
+    "tournaments": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tournament.tournament",
+      "mappedBy": "participants"
+    },
+    "attributes": {
+      "displayName": "attributes",
+      "type": "component",
+      "repeatable": true,
+      "component": "attributes.attributes"
     }
   }
 }

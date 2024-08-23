@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_attributes_attributes",
+  "info": {
+    "displayName": "attributes",
+    "icon": "chartBubble"
+  },
+  "options": {},
+  "attributes": {
+    "utm_term": {
+      "type": "string"
+    },
+    "utm_source": {
+      "type": "string"
+    },
+    "utm_campaign": {
+      "type": "string"
+    },
+    "utm_medium": {
+      "type": "string"
+    }
+  }
+}
