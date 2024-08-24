@@ -463,6 +463,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     singularName: 'tournament';
     pluralName: 'tournaments';
     displayName: 'Tournament';
+    description: '';
   };
   options: {
     draftAndPublish: true;
@@ -485,6 +486,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
       'api::match.match'
     >;
     sponsors: Attribute.Media;
+    cover: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
