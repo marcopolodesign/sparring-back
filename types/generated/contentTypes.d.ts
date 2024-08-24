@@ -379,6 +379,11 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     available_sports: Attribute.Component<'sports.sport'>;
     amenities: Attribute.Component<'ammenities.ammenities', true>;
     cover: Attribute.Media;
+    tournaments: Attribute.Relation<
+      'api::court.court',
+      'oneToMany',
+      'api::tournament.tournament'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -488,6 +493,11 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     sponsors: Attribute.Media;
     cover: Attribute.Media;
     logo: Attribute.Media;
+    venue: Attribute.Relation<
+      'api::tournament.tournament',
+      'manyToOne',
+      'api::court.court'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

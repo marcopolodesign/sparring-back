@@ -49,6 +49,12 @@
       ],
       "type": "media",
       "multiple": false
+    },
+    "tournaments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tournament.tournament",
+      "mappedBy": "venue"
     }
   }
 }
