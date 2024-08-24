@@ -487,6 +487,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     >;
     sponsors: Attribute.Media;
     cover: Attribute.Media;
+    logo: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
