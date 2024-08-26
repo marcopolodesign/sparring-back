@@ -83,6 +83,12 @@
       "relation": "manyToOne",
       "target": "api::court.court",
       "inversedBy": "tournaments"
+    },
+    "registration_deadline": {
+      "type": "date"
+    },
+    "title": {
+      "type": "text"
     }
   }
 }

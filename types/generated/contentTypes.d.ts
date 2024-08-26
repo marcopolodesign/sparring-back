@@ -498,6 +498,8 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
       'manyToOne',
       'api::court.court'
     >;
+    registration_deadline: Attribute.Date;
+    title: Attribute.Text;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
