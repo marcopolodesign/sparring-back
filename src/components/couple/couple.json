@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_couple_couples",
+  "info": {
+    "displayName": "Couple",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "members": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

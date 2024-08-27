@@ -22,6 +22,38 @@ export interface AttributesAttributes extends Schema.Component {
   };
 }
 
+export interface CoupleCouple extends Schema.Component {
+  collectionName: 'components_couple_couples';
+  info: {
+    displayName: 'Couple';
+    description: '';
+  };
+  attributes: {
+    members: Attribute.Relation<
+      'couple.couple',
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
+export interface GroupsTournamentGroupsTournament extends Schema.Component {
+  collectionName: 'components_groups_tournament_groups_tournaments';
+  info: {
+    displayName: 'Groups Tournament';
+    description: '';
+  };
+  attributes: {
+    name: Attribute.String;
+    matches: Attribute.Relation<
+      'groups-tournament.groups-tournament',
+      'oneToMany',
+      'api::match.match'
+    >;
+    couples: Attribute.Component<'couple.couple', true>;
+  };
+}
+
 export interface LocationLocation extends Schema.Component {
   collectionName: 'components_location_locations';
   info: {
@@ -52,6 +84,8 @@ declare module '@strapi/types' {
     export interface Components {
       'ammenities.ammenities': AmmenitiesAmmenities;
       'attributes.attributes': AttributesAttributes;
+      'couple.couple': CoupleCouple;
+      'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;
       'location.location': LocationLocation;
       'sports.sport': SportsSport;
     }

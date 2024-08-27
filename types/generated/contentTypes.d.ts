@@ -797,6 +797,8 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'api::tournament.tournament'
     >;
     attributes: Attribute.Component<'attributes.attributes', true>;
+    date_of_birth: Attribute.Date;
+    document: Attribute.BigInteger;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -896,6 +898,11 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    member_1: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -952,6 +959,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     >;
     registration_deadline: Attribute.Date;
     title: Attribute.Text;
+    groups: Attribute.Component<'groups-tournament.groups-tournament', true>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

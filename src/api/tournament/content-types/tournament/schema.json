@@ -89,6 +89,11 @@
     },
     "title": {
       "type": "text"
+    },
+    "groups": {
+      "type": "component",
+      "repeatable": true,
+      "component": "groups-tournament.groups-tournament"
     }
   }
 }

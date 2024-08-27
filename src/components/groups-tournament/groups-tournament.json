@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_groups_tournament_groups_tournaments",
+  "info": {
+    "displayName": "Groups Tournament",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "matches": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::match.match"
+    },
+    "couples": {
+      "type": "component",
+      "repeatable": true,
+      "component": "couple.couple"
+    }
+  }
+}
