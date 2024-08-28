@@ -10,6 +10,11 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "plugin::users-permissions.user"
+    },
+    "sets": {
+      "type": "component",
+      "repeatable": true,
+      "component": "games.games"
     }
   }
 }

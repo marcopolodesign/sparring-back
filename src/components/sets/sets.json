@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_sets_sets",
+  "info": {
+    "displayName": "sets",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "games": {
+      "displayName": "games",
+      "type": "component",
+      "repeatable": true,
+      "component": "games.games"
+    }
+  }
+}

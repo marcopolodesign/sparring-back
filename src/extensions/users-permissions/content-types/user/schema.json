@@ -100,12 +100,6 @@
       "target": "plugin::users-permissions.user",
       "inversedBy": "friends_added"
     },
-    "matches": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::match.match",
-      "mappedBy": "members"
-    },
     "coach": {
       "type": "boolean"
     },

@@ -1,0 +1,13 @@
+{
+  "collectionName": "components_games_games",
+  "info": {
+    "displayName": "games",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "gamesWon": {
+      "type": "integer"
+    }
+  }
+}

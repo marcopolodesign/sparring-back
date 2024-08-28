@@ -15,12 +15,6 @@
     "Date": {
       "type": "datetime"
     },
-    "members": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "matches"
-    },
     "location": {
       "type": "component",
       "repeatable": false,
@@ -61,6 +55,11 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
+    },
+    "couples": {
+      "type": "component",
+      "repeatable": true,
+      "component": "couple.couple"
     }
   }
 }

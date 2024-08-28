@@ -11,6 +11,15 @@ module.exports = {
 
     {
       method: 'GET',
+      path: '/fupa/:id/match-result',
+      handler: 'fupa.findMatchesWithCouples',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+    
+    {
+      method: 'GET',
       path: '/fupa/:id/groups',
       handler: 'fupa.findGroupMatches',
       config: {
@@ -26,6 +35,8 @@ module.exports = {
         auth: false, // Adjust as needed
       },
     },
+
+
 
   ],
 };

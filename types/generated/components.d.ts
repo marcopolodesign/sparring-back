@@ -34,6 +34,18 @@ export interface CoupleCouple extends Schema.Component {
       'oneToMany',
       'plugin::users-permissions.user'
     >;
+    sets: Attribute.Component<'games.games', true>;
+  };
+}
+
+export interface GamesGames extends Schema.Component {
+  collectionName: 'components_games_games';
+  info: {
+    displayName: 'games';
+    description: '';
+  };
+  attributes: {
+    gamesWon: Attribute.Integer;
   };
 }
 
@@ -68,6 +80,17 @@ export interface LocationLocation extends Schema.Component {
   };
 }
 
+export interface SetsSets extends Schema.Component {
+  collectionName: 'components_sets_sets';
+  info: {
+    displayName: 'sets';
+    description: '';
+  };
+  attributes: {
+    games: Attribute.Component<'games.games', true>;
+  };
+}
+
 export interface SportsSport extends Schema.Component {
   collectionName: 'components_sports_sports';
   info: {
@@ -85,8 +108,10 @@ declare module '@strapi/types' {
       'ammenities.ammenities': AmmenitiesAmmenities;
       'attributes.attributes': AttributesAttributes;
       'couple.couple': CoupleCouple;
+      'games.games': GamesGames;
       'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;
       'location.location': LocationLocation;
+      'sets.sets': SetsSets;
       'sports.sport': SportsSport;
     }
   }
