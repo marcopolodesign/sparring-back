@@ -126,6 +126,9 @@
     },
     "document": {
       "type": "biginteger"
+    },
+    "phone": {
+      "type": "string"
     }
   }
 }

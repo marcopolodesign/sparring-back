@@ -66,23 +66,23 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       const groupMatches = tournament.groups.map(group => ({
         groupName: group.name,
         matches: group.matches.map(match => ({
-          group,
-          member_1: {
-            id: match.match_owner.id, 
-            name: match.match_owner.firstName,
-          },
-          member_2: {
-            id: match.member_2.id,
-            name: match.member_2.firstName,
-          },
-          member_3: {
-            id: match.member_3.id,
-            name: match.member_3.firstName,
-          },
-          member_4: {
-            id: match.member_4.id,
-            name: match.member_4.firstName,
-          },
+          match,
+          // member_1: {
+          //   id: match.match_owner.id, 
+          //   name: match.match_owner.firstName,
+          // },
+          // member_2: {
+          //   id: match.member_2.id,
+          //   name: match.member_2.firstName,
+          // },
+          // member_3: {
+          //   id: match.member_3.id,
+          //   name: match.member_3.firstName,
+          // },
+          // member_4: {
+          //   id: match.member_4.id,
+          //   name: match.member_4.firstName,
+          // },
           // score: match.score,
         })),
       }));
