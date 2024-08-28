@@ -197,8 +197,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     } catch (err) {
       ctx.throw(500, err.message);
     }
-  }
-  ,
+  },
   
   
   async findMatchesWithCouples(ctx) {
@@ -268,39 +267,76 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
-  // async findMatchWithSets(ctx) {
-  //   const { id } = ctx.params;
-
-  //   try {
-  //     // Fetch the match by ID, and populate sets, games, and couples
-  //     const match = await strapi.entityService.findOne('api::match.match', id, {
-  //       populate: {
-  //         sets: {
-  //           populate: {
-  //             games: {
-  //               populate: {
-  //                 couples: {
-  //                   populate: {
-  //                     members: {
-  //                       fields: ['firstName', 'lastName'], // Select fields to populate
-  //                     },
-  //                   },
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     });
-
-  //     if (!match) {
-  //       return ctx.notFound('Match not found');
-  //     }
-
-  //     ctx.body = match;
-  //   } catch (err) {
-  //     ctx.throw(500, err.message);
-  //   }
-  // },
   
+  async removeFourthSet(ctx) {
+    const { id } = ctx.params;
+
+    try {
+      // Call the function to remove the 4th set
+      await removeFourthSetFromTournamentMatches(id);
+
+      ctx.send({ message: 'Successfully removed the 4th set from all matches in the tournament.' });
+    } catch (error) {
+      ctx.throw(500, 'Failed to remove the 4th set from matches.');
+    }
+  },
+
+
 }));
+
+
+async function removeFourthSetFromTournamentMatches(tournamentId) {
+  try {
+    // Fetch the tournament by ID and populate its matches
+    const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+      populate: {
+        groups: {
+          populate: {
+            matches: {
+              populate: {
+                couples: {
+                  populate: {
+                    sets: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!tournament) {
+      throw new Error('Tournament not found');
+    }
+
+    // Iterate over each group and each match
+    for (const group of tournament.groups) {
+      for (const match of group.matches) {
+        let setsModified = false;
+
+        // Iterate over each couple in the match
+        match.couples.forEach(couple => {
+          if (couple.sets.length > 3) {
+            // Remove the 4th set
+            couple.sets.splice(3, 1);
+            setsModified = true;
+          }
+        });
+
+        // If sets were modified, update the match
+        if (setsModified) {
+          await strapi.entityService.update('api::match.match', match.id, {
+            data: {
+              couples: match.couples,
+            },
+          });
+        }
+      }
+    }
+
+    console.log('Successfully removed the 4th set from all matches.');
+  } catch (error) {
+    console.error('Error removing the 4th set from matches:', error);
+  }
+}

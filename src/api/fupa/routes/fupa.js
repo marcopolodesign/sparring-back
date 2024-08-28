@@ -36,7 +36,13 @@ module.exports = {
       },
     },
 
-
-
+    {
+      "method": "DELETE",
+      "path": "/fupa/:id/remove-fourth-set",
+      "handler": "fupa.removeFourthSet",
+      "config": {
+        "policies": []
+      }
+    }
   ],
 };

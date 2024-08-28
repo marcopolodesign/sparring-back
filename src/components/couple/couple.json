@@ -15,6 +15,9 @@
       "type": "component",
       "repeatable": true,
       "component": "games.games"
+    },
+    "points": {
+      "type": "integer"
     }
   }
 }

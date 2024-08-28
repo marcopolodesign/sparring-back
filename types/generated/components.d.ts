@@ -35,6 +35,7 @@ export interface CoupleCouple extends Schema.Component {
       'plugin::users-permissions.user'
     >;
     sets: Attribute.Component<'games.games', true>;
+    points: Attribute.Integer;
   };
 }
 
