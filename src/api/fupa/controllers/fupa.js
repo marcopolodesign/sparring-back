@@ -51,7 +51,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: '*',
               },
               matches: {
-                populate: ['match_owner', 'member_2', 'member_3', 'member_4'],
+                populate: ['member_1', 'member_2', 'member_3', 'member_4'],
               },
             },
           },
