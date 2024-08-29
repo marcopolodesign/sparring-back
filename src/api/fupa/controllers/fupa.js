@@ -389,7 +389,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                             }
                           }
                         },
-                        fields: ['firstName', 'lastName'],
+                        fields: ['id', 'firstName', 'lastName'],
                       },
                       sets: true, // Populate sets within each couple
                     },
@@ -412,9 +412,12 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       tournament.groups.forEach(group => {
         group.matches.forEach(match => {
           match.couples.forEach(couple => {
-            if (!coupleWins[couple.id]) {
-              coupleWins[couple.id] = {
-                couple: couple,
+            // Create a unique key for each couple based on member IDs
+            const coupleKey = couple.members.map(member => member.id).sort().join('-');
+
+            if (!coupleWins[coupleKey]) {
+              coupleWins[coupleKey] = {
+                members: couple.members,
                 matchesWon: 0,
               };
             }
@@ -438,7 +441,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
               }
             });
 
-            coupleResults[couple.id] = {
+            const coupleKey = couple.members.map(member => member.id).sort().join('-');
+
+            coupleResults[coupleKey] = {
               setsWon,
               details: couple,
             };
@@ -447,7 +452,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           // Determine the winner of the match (best of 3 sets)
           const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 2);
           if (matchWinner) {
-            coupleWins[matchWinner.details.id].matchesWon += 1;
+            const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
+            coupleWins[coupleKey].matchesWon += 1;
           }
         }
       }
@@ -456,14 +462,12 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       const formattedResponse = Object.values(coupleWins).map(couple => {
         return {
           couple: {
-            id: couple.couple.id,
-            members: couple.couple.members.map(member => ({
+            members: couple.members.map(member => ({
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
               profilePicture: member.profilePicture?.formats?.small?.url || null,
             })),
-            sets: couple.couple.sets,
           },
           matchesWon: couple.matchesWon,
         };
