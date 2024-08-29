@@ -281,6 +281,93 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+  async findGroupByMemberId(ctx) {
+    const { tournamentId, memberId } = ctx.params;
+
+    try {
+      // Fetch the tournament by ID and populate groups, couples, members, and matches
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+        populate: {
+          groups: {
+            populate: {
+              couples: {
+                populate: {
+                  members: true, // Populate members of each couple
+                },
+              },
+              matches: {
+                populate: {
+                  couples: {
+                    populate: '*', // Populate members in each match's couples
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!tournament) {
+        ctx.throw(404, 'Tournament not found');
+        return;
+      }
+
+      // Iterate over each group to find the matching member ID
+      for (const group of tournament.groups) {
+        for (const couple of group.couples) {
+          // Check if the member ID is in the couple's members
+          const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
+
+          if (matchedMember) {
+            // Find the member in the couple who does not match the provided memberId
+            const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
+
+            // If a match is found, return the group, its matches, and the other member of the matched couple
+            ctx.send({
+              group: {
+                id: group.id,
+                name: group.name,
+              },
+              matches: group.matches.map(match => ({
+                id: match.id,
+                description: match.description,
+                couples: match.couples.map(couple => ({
+                  id: couple.id,
+                  sets: couple.sets,
+                  points: couple.points,
+                  members: couple.members.map(member => ({
+                    id: member.id,
+                    firstName: member.firstName,
+                    lastName: member.lastName,
+                    email: member.email,
+                  })),
+                })),
+              })),
+              matchedCouple: {
+                id: couple.id,
+                points: couple.points,
+                otherMember: {
+                  id: otherMember.id,
+                  firstName: otherMember.firstName,
+                  lastName: otherMember.lastName,
+                  email: otherMember.email,
+                },
+              },
+            });
+            return;
+          }
+        }
+      }
+
+      // If no match was found, return a message
+      ctx.send({ message: 'No match found for the provided member ID.' });
+
+    } catch (error) {
+      console.error('Error finding group by member ID:', error);
+      ctx.throw(500, 'Failed to find the group by member ID.');
+    }
+  },
+
 
 }));
 

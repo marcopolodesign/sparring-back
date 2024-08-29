@@ -28,9 +28,18 @@ module.exports = {
     },
 
     {
-      method: 'POST',
-      path: '/fupa/:id/generate-matches',
-      handler: 'fupa.generateMatchesForTournament',
+      method: 'GET',
+      path: '/fupa/:id/groups',
+      handler: 'fupa.findGroupMatches',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
+    {
+      method: 'GET',
+      path: '/fupa/:tournamentId/members/:memberId/group',
+      handler: 'fupa.findGroupByMemberId',
       config: {
         auth: false, // Adjust as needed
       },
