@@ -46,6 +46,15 @@ module.exports = {
     },
 
     {
+      method: 'GET',
+      path: '/fupa/:tournamentId/results',
+      handler: 'fupa.getTournamentResults',
+      config: {
+         auth: false
+      },
+    },
+
+    {
       "method": "DELETE",
       "path": "/fupa/:id/remove-fourth-set",
       "handler": "fupa.removeFourthSet",
