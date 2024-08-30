@@ -493,13 +493,34 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
             populate: {
               couples: {
                 populate: {
-                  members: true, // Populate members of each couple
+                  members: {
+                    populate: {
+                      profilePicture: {
+                        populate: {
+                          formats: true,
+                        }
+                      }
+                    },
+                    fields: ['id', 'firstName', 'lastName'],
+                  },
                 },
               },
               matches: {
                 populate: {
                   couples: {
-                    populate: '*', // Populate members in each match's couples
+                    populate: {
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: {
+                              formats: true,
+                            }
+                          }
+                        },
+                        fields: ['id', 'firstName', 'lastName'],
+                      },
+                      sets: true,
+                    },
                   },
                 },
               },
@@ -513,6 +534,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return;
       }
 
+      let matchedGroup = null;
+
       // Iterate over each group to find the matching member ID
       for (const group of tournament.groups) {
         for (const couple of group.couples) {
@@ -520,52 +543,85 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
 
           if (matchedMember) {
-            // Find the member in the couple who does not match the provided memberId
-            const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
-
-            // If a match is found, return the group, its matches, and the other member of the matched couple
-            ctx.send({
-              group: {
-                id: group.id,
-                name: group.name,
-              },
-              matches: group.matches.map(match => ({
-                id: match.id,
-                description: match.description,
-                couples: match.couples.map(couple => ({
-                  id: couple.id,
-                  sets: couple.sets,
-                  points: couple.points,
-                  members: couple.members.map(member => ({
-                    id: member.id,
-                    firstName: member.firstName,
-                    lastName: member.lastName,
-                    email: member.email,
-                  })),
-                })),
-              })),
-              matchedCouple: {
-                id: couple.id,
-                points: couple.points,
-                otherMember: {
-                  id: otherMember.id,
-                  firstName: otherMember.firstName,
-                  lastName: otherMember.lastName,
-                  email: otherMember.email,
-                },
-              },
-            });
-            return;
+            matchedGroup = group;
+            break;
           }
+        }
+        if (matchedGroup) break;
+      }
+
+      if (!matchedGroup) {
+        ctx.send({ message: 'No match found for the provided member ID.' });
+        return;
+      }
+
+      // Aggregate results for the matched group
+      const coupleWins = {};
+
+      matchedGroup.matches.forEach(match => {
+        match.couples.forEach(couple => {
+          const coupleKey = couple.members.map(member => member.id).sort().join('-');
+
+          if (!coupleWins[coupleKey]) {
+            coupleWins[coupleKey] = {
+              members: couple.members,
+              matchesWon: 0,
+            };
+          }
+        });
+      });
+
+      // Calculate matches won by couples within the group
+      for (const match of matchedGroup.matches) {
+        const coupleResults = {};
+
+        match.couples.forEach(couple => {
+          let setsWon = 0;
+
+          couple.sets.forEach(set => {
+            if (set.gamesWon >= 4) {
+              setsWon += 1;
+            }
+          });
+
+          const coupleKey = couple.members.map(member => member.id).sort().join('-');
+
+          coupleResults[coupleKey] = {
+            setsWon,
+            details: couple,
+          };
+        });
+
+        const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 2);
+        if (matchWinner) {
+          const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
+          coupleWins[coupleKey].matchesWon += 1;
         }
       }
 
-      // If no match was found, return a message
-      ctx.send({ message: 'No match found for the provided member ID.' });
+      const formattedResponse = Object.values(coupleWins).map(couple => ({
+        couple: {
+          members: couple.members.map(member => ({
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
+          })),
+        },
+        matchesWon: couple.matchesWon,
+      })).sort((a, b) => b.matchesWon - a.matchesWon);  // Sort in descending order
+
+      ctx.send({
+        group: {
+          id: matchedGroup.id,
+          name: matchedGroup.name,
+        },
+        results: formattedResponse,
+      });
 
     } catch (error) {
       console.error('Error finding group by member ID:', error);
-      ctx.throw(500, 'Failed to find the group by member ID.');
+      ctx.throw(500, 'Failed to fetch group results.');
     }
   },
 
