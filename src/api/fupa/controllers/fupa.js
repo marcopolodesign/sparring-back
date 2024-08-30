@@ -216,7 +216,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       members: {
                         populate: {
                           profilePicture: {
-                            fields: ['url'] // Populate only the URL of the profile picture
+                            populate: {
+                              formats: true
+                            }
                           }
                         },
                         fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
@@ -254,8 +256,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
-              profilePictureUrl: member.profilePicture ? member.profilePicture.url : null,
-            })),
+              profilePicture: member.profilePicture?.formats?.small?.url || null,
+          })),
             sets: couple.sets
           }))
         }))
