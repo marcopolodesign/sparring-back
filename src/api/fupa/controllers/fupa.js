@@ -471,7 +471,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           },
           matchesWon: couple.matchesWon,
         };
-      });
+      }).sort((a, b) => b.matchesWon - a.matchesWon);;
 
       ctx.send(formattedResponse);
 
