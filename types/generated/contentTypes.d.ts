@@ -362,6 +362,164 @@ export interface AdminTransferTokenPermission extends Schema.CollectionType {
   };
 }
 
+export interface ApiCourtCourt extends Schema.CollectionType {
+  collectionName: 'courts';
+  info: {
+    singularName: 'court';
+    pluralName: 'courts';
+    displayName: 'Courts';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.String;
+    gallery: Attribute.Media;
+    location: Attribute.Component<'location.location'>;
+    available_sports: Attribute.Component<'sports.sport'>;
+    amenities: Attribute.Component<'ammenities.ammenities', true>;
+    cover: Attribute.Media;
+    tournaments: Attribute.Relation<
+      'api::court.court',
+      'oneToMany',
+      'api::tournament.tournament'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::court.court',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::court.court',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiMatchMatch extends Schema.CollectionType {
+  collectionName: 'matches';
+  info: {
+    singularName: 'match';
+    pluralName: 'matches';
+    displayName: 'Matches';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Date: Attribute.DateTime;
+    location: Attribute.Component<'location.location'>;
+    match_owner: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    description: Attribute.String;
+    sport: Attribute.Component<'sports.sport'>;
+    ammount_players: Attribute.Integer;
+    member_2: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    member_3: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    member_4: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    member_1: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    couples: Attribute.Component<'couple.couple', true>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiTournamentTournament extends Schema.CollectionType {
+  collectionName: 'tournaments';
+  info: {
+    singularName: 'tournament';
+    pluralName: 'tournaments';
+    displayName: 'Tournament';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    start_date: Attribute.Date;
+    end_date: Attribute.Date;
+    location: Attribute.Component<'location.location', true>;
+    sport: Attribute.Component<'sports.sport', true>;
+    name: Attribute.String;
+    description: Attribute.String;
+    participants: Attribute.Relation<
+      'api::tournament.tournament',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    matches: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToMany',
+      'api::match.match'
+    >;
+    sponsors: Attribute.Media;
+    cover: Attribute.Media;
+    logo: Attribute.Media;
+    venue: Attribute.Relation<
+      'api::tournament.tournament',
+      'manyToOne',
+      'api::court.court'
+    >;
+    registration_deadline: Attribute.Date;
+    title: Attribute.Text;
+    groups: Attribute.Component<'groups-tournament.groups-tournament', true>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface PluginUploadFile extends Schema.CollectionType {
   collectionName: 'files';
   info: {
@@ -812,164 +970,6 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
   };
 }
 
-export interface ApiCourtCourt extends Schema.CollectionType {
-  collectionName: 'courts';
-  info: {
-    singularName: 'court';
-    pluralName: 'courts';
-    displayName: 'Courts';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    name: Attribute.String;
-    gallery: Attribute.Media;
-    location: Attribute.Component<'location.location'>;
-    available_sports: Attribute.Component<'sports.sport'>;
-    amenities: Attribute.Component<'ammenities.ammenities', true>;
-    cover: Attribute.Media;
-    tournaments: Attribute.Relation<
-      'api::court.court',
-      'oneToMany',
-      'api::tournament.tournament'
-    >;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::court.court',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::court.court',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
-export interface ApiMatchMatch extends Schema.CollectionType {
-  collectionName: 'matches';
-  info: {
-    singularName: 'match';
-    pluralName: 'matches';
-    displayName: 'Matches';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    Date: Attribute.DateTime;
-    location: Attribute.Component<'location.location'>;
-    match_owner: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
-    description: Attribute.String;
-    sport: Attribute.Component<'sports.sport'>;
-    ammount_players: Attribute.Integer;
-    member_2: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
-    member_3: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
-    member_4: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
-    member_1: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
-    couples: Attribute.Component<'couple.couple', true>;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
-export interface ApiTournamentTournament extends Schema.CollectionType {
-  collectionName: 'tournaments';
-  info: {
-    singularName: 'tournament';
-    pluralName: 'tournaments';
-    displayName: 'Tournament';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    start_date: Attribute.Date;
-    end_date: Attribute.Date;
-    location: Attribute.Component<'location.location', true>;
-    sport: Attribute.Component<'sports.sport', true>;
-    name: Attribute.String;
-    description: Attribute.String;
-    participants: Attribute.Relation<
-      'api::tournament.tournament',
-      'manyToMany',
-      'plugin::users-permissions.user'
-    >;
-    matches: Attribute.Relation<
-      'api::tournament.tournament',
-      'oneToMany',
-      'api::match.match'
-    >;
-    sponsors: Attribute.Media;
-    cover: Attribute.Media;
-    logo: Attribute.Media;
-    venue: Attribute.Relation<
-      'api::tournament.tournament',
-      'manyToOne',
-      'api::court.court'
-    >;
-    registration_deadline: Attribute.Date;
-    title: Attribute.Text;
-    groups: Attribute.Component<'groups-tournament.groups-tournament', true>;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<
-      'api::tournament.tournament',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<
-      'api::tournament.tournament',
-      'oneToOne',
-      'admin::user'
-    > &
-      Attribute.Private;
-  };
-}
-
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -980,6 +980,9 @@ declare module '@strapi/types' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
+      'api::court.court': ApiCourtCourt;
+      'api::match.match': ApiMatchMatch;
+      'api::tournament.tournament': ApiTournamentTournament;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::content-releases.release': PluginContentReleasesRelease;
@@ -988,9 +991,6 @@ declare module '@strapi/types' {
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
-      'api::court.court': ApiCourtCourt;
-      'api::match.match': ApiMatchMatch;
-      'api::tournament.tournament': ApiTournamentTournament;
     }
   }
 }
