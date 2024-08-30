@@ -56,7 +56,7 @@ module.exports = {
 
     {
       method: 'GET',
-      path: '/fupa/:tournamentId/results/:groupId/group',
+      path: '/fupa/:tournamentId/results/results/:groupId/group/',
       handler: 'fupa.getGroupResults',
       config: {
          auth: false

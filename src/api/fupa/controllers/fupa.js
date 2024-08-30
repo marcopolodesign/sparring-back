@@ -481,6 +481,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+
   async getGroupResult(ctx) {
     const { tournamentId, memberId } = ctx.params;
 
