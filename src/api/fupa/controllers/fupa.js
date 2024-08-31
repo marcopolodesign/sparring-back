@@ -297,10 +297,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                   members: {
                     populate: {
                       profilePicture: {
-                        populate: {
-                          formats: true
-                        }
-                      }
+                        populate: '*',  // Ensure all fields under profilePicture are populated
+                      },
                     },
                     fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
                   },
@@ -309,7 +307,17 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
               matches: {
                 populate: {
                   couples: {
-                    populate: '*', // Populate members in each match's couples
+                    populate: {
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: '*',  // Ensure all fields under profilePicture are populated
+                          },
+                        },
+                        fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
+                      },
+                      sets: true, // Populate sets within each couple
+                    },
                   },
                 },
               },
@@ -352,7 +360,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                     lastName: member.lastName,
                     email: member.email,
                     profilePicture: member.profilePicture?.formats?.small?.url || null,
-
                   })),
                 })),
               })),
