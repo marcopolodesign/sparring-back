@@ -39,6 +39,17 @@ export interface CoupleCouple extends Schema.Component {
   };
 }
 
+export interface DetailsDetails extends Schema.Component {
+  collectionName: 'components_details_details';
+  info: {
+    displayName: 'Details';
+  };
+  attributes: {
+    title: Attribute.Text;
+    description: Attribute.Text;
+  };
+}
+
 export interface GamesGames extends Schema.Component {
   collectionName: 'components_games_games';
   info: {
@@ -109,6 +120,7 @@ declare module '@strapi/types' {
       'ammenities.ammenities': AmmenitiesAmmenities;
       'attributes.attributes': AttributesAttributes;
       'couple.couple': CoupleCouple;
+      'details.details': DetailsDetails;
       'games.games': GamesGames;
       'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;
       'location.location': LocationLocation;

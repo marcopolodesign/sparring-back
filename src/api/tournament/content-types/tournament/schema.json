@@ -94,6 +94,12 @@
       "type": "component",
       "repeatable": true,
       "component": "groups-tournament.groups-tournament"
+    },
+    "details": {
+      "displayName": "Details",
+      "type": "component",
+      "repeatable": false,
+      "component": "details.details"
     }
   }
 }
