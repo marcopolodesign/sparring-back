@@ -32,7 +32,7 @@
       "type": "string"
     },
     "description": {
-      "type": "string"
+      "type": "text"
     },
     "participants": {
       "type": "relation",

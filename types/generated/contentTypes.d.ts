@@ -930,7 +930,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     location: Attribute.Component<'location.location', true>;
     sport: Attribute.Component<'sports.sport', true>;
     name: Attribute.String;
-    description: Attribute.String;
+    description: Attribute.Text;
     participants: Attribute.Relation<
       'api::tournament.tournament',
       'manyToMany',
