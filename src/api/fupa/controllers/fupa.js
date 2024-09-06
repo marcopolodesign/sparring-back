@@ -1,4 +1,5 @@
 const { createCoreController } = require('@strapi/strapi').factories;
+const axios = require('axios');
 
 module.exports = createCoreController('api::tournament.tournament', ({ strapi }) => ({
   // Existing findParticipants function
@@ -649,20 +650,31 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     try {
       // Fetch all users
       const users = await strapi.query('plugin::users-permissions.user').findMany({
-        populate: ['document'], // Assuming `document` is part of the user model
+        populate: ['document'], // Assuming document is part of the user model
       });
 
       const invalidUsers = [];
 
-      // Check if user's document matches the password
+      // Iterate through each user and try to log in
       for (const user of users) {
-        if (user.document !== user.password) {
-          // Add user to the invalidUsers array if the document doesn't match the password
+        try {
+          // Make a login request using the email and document (acting as password)
+          const response = await axios.post(`${strapi.config.server.url}/api/auth/local`, {
+            identifier: user.email, // Email is the identifier
+            password: user.document, // Document is used as the password
+          });
+
+          // Check if a JWT token is returned
+          if (!response.data.jwt) {
+            throw new Error('No JWT token returned');
+          }
+        } catch (error) {
+          // If login fails, add the user to the invalidUsers array
           invalidUsers.push({
             id: user.id,
             email: user.email,
             document: user.document,
-            name: user.username, // Assuming `username` exists, replace as needed
+            name: user.username, // Assuming username exists, replace as needed
           });
         }
       }
