@@ -69,6 +69,7 @@ export interface GroupsTournamentGroupsTournament extends Schema.Component {
   };
   attributes: {
     name: Attribute.String;
+    hours: Attribute.String;
     matches: Attribute.Relation<
       'groups-tournament.groups-tournament',
       'oneToMany',

@@ -9,6 +9,9 @@
     "name": {
       "type": "string"
     },
+    "hours": {
+      "type": "string"
+    },
     "matches": {
       "type": "relation",
       "relation": "oneToMany",
