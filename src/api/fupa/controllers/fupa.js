@@ -655,13 +655,21 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
 
       const invalidUsers = [];
 
+      // Token for authorization
+      const token = '04b4bf677234667eda880a51ef1858959fde491a5a007bf9f00be1060271013bcfbee19c644923e1766f9a77e6cf9d2ac6e57a559bdfec9015425bdcbf89b556b5a971f7d4a6eaf0ce0ea423660fe3793afea05bf8328eb4f3e4fb20d381e6b79e2138fcb1b9000574e72dbe873c1f0698e76a016f19451185c6a4bc43f795fc';
+
       // Iterate through each user and try to log in
       for (const user of users) {
         try {
           // Make a login request using the email and document (acting as password)
-          const response = await axios.post(`${strapi.config.server.url}/api/auth/local`, {
+          const response = await axios.post('https://goldfish-app-25h3o.ondigitalocean.app/api/auth/local', {
             identifier: user.email, // Email is the identifier
             password: user.document, // Document is used as the password
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, // Bearer token for authorization
+            }
           });
 
           // Check if a JWT token is returned
@@ -693,7 +701,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'An error occurred while checking login statuses.');
     }
   },
-
   
 }));
 
