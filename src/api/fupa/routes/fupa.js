@@ -79,6 +79,17 @@ module.exports = {
       "config": {
         "policies": []
       }
-    }
+    }, 
+
+
+    {
+      method: 'GET',
+      path: '/fupa/:test-login',
+      handler: 'fupa.checkLoginStatus',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
   ],
 };

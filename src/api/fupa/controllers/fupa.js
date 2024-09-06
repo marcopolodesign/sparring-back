@@ -645,6 +645,43 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+  async checkLoginStatus(ctx) {
+    try {
+      // Fetch all users
+      const users = await strapi.query('plugin::users-permissions.user').findMany({
+        populate: ['document'], // Assuming `document` is part of the user model
+      });
+
+      const invalidUsers = [];
+
+      // Check if user's document matches the password
+      for (const user of users) {
+        if (user.document !== user.password) {
+          // Add user to the invalidUsers array if the document doesn't match the password
+          invalidUsers.push({
+            id: user.id,
+            email: user.email,
+            document: user.document,
+            name: user.username, // Assuming `username` exists, replace as needed
+          });
+        }
+      }
+
+      // Return users who couldn't log in
+      if (invalidUsers.length > 0) {
+        ctx.send({
+          message: `${invalidUsers.length} users cannot log in.`,
+          invalidUsers,
+        });
+      } else {
+        ctx.send({ message: 'All users can log in successfully.' });
+      }
+    } catch (error) {
+      console.error('Error checking login status:', error);
+      ctx.throw(500, 'An error occurred while checking login statuses.');
+    }
+  },
+
   
 }));
 
