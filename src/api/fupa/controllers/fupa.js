@@ -391,7 +391,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
 
   async getTournamentResults(ctx) {
     const { tournamentId } = ctx.params;
-
+  
     try {
       // Fetch all matches in the tournament, populating necessary fields
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
@@ -406,7 +406,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                         populate: {
                           profilePicture: {
                             populate: {
-                              formats: true
+                              formats: true,
                             }
                           }
                         },
@@ -421,21 +421,21 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           },
         },
       });
-
+  
       if (!tournament) {
         ctx.throw(404, 'Tournament not found');
         return;
       }
-
+  
       const coupleWins = {};
-
+  
       // Initialize all couples with 0 matches won
       tournament.groups.forEach(group => {
         group.matches.forEach(match => {
           match.couples.forEach(couple => {
             // Create a unique key for each couple based on member IDs
             const coupleKey = couple.members.map(member => member.id).sort().join('-');
-
+  
             if (!coupleWins[coupleKey]) {
               coupleWins[coupleKey] = {
                 members: couple.members,
@@ -445,40 +445,40 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           });
         });
       });
-
+  
       // Iterate over each group and each match to calculate matches won
       for (const group of tournament.groups) {
         for (const match of group.matches) {
           const coupleResults = {};
-
+  
           // Iterate over each couple in the match
           match.couples.forEach(couple => {
             let setsWon = 0;
-
+  
             // Determine the winner of each set for this couple
             couple.sets.forEach(set => {
               if (set.gamesWon >= 6) {
-                setsWon += 1;
+                setsWon += 1; // Count the set as won if they have 6 or more games won
               }
             });
-
+  
             const coupleKey = couple.members.map(member => member.id).sort().join('-');
-
+  
             coupleResults[coupleKey] = {
               setsWon,
               details: couple,
             };
           });
-
-          // Determine the winner of the match (best of 3 sets)
-          const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 2);
+  
+          // Determine the winner of the match (first couple to win 1 set)
+          const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 1);
           if (matchWinner) {
             const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
             coupleWins[coupleKey].matchesWon += 1;
           }
         }
       }
-
+  
       // Format the response to include only necessary member fields
       const formattedResponse = Object.values(coupleWins).map(couple => {
         return {
@@ -492,10 +492,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           },
           matchesWon: couple.matchesWon,
         };
-      }).sort((a, b) => b.matchesWon - a.matchesWon);;
-
+      }).sort((a, b) => b.matchesWon - a.matchesWon); // Sort by matches won in descending order
+  
       ctx.send(formattedResponse);
-
+  
     } catch (error) {
       console.error('Error fetching tournament results:', error);
       ctx.throw(500, 'Failed to fetch tournament results.');
