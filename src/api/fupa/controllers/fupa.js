@@ -457,7 +457,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
 
             // Determine the winner of each set for this couple
             couple.sets.forEach(set => {
-              if (set.gamesWon >= 4) {
+              if (set.gamesWon >= 6) {
                 setsWon += 1;
               }
             });
@@ -600,7 +600,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           let setsWon = 0;
 
           couple.sets.forEach(set => {
-            if (set.gamesWon >= 4) {
+            if (set.gamesWon >= 6) {
               setsWon += 1;
             }
           });
@@ -767,9 +767,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           match.couples.forEach(matchCouple => {
             let setsWon = 0;
 
-            // Iterate over sets to check if the couple won at least 4 games in the set
+            // Iterate over sets to check if the couple won at least 6 games in the set
             matchCouple.sets.forEach(set => {
-              if (set.gamesWon >= 4) {
+              if (set.gamesWon >= 6) {
                 setsWon += 1;
               }
             });
