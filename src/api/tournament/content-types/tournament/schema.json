@@ -100,6 +100,16 @@
       "type": "component",
       "repeatable": false,
       "component": "details.details"
+    },
+    "golden_cup": {
+      "type": "component",
+      "repeatable": false,
+      "component": "cup.cup"
+    },
+    "silver_cup": {
+      "type": "component",
+      "repeatable": false,
+      "component": "cup.cup"
     }
   }
 }

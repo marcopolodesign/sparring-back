@@ -91,5 +91,16 @@ module.exports = {
       },
     },
 
+    {
+      method: 'POST',
+      path: '/fupa/:tournamentId/generate-knockout',
+      handler: 'fupa.generateKnockoutMatches',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
+    
+
   ],
 };

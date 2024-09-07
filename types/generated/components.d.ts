@@ -39,6 +39,23 @@ export interface CoupleCouple extends Schema.Component {
   };
 }
 
+export interface CupCup extends Schema.Component {
+  collectionName: 'cups';
+  info: {
+    displayName: 'Cup';
+    description: 'Golden or Silver Cup rounds';
+  };
+  attributes: {
+    quarterfinals: Attribute.Relation<
+      'cup.cup',
+      'oneToMany',
+      'api::match.match'
+    >;
+    semifinals: Attribute.Relation<'cup.cup', 'oneToMany', 'api::match.match'>;
+    final: Attribute.Relation<'cup.cup', 'oneToOne', 'api::match.match'>;
+  };
+}
+
 export interface DetailsDetails extends Schema.Component {
   collectionName: 'components_details_details';
   info: {
@@ -121,6 +138,7 @@ declare module '@strapi/types' {
       'ammenities.ammenities': AmmenitiesAmmenities;
       'attributes.attributes': AttributesAttributes;
       'couple.couple': CoupleCouple;
+      'cup.cup': CupCup;
       'details.details': DetailsDetails;
       'games.games': GamesGames;
       'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;

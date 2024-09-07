@@ -953,6 +953,8 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     title: Attribute.Text;
     groups: Attribute.Component<'groups-tournament.groups-tournament', true>;
     details: Attribute.Component<'details.details'>;
+    golden_cup: Attribute.Component<'cup.cup'>;
+    silver_cup: Attribute.Component<'cup.cup'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
