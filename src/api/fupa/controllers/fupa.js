@@ -502,10 +502,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
-
   async getGroupResults(ctx) {
     const { tournamentId, memberId } = ctx.params;
-
+  
     try {
       // Fetch the tournament by ID and populate groups, couples, members, and matches
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
@@ -519,8 +518,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       profilePicture: {
                         populate: {
                           formats: true,
-                        }
-                      }
+                        },
+                      },
                     },
                     fields: ['id', 'firstName', 'lastName'],
                   },
@@ -535,12 +534,12 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                           profilePicture: {
                             populate: {
                               formats: true,
-                            }
-                          }
+                            },
+                          },
                         },
                         fields: ['id', 'firstName', 'lastName'],
                       },
-                      sets: true,
+                      sets: true, // Populate sets within each couple
                     },
                   },
                 },
@@ -549,20 +548,19 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           },
         },
       });
-
+  
       if (!tournament) {
         ctx.throw(404, 'Tournament not found');
         return;
       }
-
+  
       let matchedGroup = null;
-
-      // Iterate over each group to find the matching member ID
+  
+      // Find the group where the member is participating
       for (const group of tournament.groups) {
         for (const couple of group.couples) {
-          // Check if the member ID is in the couple's members
           const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
-
+  
           if (matchedMember) {
             matchedGroup = group;
             break;
@@ -570,19 +568,20 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         }
         if (matchedGroup) break;
       }
-
+  
       if (!matchedGroup) {
         ctx.send({ message: 'No match found for the provided member ID.' });
         return;
       }
-
-      // Aggregate results for the matched group
+  
+      // Initialize an empty object to track couple wins
       const coupleWins = {};
-
+  
+      // Initialize all couples in the group with 0 matches won
       matchedGroup.matches.forEach(match => {
         match.couples.forEach(couple => {
           const coupleKey = couple.members.map(member => member.id).sort().join('-');
-
+  
           if (!coupleWins[coupleKey]) {
             coupleWins[coupleKey] = {
               members: couple.members,
@@ -591,35 +590,42 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           }
         });
       });
-
-      // Calculate matches won by couples within the group
+  
+      // Calculate which couple won each match
       for (const match of matchedGroup.matches) {
+        let matchWinner = null;
+  
+        // Iterate over each couple in the match
         const coupleResults = {};
-
+  
         match.couples.forEach(couple => {
           let setsWon = 0;
-
+  
+          // Iterate through each set and check if the couple has won by reaching 6 games
           couple.sets.forEach(set => {
             if (set.gamesWon >= 6) {
-              setsWon += 1;
+              setsWon += 1; // Count the set as won if the couple reached 6 games
             }
           });
-
+  
           const coupleKey = couple.members.map(member => member.id).sort().join('-');
-
+  
           coupleResults[coupleKey] = {
             setsWon,
             details: couple,
           };
         });
-
-        const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 2);
-        if (matchWinner) {
-          const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
-          coupleWins[coupleKey].matchesWon += 1;
+  
+        // Determine the match winner (the couple that wins at least 1 set)
+        const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= 1);
+  
+        if (winningCouple) {
+          const coupleKey = winningCouple.details.members.map(member => member.id).sort().join('-');
+          coupleWins[coupleKey].matchesWon += 1; // Increment the match win count for the winning couple
         }
       }
-
+  
+      // Format the response to include necessary member fields
       const formattedResponse = Object.values(coupleWins).map(couple => ({
         couple: {
           members: couple.members.map(member => ({
@@ -630,8 +636,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           })),
         },
         matchesWon: couple.matchesWon,
-      })).sort((a, b) => b.matchesWon - a.matchesWon);  // Sort in descending order
-
+      })).sort((a, b) => b.matchesWon - a.matchesWon);  // Sort by matches won in descending order
+  
+      // Send the final result back in the response
       ctx.send({
         group: {
           id: matchedGroup.id,
@@ -639,9 +646,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         },
         results: formattedResponse,
       });
-
+  
     } catch (error) {
-      console.error('Error finding group by member ID:', error);
+      console.error('Error fetching group results:', error);
       ctx.throw(500, 'Failed to fetch group results.');
     }
   },
