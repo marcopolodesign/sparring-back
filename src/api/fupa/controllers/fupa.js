@@ -1148,7 +1148,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     const { userId, tournamentId } = ctx.params;  // Get the user ID and tournament ID from the URL params
   
     try {
-      // Fetch the tournament with Golden and Silver Cup quarterfinal matches populated, including profilePicture
+      // Fetch the tournament with Golden and Silver Cup quarterfinal matches populated
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           golden_cup: {
@@ -1160,9 +1160,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       members: {
                         populate: {
                           profilePicture: {
-                            populate: { formats: true } // Ensure profilePicture and formats are populated
+                            populate: { formats: true } // Populate profile picture formats
                           }
-                        }
+                        },
                       },
                       sets: true,    // Populate sets in couples
                     },
@@ -1180,9 +1180,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       members: {
                         populate: {
                           profilePicture: {
-                            populate: { formats: true } // Ensure profilePicture and formats are populated
+                            populate: { formats: true } // Populate profile picture formats
                           }
-                        }
+                        },
                       },
                       sets: true,    // Populate sets in couples
                     },
@@ -1200,7 +1200,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
       const userQuarterfinalMatches = {
         goldenCupMatches: [],
-        silverCupMatches: []
+        silverCupMatches: [],
+        cupType: '' // To indicate which cup the user is in
       };
   
       // Function to check if a user is part of a match's couples
@@ -1212,7 +1213,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
       // Helper function to format match results with couples and their sets
       const formatMatchResult = (match) => {
-        // Iterate over the couples in the match and extract sets
         const formattedCouples = match.couples.map(couple => ({
           coupleId: couple.id,
           members: couple.members.map(member => ({
@@ -1234,26 +1234,30 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         };
       };
   
-      // Check Golden Cup quarterfinals for user involvement
+      // Check if the user is in Golden Cup quarterfinals
       if (tournament.golden_cup && tournament.golden_cup.quarterfinals) {
         for (const match of tournament.golden_cup.quarterfinals) {
           if (isUserInMatch(match, userId)) {
-            userQuarterfinalMatches.goldenCupMatches.push(formatMatchResult(match));
+            userQuarterfinalMatches.goldenCupMatches = tournament.golden_cup.quarterfinals.map(formatMatchResult);
+            userQuarterfinalMatches.cupType = 'Golden';
+            break;
           }
         }
       }
   
-      // Check Silver Cup quarterfinals for user involvement
-      if (tournament.silver_cup && tournament.silver_cup.quarterfinals) {
+      // Check if the user is in Silver Cup quarterfinals
+      if (tournament.silver_cup && tournament.silver_cup.quarterfinals && userQuarterfinalMatches.cupType === '') {
         for (const match of tournament.silver_cup.quarterfinals) {
           if (isUserInMatch(match, userId)) {
-            userQuarterfinalMatches.silverCupMatches.push(formatMatchResult(match));
+            userQuarterfinalMatches.silverCupMatches = tournament.silver_cup.quarterfinals.map(formatMatchResult);
+            userQuarterfinalMatches.cupType = 'Silver';
+            break;
           }
         }
       }
   
       // Send the results back to the client
-      if (userQuarterfinalMatches.goldenCupMatches.length || userQuarterfinalMatches.silverCupMatches.length) {
+      if (userQuarterfinalMatches.cupType) {
         ctx.send(userQuarterfinalMatches);
       } else {
         ctx.send({ message: 'User is not part of any quarterfinal matches' });
