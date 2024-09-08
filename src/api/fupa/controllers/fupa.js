@@ -878,13 +878,26 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
         const matchData = {
           match_owner: match.team1.members[0].id,
-          member_1: match.team1.members[0].id,
-          member_2: match.team1.members[1].id,
-          member_3: match.team2.members[0].id,
-          member_4: match.team2.members[1].id,
-          sets: sets,  // Add the sets to the match
+          couples: [
+            {
+              id: match.team1.id,  // Add team1 couple
+              members: [
+                { id: match.team1.members[0].id },
+                { id: match.team1.members[1].id }
+              ],
+              sets: sets  // Assign the created sets to team1
+            },
+            {
+              id: match.team2.id,  // Add team2 couple
+              members: [
+                { id: match.team2.members[0].id },
+                { id: match.team2.members[1].id }
+              ],
+              sets: sets  // Assign the created sets to team2
+            }
+          ],
           cup_type: 'Golden',
-          description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          description: `Golden Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(),
         };
@@ -908,13 +921,26 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
         const matchData = {
           match_owner: match.team1.members[0].id,
-          member_1: match.team1.members[0].id,
-          member_2: match.team1.members[1].id,
-          member_3: match.team2.members[0].id,
-          member_4: match.team2.members[1].id,
-          sets: sets,  // Add the sets to the match
+          couples: [
+            {
+              id: match.team1.id,  // Add team1 couple
+              members: [
+                { id: match.team1.members[0].id },
+                { id: match.team1.members[1].id }
+              ],
+              sets: sets  // Assign the created sets to team1
+            },
+            {
+              id: match.team2.id,  // Add team2 couple
+              members: [
+                { id: match.team2.members[0].id },
+                { id: match.team2.members[1].id }
+              ],
+              sets: sets  // Assign the created sets to team2
+            }
+          ],
           cup_type: 'Silver',
-          description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          description: `Silver Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(),
         };
