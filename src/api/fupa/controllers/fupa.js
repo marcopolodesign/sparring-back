@@ -806,8 +806,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       };
   
       // Iterate over each group to calculate matches won and sort couples
-      const groups = tournament.groups.filter(group => group.name.startsWith('Grupo'));
-      
+      const groups = tournament.groups;
+  
       for (const group of groups) {
         if (!group || !group.couples || !Array.isArray(group.couples)) {
           console.error('Error: Missing or invalid group or couples data', group);
@@ -833,17 +833,17 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         const thirdPlace = sortedCouples[2];
         const fourthPlace = sortedCouples[3];
   
-        // Assign couples to quarterfinals based on their group and place
-        if (group.name === 'Zona A') {
+        // Assign couples to quarterfinals based on their group and place using group index
+        if (groups.indexOf(group) === 0) { // Zona A
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
-        } else if (group.name === 'Zona B') {
+        } else if (groups.indexOf(group) === 1) { // Zona B
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
-        } else if (group.name === 'Zona C') {
+        } else if (groups.indexOf(group) === 2) { // Zona C
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
-        } else if (group.name === 'Zona D') {
+        } else if (groups.indexOf(group) === 3) { // Zona D
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
         }
@@ -878,7 +878,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           member_3: match.team2.members[0].id,
           member_4: match.team2.members[1].id,
           cup_type: 'Golden',
-          description: `Golden Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(),
         };
@@ -901,7 +901,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           member_3: match.team2.members[0].id,
           member_4: match.team2.members[1].id,
           cup_type: 'Silver',
-          description: `Silver Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(),
         };
@@ -928,7 +928,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       console.error('Error generating quarterfinal matches:', err);
       ctx.throw(500, err.message);
     }
-  },
+  }
 }));
 
 
