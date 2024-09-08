@@ -806,7 +806,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       };
   
       // Iterate over each group to calculate matches won and sort couples
-      for (const group of tournament.groups) {
+      const groups = tournament.groups.filter(group => group.name.startsWith('Grupo'));
+      
+      for (const group of groups) {
         if (!group || !group.couples || !Array.isArray(group.couples)) {
           console.error('Error: Missing or invalid group or couples data', group);
           continue;
@@ -832,18 +834,95 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         const fourthPlace = sortedCouples[3];
   
         // Assign couples to quarterfinals based on their group and place
-        if (group.name === 'Grupo A') {
+        if (group.name === 'Zona A') {
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
-        } else if (group.name === 'Grupo B') {
+        } else if (group.name === 'Zona B') {
+          goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
+          silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
+        } else if (group.name === 'Zona C') {
+          goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
+          silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
+        } else if (group.name === 'Zona D') {
           goldenCupQuarterfinals.push({ team1: firstPlace, team2: secondPlace });
           silverCupQuarterfinals.push({ team1: thirdPlace, team2: fourthPlace });
         }
       }
   
-      // Generate Golden Cup and Silver Cup matches (the logic for this remains the same)
+      // Now assign matches between groups for Golden Cup and Silver Cup quarterfinals
+      const goldenCupMatches = [
+        { team1: goldenCupQuarterfinals[0].team1, team2: goldenCupQuarterfinals[2].team2 },  // 1st Group A vs 2nd Group C
+        { team1: goldenCupQuarterfinals[1].team1, team2: goldenCupQuarterfinals[3].team2 },  // 1st Group B vs 2nd Group D
+        { team1: goldenCupQuarterfinals[2].team1, team2: goldenCupQuarterfinals[0].team2 },  // 1st Group C vs 2nd Group A
+        { team1: goldenCupQuarterfinals[3].team1, team2: goldenCupQuarterfinals[1].team2 },  // 1st Group D vs 2nd Group B
+      ];
   
-      // Continue with the rest of the match creation logic...
+      const silverCupMatches = [
+        { team1: silverCupQuarterfinals[0].team1, team2: silverCupQuarterfinals[2].team2 },  // 3rd Group A vs 4th Group C
+        { team1: silverCupQuarterfinals[1].team1, team2: silverCupQuarterfinals[3].team2 },  // 3rd Group B vs 4th Group D
+        { team1: silverCupQuarterfinals[2].team1, team2: silverCupQuarterfinals[0].team2 },  // 3rd Group C vs 4th Group A
+        { team1: silverCupQuarterfinals[3].team1, team2: silverCupQuarterfinals[1].team2 },  // 3rd Group D vs 4th Group B
+      ];
+  
+      // Create Golden Cup Matches
+      const goldenCupMatchesIds = [];
+      for (const match of goldenCupMatches) {
+        if (!match.team1 || !match.team2) {
+          continue;
+        }
+  
+        const matchData = {
+          match_owner: match.team1.members[0].id,
+          member_1: match.team1.members[0].id,
+          member_2: match.team1.members[1].id,
+          member_3: match.team2.members[0].id,
+          member_4: match.team2.members[1].id,
+          cup_type: 'Golden',
+          description: `Golden Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+  
+        const newMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        goldenCupMatchesIds.push(newMatch.id);
+      }
+  
+      // Create Silver Cup Matches
+      const silverCupMatchesIds = [];
+      for (const match of silverCupMatches) {
+        if (!match.team1 || !match.team2) {
+          continue;
+        }
+  
+        const matchData = {
+          match_owner: match.team1.members[0].id,
+          member_1: match.team1.members[0].id,
+          member_2: match.team1.members[1].id,
+          member_3: match.team2.members[0].id,
+          member_4: match.team2.members[1].id,
+          cup_type: 'Silver',
+          description: `Silver Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+  
+        const newMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        silverCupMatchesIds.push(newMatch.id);
+      }
+  
+      // Update the tournament with Golden and Silver Cup quarterfinal matches
+      await strapi.entityService.update('api::tournament.tournament', tournamentId, {
+        data: {
+          golden_cup: {
+            quarterfinals: goldenCupMatchesIds,
+          },
+          silver_cup: {
+            quarterfinals: silverCupMatchesIds,
+          },
+        },
+      });
+  
+      // Return response with a success message
       ctx.send({ message: 'Golden Cup and Silver Cup quarterfinals generated successfully' });
     } catch (err) {
       console.error('Error generating quarterfinal matches:', err);

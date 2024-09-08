@@ -77,7 +77,8 @@ module.exports = {
       "path": "/fupa/:id/remove-fourth-set",
       "handler": "fupa.removeFourthSet",
       "config": {
-        "policies": []
+        "policies": [], 
+        auth: false,
       }
     }, 
 
