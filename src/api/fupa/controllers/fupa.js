@@ -708,7 +708,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'An error occurred while checking login statuses.');
     }
   },
-
   async generateKnockoutMatches(ctx) {
     const { tournamentId } = ctx.params;  // Get the tournament ID from the URL params
   
@@ -871,12 +870,19 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           continue;
         }
   
+        // Create 3 sets for each match
+        const sets = [];
+        for (let setNumber = 1; setNumber <= 3; setNumber++) {
+          sets.push({ gamesWon: 0 });  // Initialize gamesWon with 0
+        }
+  
         const matchData = {
           match_owner: match.team1.members[0].id,
           member_1: match.team1.members[0].id,
           member_2: match.team1.members[1].id,
           member_3: match.team2.members[0].id,
           member_4: match.team2.members[1].id,
+          sets: sets,  // Add the sets to the match
           cup_type: 'Golden',
           description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
@@ -894,12 +900,19 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           continue;
         }
   
+        // Create 3 sets for each match
+        const sets = [];
+        for (let setNumber = 1; setNumber <= 3; setNumber++) {
+          sets.push({ gamesWon: 0 });  // Initialize gamesWon with 0
+        }
+  
         const matchData = {
           match_owner: match.team1.members[0].id,
           member_1: match.team1.members[0].id,
           member_2: match.team1.members[1].id,
           member_3: match.team2.members[0].id,
           member_4: match.team2.members[1].id,
+          sets: sets,  // Add the sets to the match
           cup_type: 'Silver',
           description: `${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
           date: new Date().toISOString(),
