@@ -906,7 +906,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           member_3: quarterfinal.team2.members[0].id,
           member_4: quarterfinal.team2.members[1].id,
           cup_type: 'Golden', // Specify that this is a Golden Cup match
-          description: `Golden Cup Quarterfinal - ${quarterfinal.team1.members[0].firstName} & ${quarterfinal.team1.members[1].firstName} vs ${quarterfinal.team2.members[0].firstName} & ${quarterfinal.team2.members[1].firstName}`,
+          description: `Golden Cup Quarterfinal - ${quarterfinal.team1.members[0].lastName} & ${quarterfinal.team1.members[1].lastName} vs ${quarterfinal.team2.members[0].lastName} & ${quarterfinal.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(), // Ensure match is published
         };
@@ -934,7 +934,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           member_3: quarterfinal.team2.members[0].id,
           member_4: quarterfinal.team2.members[1].id,
           cup_type: 'Silver', // Specify that this is a Silver Cup match
-          description: `Silver Cup Quarterfinal - ${quarterfinal.team1.members[0].firstName} & ${quarterfinal.team1.members[1].firstName} vs ${quarterfinal.team2.members[0].firstName} & ${quarterfinal.team2.members[1].firstName}`,
+          description: `Silver Cup Quarterfinal - ${quarterfinal.team1.members[0].lastName} & ${quarterfinal.team1.members[1].lastName} vs ${quarterfinal.team2.members[0].lastName} & ${quarterfinal.team2.members[1].lastName}`,
           date: new Date().toISOString(),
           publishedAt: new Date().toISOString(), // Ensure match is published
         };
