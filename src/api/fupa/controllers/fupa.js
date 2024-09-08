@@ -1148,7 +1148,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     const { userId, tournamentId } = ctx.params;  // Get the user ID and tournament ID from the URL params
   
     try {
-      // Fetch the tournament with Golden and Silver Cup quarterfinal matches populated
+      // Fetch the tournament with Golden and Silver Cup quarterfinal matches populated, including profilePicture
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           golden_cup: {
@@ -1157,7 +1157,13 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true, // Populate members in couples
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Ensure profilePicture and formats are populated
+                          }
+                        }
+                      },
                       sets: true,    // Populate sets in couples
                     },
                   },
@@ -1171,7 +1177,13 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true, // Populate members in couples
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Ensure profilePicture and formats are populated
+                          }
+                        }
+                      },
                       sets: true,    // Populate sets in couples
                     },
                   },
@@ -1205,7 +1217,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            name: `${member.firstName} ${member.lastName}`,
+            firstName: `${member.firstName}`,
+            lastName: `${member.lastName}`,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
