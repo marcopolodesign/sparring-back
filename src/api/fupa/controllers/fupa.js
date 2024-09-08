@@ -1270,7 +1270,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   },
 
   async getSemifinalMatches(ctx) {
-    const { tournamentId, userId } = ctx.params;
+    const { tournamentId } = ctx.params;
   
     try {
       // Fetch the tournament with the semifinals populated
@@ -1282,8 +1282,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true,
-                      sets: true,
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Populate profile picture formats
+                          }
+                        },
+                      },
+                      sets: true,    // Populate sets in couples
                     },
                   },
                 },
@@ -1296,8 +1302,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true,
-                      sets: true,
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Populate profile picture formats
+                          }
+                        },
+                      },
+                      sets: true,    // Populate sets in couples
                     },
                   },
                 },
@@ -1311,73 +1323,58 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return ctx.notFound('Tournament not found');
       }
   
-      const userSemifinalMatches = {
+      const allSemifinalMatches = {
         goldenCupSemifinals: [],
-        silverCupSemifinals: []
-      };
-  
-      // Function to check if a user is part of a match's couples
-      const isUserInMatch = (match, userId) => {
-        return match.couples.some(couple => {
-          return couple.members.some(member => member && member.id === parseInt(userId, 10));
-        });
+        silverCupSemifinals: [],
       };
   
       // Helper function to format match results with couples and their sets
       const formatMatchResult = (match) => {
-        // Iterate over the couples in the match and extract sets
         const formattedCouples = match.couples.map(couple => ({
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            name: `${member.firstName} ${member.lastName}`,
+            firstName: `${member.firstName}`,
+            lastName: `${member.lastName}`,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
             gamesWon: set.gamesWon,
-          })) : [] // Ensure sets exists, otherwise return an empty array
+          })) : [],
         }));
   
         return {
           id: match.id,
           description: match.description,
-          couples: formattedCouples
+          couples: formattedCouples,
         };
       };
   
-      // Check Golden Cup semifinals for user involvement
+      // Collect all Golden Cup semifinal matches
       if (tournament.golden_cup && tournament.golden_cup.semifinals) {
         for (const match of tournament.golden_cup.semifinals) {
-          if (isUserInMatch(match, userId)) {
-            userSemifinalMatches.goldenCupSemifinals.push(formatMatchResult(match));
-          }
+          allSemifinalMatches.goldenCupSemifinals.push(formatMatchResult(match));
         }
       }
   
-      // Check Silver Cup semifinals for user involvement
+      // Collect all Silver Cup semifinal matches
       if (tournament.silver_cup && tournament.silver_cup.semifinals) {
         for (const match of tournament.silver_cup.semifinals) {
-          if (isUserInMatch(match, userId)) {
-            userSemifinalMatches.silverCupSemifinals.push(formatMatchResult(match));
-          }
+          allSemifinalMatches.silverCupSemifinals.push(formatMatchResult(match));
         }
       }
   
       // Send the results back to the client
-      if (userSemifinalMatches.goldenCupSemifinals.length || userSemifinalMatches.silverCupSemifinals.length) {
-        ctx.send(userSemifinalMatches);
-      } else {
-        ctx.send({ message: 'User is not part of any semifinal matches' });
-      }
+      ctx.send(allSemifinalMatches);
   
     } catch (err) {
-      console.error('Error fetching semifinal matches by user:', err);
+      console.error('Error fetching semifinal matches:', err);
       ctx.throw(500, 'Failed to fetch semifinal matches');
     }
   },
-
   async getFinalMatches(ctx) {
-    const { tournamentId, userId } = ctx.params;
+    const { tournamentId } = ctx.params;
   
     try {
       // Fetch the tournament with the finals populated
@@ -1389,8 +1386,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true,
-                      sets: true,
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Populate profile picture formats
+                          }
+                        },
+                      },
+                      sets: true,    // Populate sets in couples
                     },
                   },
                 },
@@ -1403,8 +1406,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                 populate: {
                   couples: {
                     populate: {
-                      members: true,
-                      sets: true,
+                      members: {
+                        populate: {
+                          profilePicture: {
+                            populate: { formats: true } // Populate profile picture formats
+                          }
+                        },
+                      },
+                      sets: true,    // Populate sets in couples
                     },
                   },
                 },
@@ -1418,16 +1427,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return ctx.notFound('Tournament not found');
       }
   
-      const userFinalMatches = {
+      const allFinalMatches = {
         goldenCupFinal: [],
-        silverCupFinal: []
-      };
-  
-      // Function to check if a user is part of a match's couples
-      const isUserInMatch = (match, userId) => {
-        return match.couples.some(couple => {
-          return couple.members.some(member => member && member.id === parseInt(userId, 10));
-        });
+        silverCupFinal: [],
       };
   
       // Helper function to format match results with couples and their sets
@@ -1436,46 +1438,40 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            name: `${member.firstName} ${member.lastName}`,
+            firstName: `${member.firstName}`,
+            lastName: `${member.lastName}`,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
             gamesWon: set.gamesWon,
-          })) : []
+          })) : [],
         }));
   
         return {
           id: match.id,
           description: match.description,
-          couples: formattedCouples
+          couples: formattedCouples,
         };
       };
   
-      // Check Golden Cup final for user involvement
+      // Collect the Golden Cup final match
       if (tournament.golden_cup && tournament.golden_cup.final) {
         const finalMatch = tournament.golden_cup.final;
-        if (isUserInMatch(finalMatch, userId)) {
-          userFinalMatches.goldenCupFinal.push(formatMatchResult(finalMatch));
-        }
+        allFinalMatches.goldenCupFinal.push(formatMatchResult(finalMatch));
       }
   
-      // Check Silver Cup final for user involvement
+      // Collect the Silver Cup final match
       if (tournament.silver_cup && tournament.silver_cup.final) {
         const finalMatch = tournament.silver_cup.final;
-        if (isUserInMatch(finalMatch, userId)) {
-          userFinalMatches.silverCupFinal.push(formatMatchResult(finalMatch));
-        }
+        allFinalMatches.silverCupFinal.push(formatMatchResult(finalMatch));
       }
   
       // Send the results back to the client
-      if (userFinalMatches.goldenCupFinal.length || userFinalMatches.silverCupFinal.length) {
-        ctx.send(userFinalMatches);
-      } else {
-        ctx.send({ message: 'User is not part of any final matches' });
-      }
+      ctx.send(allFinalMatches);
   
     } catch (err) {
-      console.error('Error fetching final matches by user:', err);
+      console.error('Error fetching final matches:', err);
       ctx.throw(500, 'Failed to fetch final matches');
     }
   },
