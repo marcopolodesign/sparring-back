@@ -795,6 +795,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     date_of_birth: Attribute.Date;
     document: Attribute.BigInteger;
     phone: Attribute.String;
+    matches: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::match.match'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

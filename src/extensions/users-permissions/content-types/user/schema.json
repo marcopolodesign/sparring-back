@@ -123,6 +123,11 @@
     },
     "phone": {
       "type": "string"
+    },
+    "matches": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::match.match"
     }
   }
 }
