@@ -797,7 +797,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     phone: Attribute.String;
     matches: Attribute.Relation<
       'plugin::users-permissions.user',
-      'oneToMany',
+      'manyToMany',
       'api::match.match'
     >;
     createdAt: Attribute.DateTime;
@@ -900,6 +900,11 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     couples: Attribute.Component<'couple.couple', true>;
+    users: Attribute.Relation<
+      'api::match.match',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
