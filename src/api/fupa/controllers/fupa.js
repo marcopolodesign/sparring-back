@@ -1475,6 +1475,66 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'Failed to fetch final matches');
     }
   },
+
+
+    async assignTournamentToMatches(ctx) {
+      const { tournamentId } = ctx.params;
+  
+      try {
+        // Step 1: Fetch the tournament by ID and populate groups and matches within the groups
+        const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+          populate: {
+            groups: {
+              populate: {
+                matches: true, // Populate the matches within the groups
+              },
+            },
+          },
+        });
+  
+        // If tournament is not found, return a 404 error
+        if (!tournament) {
+          return ctx.notFound('Tournament not found');
+        }
+  
+        // Step 2: Loop through all groups and their matches
+        const groups = tournament.groups;
+        if (!groups || groups.length === 0) {
+          return ctx.send({ message: 'No groups found in this tournament' });
+        }
+  
+        // Collect all matches from all groups
+        let allMatches = [];
+        groups.forEach(group => {
+          if (group.matches && group.matches.length > 0) {
+            allMatches = allMatches.concat(group.matches);
+          }
+        });
+  
+        if (allMatches.length === 0) {
+          return ctx.send({ message: 'No matches found in the tournament groups' });
+        }
+  
+        // Step 3: Update each match to assign the tournament ID
+        await Promise.all(
+          allMatches.map(async (match) => {
+            await strapi.entityService.update('api::match.match', match.id, {
+              data: {
+                tournament: tournamentId, // Assign the tournament ID to the match
+              },
+            });
+          })
+        );
+  
+        // Step 4: Return success response
+        ctx.send({
+          message: `Tournament ID ${tournamentId} has been successfully added to all matches in the groups of the tournament`,
+        });
+      } catch (error) {
+        console.error('Error assigning tournament to matches:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    },
 }));
 
 

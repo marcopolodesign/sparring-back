@@ -42,8 +42,9 @@
     },
     "matches": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::match.match"
+      "relation": "manyToMany",
+      "target": "api::match.match",
+      "inversedBy": "tournament"
     },
     "sponsors": {
       "type": "media",

@@ -905,6 +905,11 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'manyToMany',
       'plugin::users-permissions.user'
     >;
+    tournament: Attribute.Relation<
+      'api::match.match',
+      'manyToMany',
+      'api::tournament.tournament'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -948,7 +953,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     >;
     matches: Attribute.Relation<
       'api::tournament.tournament',
-      'oneToMany',
+      'manyToMany',
       'api::match.match'
     >;
     sponsors: Attribute.Media;

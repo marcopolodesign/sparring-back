@@ -82,6 +82,16 @@ module.exports = {
       }
     }, 
 
+    {
+      "method": "PUT",
+      "path": "/fupa/:tournamentId/assign-group-matches",
+      "handler": "fupa.assignTournamentToMatches",
+      "config": {
+        "policies": [],
+        auth: false
+      }
+    },
+
 
     {
       method: 'GET',

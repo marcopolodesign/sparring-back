@@ -66,6 +66,12 @@
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",
       "inversedBy": "matches"
+    },
+    "tournament": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tournament.tournament",
+      "inversedBy": "matches"
     }
   }
 }
