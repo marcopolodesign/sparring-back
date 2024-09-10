@@ -91,31 +91,38 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
   
     // Custom function to fetch all matches
     async findAllMatches(ctx) {
-      try {
-        // Fetch all matches without filters
-        const matches = await strapi.entityService.findMany('api::match.match', {
-          populate: {
-            match_owner: { populate: '*' }, // Populate match owner details
-            member_1: { populate: '*' },    // Populate member_1 details
-            member_2: { populate: '*' },    // Populate member_2 details
-            member_3: { populate: '*' },    // Populate member_3 details
-            member_4: { populate: '*' },    // Populate member_4 details
-          },
-        });
-  
-        if (!matches || matches.length === 0) {
-          return ctx.notFound('No matches found');
+        try {
+          // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
+          const matches = await strapi.entityService.findMany('api::match.match', {
+            filters: {
+              tournament: {
+                id: {
+                  $null: true, // Fetch matches where the tournament ID is null
+                },
+              },
+            },
+            populate: {
+              match_owner: { populate: '*' }, // Populate match owner details
+              member_1: { populate: '*' },    // Populate member_1 details
+              member_2: { populate: '*' },    // Populate member_2 details
+              member_3: { populate: '*' },    // Populate member_3 details
+              member_4: { populate: '*' },    // Populate member_4 details
+            },
+          });
+      
+          if (!matches || matches.length === 0) {
+            return ctx.notFound('No matches found');
+          }
+      
+          // Optionally format each match if needed, or directly return matches
+          const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+      
+          // Return the formatted match details
+          ctx.send(formattedMatches);
+        } catch (error) {
+          console.error('Error fetching all matches:', error);
+          ctx.throw(500, 'Internal Server Error');
         }
-  
-        // Optionally format each match if needed, or directly return matches
-        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
-  
-        // Return the formatted match details
-        ctx.send(formattedMatches);
-      } catch (error) {
-        console.error('Error fetching all matches:', error);
-        ctx.throw(500, 'Internal Server Error');
-      }
-    },
+      },
   }));
   
