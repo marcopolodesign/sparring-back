@@ -12,7 +12,6 @@ const getUserProfilePicture = async (profilePicture) => {
     if (!profilePicture) return null;
     return profilePicture?.formats?.small?.url || profilePicture?.url || null;
   };
-  
   const formatMatchDetails = async (match) => {
     // Parse the match date
     const matchDate = match?.Date ? parseISO(match.Date) : null;
@@ -79,10 +78,9 @@ const getUserProfilePicture = async (profilePicture) => {
         member_2,
         member_3,
         member_4,
-      ],
+      ].filter(Boolean), // Filter out any null/undefined members
     };
   };
-
 
 
 const { createCoreController } = require('@strapi/strapi').factories;
