@@ -1514,6 +1514,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         if (allMatches.length === 0) {
           return ctx.send({ message: 'No matches found in the tournament groups' });
         }
+
+        console.log('All matchesssssss:', allMatches);
   
         // Step 3: Update each match to assign the tournament ID
         await Promise.all(
