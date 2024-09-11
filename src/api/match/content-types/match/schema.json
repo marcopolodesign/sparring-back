@@ -36,6 +36,11 @@
     "ammount_players": {
       "type": "integer"
     },
+    "member_1": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
     "member_2": {
       "type": "relation",
       "relation": "oneToOne",
@@ -51,17 +56,12 @@
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
     },
-    "member_1": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "plugin::users-permissions.user"
-    },
     "couples": {
       "type": "component",
       "repeatable": true,
       "component": "couple.couple"
     },
-    "users": {
+    "members": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",

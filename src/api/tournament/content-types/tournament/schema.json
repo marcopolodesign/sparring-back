@@ -44,7 +44,7 @@
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::match.match",
-      "inversedBy": "tournament"
+      "mappedBy": "tournament"
     },
     "sponsors": {
       "type": "media",

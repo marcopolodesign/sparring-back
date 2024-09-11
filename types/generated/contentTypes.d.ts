@@ -879,6 +879,11 @@ export interface ApiMatchMatch extends Schema.CollectionType {
     description: Attribute.String;
     sport: Attribute.Component<'sports.sport'>;
     ammount_players: Attribute.Integer;
+    member_1: Attribute.Relation<
+      'api::match.match',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
     member_2: Attribute.Relation<
       'api::match.match',
       'oneToOne',
@@ -894,13 +899,8 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
-    member_1: Attribute.Relation<
-      'api::match.match',
-      'oneToOne',
-      'plugin::users-permissions.user'
-    >;
     couples: Attribute.Component<'couple.couple', true>;
-    users: Attribute.Relation<
+    members: Attribute.Relation<
       'api::match.match',
       'manyToMany',
       'plugin::users-permissions.user'
