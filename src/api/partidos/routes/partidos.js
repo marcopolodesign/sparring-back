@@ -9,5 +9,17 @@ module.exports = {
        middlewares: [],
      },
     },
+
+    {
+      method: 'GET',
+      path: '/partidos/:matchId',
+      handler: 'partidos.getMatchDetails',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     },
+
   ],
 };

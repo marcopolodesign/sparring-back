@@ -124,5 +124,38 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           ctx.throw(500, 'Internal Server Error');
         }
       },
+
+      async getMatchDetails(ctx) {
+        const { matchId } = ctx.params;
+        try {
+          // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
+          const match = await strapi.entityService.findOne('api::match.match', matchId, {
+            populate: {
+              members: { populate: {
+                profilePicture: {
+                  populate: '*',  // Ensure all fields under profilePicture are populated
+                },
+              }},
+              match_owner: true, 
+              sport: {},
+            }
+          });
+
+          console.log('match', match);
+      
+          if (!match ) {
+            return ctx.notFound('No matches found');
+          }
+      
+          // Optionally format each match if needed, or directly return matches
+          // const formattedMatches = await formatMatchDetails(matches);
+      
+          // Return the formatted match details
+          ctx.send(match);
+        } catch (error) {
+          console.error('Error fetching all matches:', error);
+          ctx.throw(500, 'Internal Server Error');
+        }
+      },
   }));
   
