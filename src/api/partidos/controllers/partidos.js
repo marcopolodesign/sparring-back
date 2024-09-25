@@ -65,6 +65,8 @@ const getUserProfilePicture = async (profilePicture) => {
       publishedAt: match.publishedAt,
       description: match.description,
       ammount_players: match.ammount_players,
+      location: match.location,
+      sport: match.sport,
       match_owner: matchOwner ? {
         id: matchOwner.id,
         username: matchOwner.username,
