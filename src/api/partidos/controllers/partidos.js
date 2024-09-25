@@ -155,7 +155,14 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           // const formattedMatches = await formatMatchDetails(matches);
       
           // Return the formatted match details
-          ctx.send(match);
+
+          const formattedMatches = await formatMatchDetails(match);
+      
+          // Return the formatted match details
+          ctx.send(formattedMatches);
+
+
+          // ctx.send(match);
         } catch (error) {
           console.error('Error fetching all matches:', error);
           ctx.throw(500, 'Internal Server Error');
