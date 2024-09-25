@@ -137,7 +137,11 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
                 },
               }},
               match_owner: true, 
+              date: true, 
+              location: true,
               sport: {},
+              description: true,
+              time: true,
             }
           });
 
