@@ -133,6 +133,8 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             member_2: { populate: '*' },    // Populate member_2 details
             member_3: { populate: '*' },    // Populate member_3 details
             member_4: { populate: '*' },    // Populate member_4 details
+            location: true,   // Populate location details
+            sport: true,  
           },
         });
         
@@ -162,22 +164,21 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         // Fetch the match details
         const match = await strapi.entityService.findOne('api::match.match', matchId, {
           populate: {
-            members: {
-              populate: {
-                profilePicture: {
-                  populate: '*', // Ensure profilePicture formats are populated for members
-                },
-              },
+            match_owner: { populate: '*' }, // Populate all match owner fields
+            members: { // Populate members and their profile pictures
+              populate: { 
+                profilePicture: { 
+                  fields: ['url'], // Only fetch the URL of the profile picture
+                  // You can include 'formats' if you want the different sizes of the image
+                }
+              }
             },
-            match_owner: {
-              populate: {
-                profilePicture: {
-                  populate: '*', // Ensure profilePicture formats are populated for match_owner
-                },
-              },
-            },
-            location: true,
-            sport: true,
+            member_1: { populate: '*' },    // Populate member_1 details
+            member_2: { populate: '*' },    // Populate member_2 details
+            member_3: { populate: '*' },    // Populate member_3 details
+            member_4: { populate: '*' },    // Populate member_4 details
+            location: true,   // Populate location details
+            sport: true,  
           },
         });
     
