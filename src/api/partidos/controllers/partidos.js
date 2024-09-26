@@ -12,78 +12,7 @@ const getUserProfilePicture = async (profilePicture) => {
     if (!profilePicture) return null;
     return profilePicture?.formats?.small?.url || profilePicture?.url || null;
   };
-  // const formatMatchDetails = async (match) => {
-  //   // Parse the match date
-  //   const matchDate = match?.Date ? parseISO(match.Date) : null;
   
-  //   // If the date is missing, return an error response
-  //   if (!matchDate) {
-  //     return {
-  //       id: match.id,
-  //       error: 'Invalid or missing match date', // Return a specific error message
-  //     };
-  //   }
-  
-  //   const capitalizeFirstLetter = (string) => {
-  //     return string.charAt(0).toUpperCase() + string.slice(1);
-  //   };
-  
-  //   const formattedDate = format(matchDate, "EEEE d 'de' MMMM", { locale: es });
-  //   const capitalizedDate = capitalizeFirstLetter(formattedDate);
-  
-  //   // Fetch the match owner's profile picture if available
-  //   const matchOwner = match?.match_owner;
-  //   const matchOwnerProfilePictureUrl = await getUserProfilePicture(matchOwner?.profilePicture);
-  
-  //   // Helper function to fetch member details
-  //   const fetchMemberDetails = async (member) => {
-  //     if (!member) return null;
-  //     const profilePictureUrl = await getUserProfilePicture(member?.profilePicture);
-  //     return {
-  //       id: member.id,
-  //       username: member.username,
-  //       email: member.email,
-  //       firstName: member.firstName,
-  //       lastName: member.lastName,
-  //       profilePictureUrl,
-  //     };
-  //   };
-  
-  //   // Get the individual members if they exist
-  //   const member_1 = match.member_1 ? await fetchMemberDetails(match.member_1) : null;
-  //   const member_2 = match.member_2 ? await fetchMemberDetails(match.member_2) : null;
-  //   const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
-  //   const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
-  
-  //   // Format the final match details
-  //   return {
-  //     id: match.id,
-  //     date: capitalizedDate, // Capitalized date in Spanish
-  //     time: format(matchDate, 'HH:mm', { locale: es }), // Format time in Spanish
-  //     createdAt: match.createdAt,
-  //     updatedAt: match.updatedAt,
-  //     publishedAt: match.publishedAt,
-  //     description: match.description,
-  //     ammount_players: match.ammount_players,
-  //     location: match.location,
-  //     sport: match.sport,
-  //     match_owner: matchOwner ? {
-  //       id: matchOwner.id,
-  //       username: matchOwner.username,
-  //       email: matchOwner.email,
-  //       firstName: matchOwner.firstName,
-  //       lastName: matchOwner.lastName,
-  //       profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
-  //     } : null,
-  //     members: [
-  //       member_1,
-  //       member_2,
-  //       member_3,
-  //       member_4,
-  //     ].filter(Boolean), // Filter out any null/undefined members
-  //   };
-  // };
-
   const formatMatchDetails = async (match) => {
     if (!match) {
       return { error: 'Match is undefined' };  // Return an error if match is undefined
@@ -109,12 +38,18 @@ const getUserProfilePicture = async (profilePicture) => {
   
     // Fetch the match owner's profile picture if available
     const matchOwner = match?.match_owner;
-    const matchOwnerProfilePictureUrl = matchOwner ? await getUserProfilePicture(matchOwner?.profilePicture) : null;
+    const matchOwnerProfilePictureUrl = matchOwner?.profilePicture
+      ? matchOwner.profilePicture?.formats?.small?.url || matchOwner.profilePicture?.url
+      : null;
   
     // Helper function to fetch member details
     const fetchMemberDetails = async (member) => {
       if (!member) return null;
-      const profilePictureUrl = await getUserProfilePicture(member?.profilePicture);
+  
+      const profilePictureUrl = member?.profilePicture
+        ? member.profilePicture?.formats?.small?.url || member.profilePicture?.url
+        : null;
+  
       return {
         id: member.id,
         username: member.username,
@@ -151,12 +86,11 @@ const getUserProfilePicture = async (profilePicture) => {
         email: matchOwner.email,
         firstName: matchOwner.firstName,
         lastName: matchOwner.lastName,
-        profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
+        profilePictureUrl: matchOwnerProfilePictureUrl, // Corrected profile picture fetching
       } : null,
       members: filteredMembers, // Return filtered members array (remove any null/undefined entries)
     };
   };
-
 
 const { createCoreController } = require('@strapi/strapi').factories;
 
@@ -175,26 +109,31 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             },
           },
           populate: {
-            match_owner: true, // Populate match owner details
-            member_1: true,    // Populate member_1 details
-            member_2: true,    // Populate member_2 details
-            member_3: true,    // Populate member_3 details
-            member_4: true,    // Populate member_4 details
-            members: {         // Populate members array (if it's a relation or component)
-              populate: {
-                profilePicture: true, // Automatically includes formats for media fields
-              },
+            match_owner: { populate: '*' }, // Populate all match owner fields
+            members: { // Populate members and their profile pictures
+              populate: { 
+                profilePicture: { 
+                  fields: ['url'], // Only fetch the URL of the profile picture
+                  // You can include 'formats' if you want the different sizes of the image
+                }
+              }
             },
+            member_1: { populate: '*' },    // Populate member_1 details
+            member_2: { populate: '*' },    // Populate member_2 details
+            member_3: { populate: '*' },    // Populate member_3 details
+            member_4: { populate: '*' },    // Populate member_4 details
           },
         });
+        
+        // Log the result of the matches query
+        console.log('MATCHESSSSSSSSSSS', matches);
     
-        console.log('matches', matches);
-    
-        if (!matches || matches.length === 0) {
+        // Check if matches is an array and has entries
+        if (!Array.isArray(matches) || matches.length === 0) {
           return ctx.notFound('No matches found');
         }
     
-        // Optionally format each match if needed, or directly return matches
+        // Format each match if needed
         const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
     
         // Return the formatted match details
@@ -205,48 +144,45 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
       }
     },
 
-      async getMatchDetails(ctx) {
-        const { matchId } = ctx.params;
-        try {
-          // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
-          const match = await strapi.entityService.findOne('api::match.match', matchId, {
-            populate: {
-              members: { populate: {
+    async getMatchDetails(ctx) {
+      const { matchId } = ctx.params;
+    
+      try {
+        // Fetch the match details
+        const match = await strapi.entityService.findOne('api::match.match', matchId, {
+          populate: {
+            members: {
+              populate: {
                 profilePicture: {
-                  populate: '*',  // Ensure all fields under profilePicture are populated
+                  populate: '*', // Ensure profilePicture formats are populated for members
                 },
-              }},
-              match_owner: true, 
-              date: true, 
-              location: true,
-              sport: {},
-              description: true,
-              time: true,
-            }
-          });
-
-          console.log('match', match);
-      
-          if (!match ) {
-            return ctx.notFound('No matches found');
-          }
-      
-          // Optionally format each match if needed, or directly return matches
-          // const formattedMatches = await formatMatchDetails(matches);
-      
-          // Return the formatted match details
-
-          const formattedMatches = await formatMatchDetails(match);
-      
-          // Return the formatted match details
-          ctx.send(formattedMatches);
-
-
-          // ctx.send(match);
-        } catch (error) {
-          console.error('Error fetching all matches:', error);
-          ctx.throw(500, 'Internal Server Error');
+              },
+            },
+            match_owner: {
+              populate: {
+                profilePicture: {
+                  populate: '*', // Ensure profilePicture formats are populated for match_owner
+                },
+              },
+            },
+            location: true,
+            sport: true,
+          },
+        });
+    
+        if (!match) {
+          return ctx.notFound('Match not found');
         }
-      },
+    
+        // Format the match details
+        const formattedMatch = await formatMatchDetails(match);
+    
+        // Return formatted match details
+        ctx.send(formattedMatch);
+      } catch (error) {
+        console.error('Error fetching match details:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    },
   }));
   
