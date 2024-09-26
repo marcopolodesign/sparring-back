@@ -12,6 +12,78 @@ const getUserProfilePicture = async (profilePicture) => {
     if (!profilePicture) return null;
     return profilePicture?.formats?.small?.url || profilePicture?.url || null;
   };
+  // const formatMatchDetails = async (match) => {
+  //   // Parse the match date
+  //   const matchDate = match?.Date ? parseISO(match.Date) : null;
+  
+  //   // If the date is missing, return an error response
+  //   if (!matchDate) {
+  //     return {
+  //       id: match.id,
+  //       error: 'Invalid or missing match date', // Return a specific error message
+  //     };
+  //   }
+  
+  //   const capitalizeFirstLetter = (string) => {
+  //     return string.charAt(0).toUpperCase() + string.slice(1);
+  //   };
+  
+  //   const formattedDate = format(matchDate, "EEEE d 'de' MMMM", { locale: es });
+  //   const capitalizedDate = capitalizeFirstLetter(formattedDate);
+  
+  //   // Fetch the match owner's profile picture if available
+  //   const matchOwner = match?.match_owner;
+  //   const matchOwnerProfilePictureUrl = await getUserProfilePicture(matchOwner?.profilePicture);
+  
+  //   // Helper function to fetch member details
+  //   const fetchMemberDetails = async (member) => {
+  //     if (!member) return null;
+  //     const profilePictureUrl = await getUserProfilePicture(member?.profilePicture);
+  //     return {
+  //       id: member.id,
+  //       username: member.username,
+  //       email: member.email,
+  //       firstName: member.firstName,
+  //       lastName: member.lastName,
+  //       profilePictureUrl,
+  //     };
+  //   };
+  
+  //   // Get the individual members if they exist
+  //   const member_1 = match.member_1 ? await fetchMemberDetails(match.member_1) : null;
+  //   const member_2 = match.member_2 ? await fetchMemberDetails(match.member_2) : null;
+  //   const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
+  //   const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
+  
+  //   // Format the final match details
+  //   return {
+  //     id: match.id,
+  //     date: capitalizedDate, // Capitalized date in Spanish
+  //     time: format(matchDate, 'HH:mm', { locale: es }), // Format time in Spanish
+  //     createdAt: match.createdAt,
+  //     updatedAt: match.updatedAt,
+  //     publishedAt: match.publishedAt,
+  //     description: match.description,
+  //     ammount_players: match.ammount_players,
+  //     location: match.location,
+  //     sport: match.sport,
+  //     match_owner: matchOwner ? {
+  //       id: matchOwner.id,
+  //       username: matchOwner.username,
+  //       email: matchOwner.email,
+  //       firstName: matchOwner.firstName,
+  //       lastName: matchOwner.lastName,
+  //       profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
+  //     } : null,
+  //     members: [
+  //       member_1,
+  //       member_2,
+  //       member_3,
+  //       member_4,
+  //     ].filter(Boolean), // Filter out any null/undefined members
+  //   };
+  // };
+
   const formatMatchDetails = async (match) => {
     // Parse the match date
     const matchDate = match?.Date ? parseISO(match.Date) : null;
@@ -49,11 +121,15 @@ const getUserProfilePicture = async (profilePicture) => {
       };
     };
   
-    // Get the individual members if they exist
-    const member_1 = match.member_1 ? await fetchMemberDetails(match.member_1) : null;
-    const member_2 = match.member_2 ? await fetchMemberDetails(match.member_2) : null;
-    const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
-    const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
+    // Iterate through members array and fetch details for each member
+    const formattedMembers = await Promise.all(
+      match.members.map(async (member) => {
+        return await fetchMemberDetails(member);
+      })
+    );
+  
+    // Filter out any null members
+    const filteredMembers = formattedMembers.filter(Boolean);
   
     // Format the final match details
     return {
@@ -75,12 +151,7 @@ const getUserProfilePicture = async (profilePicture) => {
         lastName: matchOwner.lastName,
         profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
       } : null,
-      members: [
-        member_1,
-        member_2,
-        member_3,
-        member_4,
-      ].filter(Boolean), // Filter out any null/undefined members
+      members: filteredMembers, // Return filtered members array
     };
   };
 
