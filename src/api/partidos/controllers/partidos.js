@@ -4,7 +4,9 @@
  * match controller
  */
 
-const { parseISO, format } = require('date-fns');
+const { format, parseISO } = require('date-fns');
+const { utcToZonedTime, format: formatTz } = require('date-fns-tz');
+
 const { es } = require('date-fns/locale');
 
 // Helper function to fetch user profile picture
@@ -32,9 +34,15 @@ const getUserProfilePicture = async (profilePicture) => {
     const capitalizeFirstLetter = (string) => {
       return string.charAt(0).toUpperCase() + string.slice(1);
     };
-  
-    const formattedDate = format(matchDate, "EEEE d 'de' MMMM", { locale: es });
-    const capitalizedDate = capitalizeFirstLetter(formattedDate);
+   // Get the device's current time zone dynamically
+   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+   const zonedDate = utcToZonedTime(matchDate, timeZone); // Convert to the device's time zone
+   const formattedDate = format(zonedDate, "EEEE d 'de' MMMM", { locale: es });
+   const capitalizedDate = capitalizeFirstLetter(formattedDate);
+ 
+   // Format the time to the device's local timezone
+   const formattedTime = formatTz(zonedDate, 'HH:mm', { timeZone });
   
     // Fetch the match owner's profile picture if available
     const matchOwner = match?.match_owner;
@@ -72,7 +80,7 @@ const getUserProfilePicture = async (profilePicture) => {
     return {
       id: match.id,
       date: capitalizedDate, // Capitalized date in Spanish
-      time: format(matchDate, 'HH:mm', { locale: es }), // Format time in Spanish
+      time: formattedTime, // Format time in Spanish
       createdAt: match.createdAt,
       updatedAt: match.updatedAt,
       publishedAt: match.publishedAt,
