@@ -85,6 +85,10 @@ const getUserProfilePicture = async (profilePicture) => {
   // };
 
   const formatMatchDetails = async (match) => {
+    if (!match) {
+      return { error: 'Match is undefined' };  // Return an error if match is undefined
+    }
+  
     // Parse the match date
     const matchDate = match?.Date ? parseISO(match.Date) : null;
   
@@ -105,7 +109,7 @@ const getUserProfilePicture = async (profilePicture) => {
   
     // Fetch the match owner's profile picture if available
     const matchOwner = match?.match_owner;
-    const matchOwnerProfilePictureUrl = await getUserProfilePicture(matchOwner?.profilePicture);
+    const matchOwnerProfilePictureUrl = matchOwner ? await getUserProfilePicture(matchOwner?.profilePicture) : null;
   
     // Helper function to fetch member details
     const fetchMemberDetails = async (member) => {
@@ -121,12 +125,10 @@ const getUserProfilePicture = async (profilePicture) => {
       };
     };
   
-    // Iterate through members array and fetch details for each member
-    const formattedMembers = await Promise.all(
-      match.members.map(async (member) => {
-        return await fetchMemberDetails(member);
-      })
-    );
+    // Check if members array exists and format it
+    const formattedMembers = match?.members && Array.isArray(match.members)
+      ? await Promise.all(match.members.map(fetchMemberDetails))
+      : [];
   
     // Filter out any null members
     const filteredMembers = formattedMembers.filter(Boolean);
@@ -151,7 +153,7 @@ const getUserProfilePicture = async (profilePicture) => {
         lastName: matchOwner.lastName,
         profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
       } : null,
-      members: filteredMembers, // Return filtered members array
+      members: filteredMembers, // Return filtered members array (remove any null/undefined entries)
     };
   };
 
@@ -162,41 +164,46 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
   
     // Custom function to fetch all matches
     async findAllMatches(ctx) {
-        try {
-          // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
-          const matches = await strapi.entityService.findMany('api::match.match', {
-            filters: {
-              tournament: {
-                id: {
-                  $null: true, // Fetch matches where the tournament ID is null
-                },
+      try {
+        // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
+        const matches = await strapi.entityService.findMany('api::match.match', {
+          filters: {
+            tournament: {
+              id: {
+                $null: true, // Fetch matches where the tournament ID is null
               },
             },
-            populate: {
-              match_owner: { populate: '*' }, // Populate match owner details
-              member_1: { populate: '*' },    // Populate member_1 details
-              member_2: { populate: '*' },    // Populate member_2 details
-              member_3: { populate: '*' },    // Populate member_3 details
-              member_4: { populate: '*' },    // Populate member_4 details
+          },
+          populate: {
+            match_owner: true, // Populate match owner details
+            member_1: true,    // Populate member_1 details
+            member_2: true,    // Populate member_2 details
+            member_3: true,    // Populate member_3 details
+            member_4: true,    // Populate member_4 details
+            members: {         // Populate members array (if it's a relation or component)
+              populate: {
+                profilePicture: true, // Automatically includes formats for media fields
+              },
             },
-          });
-
-          console.log('matches', matches);
-      
-          if (!matches || matches.length === 0) {
-            return ctx.notFound('No matches found');
-          }
-      
-          // Optionally format each match if needed, or directly return matches
-          const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
-      
-          // Return the formatted match details
-          ctx.send(formattedMatches);
-        } catch (error) {
-          console.error('Error fetching all matches:', error);
-          ctx.throw(500, 'Internal Server Error');
+          },
+        });
+    
+        console.log('matches', matches);
+    
+        if (!matches || matches.length === 0) {
+          return ctx.notFound('No matches found');
         }
-      },
+    
+        // Optionally format each match if needed, or directly return matches
+        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+    
+        // Return the formatted match details
+        ctx.send(formattedMatches);
+      } catch (error) {
+        console.error('Error fetching all matches:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    },
 
       async getMatchDetails(ctx) {
         const { matchId } = ctx.params;
