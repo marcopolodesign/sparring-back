@@ -1,81 +1,102 @@
-const { parseISO, format } = require('date-fns');
+
+const { format, parseISO } = require('date-fns');
+const { utcToZonedTime, format: formatTz } = require('date-fns-tz');
+
 const { es } = require('date-fns/locale');
 
 // Helper function to fetch user profile picture
 const getUserProfilePicture = async (profilePicture) => {
-  if (!profilePicture) return null;
-  return profilePicture?.formats?.small?.url || profilePicture?.url || null;
-};
+    if (!profilePicture) return null;
+    return profilePicture?.formats?.small?.url || profilePicture?.url || null;  };
 
-const formatMatchDetails = async (match) => {
-  // Parse the match date
-  const matchDate = match?.Date ? parseISO(match.Date) : null;
-
-  // If the date is missing, return an error response
-  if (!matchDate) {
-    return {
-      id: match.id,
-      error: 'Invalid or missing match date', // Return a specific error message
+  
+  const formatMatchDetails = async (match) => {
+    if (!match) {
+      return { error: 'Match is undefined' };
+    }
+  
+    // Parse the match date
+    const matchDate = match?.Date ? parseISO(match.Date) : null;
+  
+    if (!matchDate) {
+      return {
+        id: match.id,
+        error: 'Invalid or missing match date',
+      };
+    }
+  
+    const capitalizeFirstLetter = (string) => {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     };
-  }
-
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const formattedDate = format(matchDate, "EEEE d 'de' MMMM", { locale: es });
-  const capitalizedDate = capitalizeFirstLetter(formattedDate);
-
-  // Fetch the match owner's profile picture if available
-  const matchOwner = match?.match_owner;
-  const matchOwnerProfilePictureUrl = await getUserProfilePicture(matchOwner?.profilePicture);
-
-  // Helper function to fetch member details
-  const fetchMemberDetails = async (member) => {
-    if (!member) return null;
-    const profilePictureUrl = await getUserProfilePicture(member?.profilePicture);
-    return {
-      id: member.id,
-      username: member.username,
-      email: member.email,
-      firstName: member.firstName,
-      lastName: member.lastName,
-      profilePictureUrl,
+  
+    // Get the device's current time zone dynamically
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
+    const zonedDate = utcToZonedTime(matchDate, timeZone); // Convert to the device's time zone
+    const formattedDate = format(zonedDate, "EEEE d 'de' MMMM", { locale: es });
+    const capitalizedDate = capitalizeFirstLetter(formattedDate);
+  
+    // Format the time to the device's local timezone
+    const formattedTime = formatTz(zonedDate, 'HH:mm', { timeZone });
+  
+    // Helper function to fetch member details
+    const fetchMemberDetails = async (member) => {
+      if (!member) return null;
+      const profilePictureUrl = await getUserProfilePicture(member?.profilePicture);
+      return {
+        id: member.id,
+        username: member.username,
+        email: member.email,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        profilePictureUrl,
+      };
     };
-  };
-
-  // Get the individual members if they exist
-  const member_1 = match.member_1 ? await fetchMemberDetails(match.member_1) : null;
-  const member_2 = match.member_2 ? await fetchMemberDetails(match.member_2) : null;
-  const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
-  const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
-
-  // Format the final match details
-  return {
+  
+    // Fetch the members if they are not null
+    const member_1 = match.member_1 ? await fetchMemberDetails(match.member_1) : null;
+    const member_2 = match.member_2 ? await fetchMemberDetails(match.member_2) : null;
+    const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
+    const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
+  
+    // Format the final match details, filtering out any null members
+    const members = [
+      member_1,
+      member_2,
+      member_3,
+      member_4,
+    ].filter(Boolean); // Filter out null or undefined members
+   // Prepare the response object and dynamically add members only if they exist
+   const response = {
     id: match.id,
-    date: capitalizedDate, // Capitalized date in Spanish
-    time: format(matchDate, 'HH:mm', { locale: es }), // Format time in Spanish
+    date: capitalizedDate,
+    time: formattedTime,
     createdAt: match.createdAt,
     updatedAt: match.updatedAt,
     publishedAt: match.publishedAt,
     description: match.description,
     ammount_players: match.ammount_players,
-    match_owner: matchOwner ? {
-      id: matchOwner.id,
-      username: matchOwner.username,
-      email: matchOwner.email,
-      firstName: matchOwner.firstName,
-      lastName: matchOwner.lastName,
-      profilePictureUrl: matchOwnerProfilePictureUrl, // Add profile picture URL for match owner
+    location: match.location,
+    sport: match.sport,
+    match_owner: match.match_owner ? {
+      id: match.match_owner.id,
+      username: match.match_owner.username,
+      email: match.match_owner.email,
+      firstName: match.match_owner.firstName,
+      lastName: match.match_owner.lastName,
+      profilePictureUrl: match.match_owner.profilePictureUrl,
     } : null,
-    members: [
-      member_1,
-      member_2,
-      member_3,
-      member_4,
-    ],
+    members,
   };
-};
+
+  // Add individual members to the response only if they are not null
+  if (member_1) response.member_1 = member_1;
+  if (member_2) response.member_2 = member_2;
+  if (member_3) response.member_3 = member_3;
+  if (member_4) response.member_4 = member_4;
+
+  return response;
+  };
 module.exports = {
   async findOwnMatches(ctx) {
     const { filters } = ctx.query;

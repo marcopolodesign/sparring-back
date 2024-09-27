@@ -196,5 +196,6 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         ctx.throw(500, 'Internal Server Error');
       }
     },
+    
   }));
   
