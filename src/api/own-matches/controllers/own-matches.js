@@ -106,11 +106,21 @@ module.exports = {
       const matches = await strapi.entityService.findMany('api::match.match', {
         filters,
         populate: {
-          match_owner: { populate: '*' }, // Populate match owner details
+          match_owner: { populate: '*' }, // Populate all match owner fields
+          members: { // Populate members and their profile pictures
+            populate: { 
+              profilePicture: { 
+                fields: ['url'], // Only fetch the URL of the profile picture
+                // You can include 'formats' if you want the different sizes of the image
+              }
+            }
+          },
           member_1: { populate: '*' },    // Populate member_1 details
           member_2: { populate: '*' },    // Populate member_2 details
           member_3: { populate: '*' },    // Populate member_3 details
           member_4: { populate: '*' },    // Populate member_4 details
+          location: true,   // Populate location details
+          sport: true,  
         },
       });
 

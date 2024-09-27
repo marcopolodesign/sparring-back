@@ -110,15 +110,26 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
     // Custom function to fetch all matches
     async findAllMatches(ctx) {
       try {
-        // Fetch all matches where the tournament field is null (exclude matches that belong to a tournament)
-        const matches = await strapi.entityService.findMany('api::match.match', {
-          filters: {
-            tournament: {
-              id: {
-                $null: true, // Fetch matches where the tournament ID is null
-              },
+        const { filters } = ctx.query;
+    
+        // Define default filters (fetch matches where the tournament ID is null)
+        const defaultFilters = {
+          tournament: {
+            id: {
+              $null: true,
             },
           },
+        };
+    
+        // Merge the default filters with any filters passed in the query string
+        const combinedFilters = {
+          ...defaultFilters,
+          filters,
+        };
+    
+        // Fetch all matches based on the combined filters
+        const matches = await strapi.entityService.findMany('api::match.match', {
+          filters: combinedFilters,
           populate: {
             match_owner: { populate: '*' }, // Populate all match owner fields
             members: { // Populate members and their profile pictures
@@ -137,7 +148,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             sport: true,  
           },
         });
-        
+    
         // Log the result of the matches query
         console.log('MATCHESSSSSSSSSSS', matches);
     
