@@ -64,6 +64,7 @@ const getUserProfilePicture = async (profilePicture) => {
     const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
     const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
   
+    console.log(member_1, 'member_1')
     // Format the final match details, filtering out any null members
     const members = [
       member_1,
@@ -89,7 +90,7 @@ const getUserProfilePicture = async (profilePicture) => {
       email: match.match_owner.email,
       firstName: match.match_owner.firstName,
       lastName: match.match_owner.lastName,
-      profilePictureUrl: match.match_owner.profilePictureUrl,
+      profilePictureUrl: member_1 ? member_1.profilePictureUrl : null,
     } : null,
     members,
   };
@@ -197,8 +198,11 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           return ctx.notFound('Match not found');
         }
     
+        // console.log('MATCH DETAILS:', match);
         // Format the match details
         const formattedMatch = await formatMatchDetails(match);
+
+        console.log('FORMATTED MATCH:', formattedMatch);
     
         // Return formatted match details
         ctx.send(formattedMatch);
