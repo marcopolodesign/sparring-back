@@ -21,6 +21,12 @@ module.exports = {
                 ],
               }
             : {
+                $or: [
+                    { member_1: { id: { $ne: userId } } },
+                    { member_2: { id: { $ne: userId } } },
+                    { member_3: { id: { $ne: userId } } },
+                    { member_4: { id: { $ne: userId } } },
+                  ],
                 members: {
                   id: {
                     $ne: userId, // Exclude matches where the user is a member
