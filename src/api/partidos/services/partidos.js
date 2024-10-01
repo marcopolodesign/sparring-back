@@ -7,55 +7,45 @@ module.exports = {
           },
           tournament: {
             id: {
-              $null: true,
+              $null: true, // Only matches with no tournament
             },
           },
-         
-              $or: [
-                { member_1: { id: isMatchOwner ? userId : { $ne: userId } } },
-                { member_2: { id: isMatchOwner ? userId : { $ne: userId } } },
-                { member_3: { id: isMatchOwner ? userId : { $ne: userId } } },
-                { member_4: { id: isMatchOwner ? userId : { $ne: userId } } },
+          // Condition based on isMatchOwner
+          $or: isMatchOwner 
+            ? [
+                { member_1: { id: userId } }, // Match if user is in any member slot
+                { member_2: { id: userId } },
+                { member_3: { id: userId } },
+                { member_4: { id: userId } },
+              ]
+            : [
+                { member_1: { id: { $ne: userId } } }, // Exclude if user is in any member slot
+                { member_2: { id: { $ne: userId } } },
+                { member_3: { id: { $ne: userId } } },
+                { member_4: { id: { $ne: userId } } },
               ],
-           
+          // Add the condition to exclude matches where the number of members is full
+          
         },
         populate: {
-            match_owner: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
-              }
-            },
-            members: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
-              } 
-            },
-            member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
-            member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
-            member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
-            member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
-            location: true,  // Populate location
-            sport: true      // Populate sport
+          match_owner: {
+            populate: {
+              profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
+            }
           },
+          members: {
+            populate: {
+              profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
+            }
+          },
+          member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
+          member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
+          member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
+          member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
+          location: true,  // Populate location
+          sport: true      // Populate sport
+        },
       };
-  
-
-      // Modify the query based on the isMatchOwner condition
-    //   if (isMatchOwner) {
-
-    //     console.log('isMatchOwnerrrrr', isMatchOwner);
-    //     query.where.$and.push({
-    //       // If the user is the match owner, add extra conditions
-    //       $or: [
-    //         { member_1: { id: { $ne: userId } } },
-    //         { member_2: { id: { $ne: userId } } },
-    //         { member_3: { id: { $ne: userId } } },
-    //         { member_4: { id: { $ne: userId } } },
-    //       ],
-    //     });
-
-        
-    //   }
   
       // Perform the query
       const matches = await strapi.db.query('api::match.match').findMany(query);
