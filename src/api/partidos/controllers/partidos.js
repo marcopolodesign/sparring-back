@@ -242,32 +242,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
 
         console.log(currentDate, 'currentDate');
   
-        // Fetch matches using the combined filters
-        const matches = await strapi.db.query('api::match.match').findMany({
-          where: {
-            Date: {
-              $gt: currentDate, // Filter by date
-            },
-          },
-          populate: {
-            match_owner: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
-              }
-            },
-            members: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
-              } 
-            },
-            member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
-            member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
-            member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
-            member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
-            location: true,  // Populate location
-            sport: true      // Populate sport
-          },
-        });
+        const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate);
   
         // Log matches for debugging
         console.log('Matches:', matches);
@@ -328,6 +303,64 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         ctx.throw(500, 'Internal Server Error');
       }
     },
+
+    async findMatchesByUser(ctx) {
+      try {
+        const { userId } = ctx.params;
+  
+        const currentDate = new Date().toISOString();
+
+        // Fetch all matches where the user is a member
+        const matches = await strapi.db.query('api::match.match').findMany({
+          where: {
+            $or: [
+              { member_1: { id: userId } },
+              { member_2: { id: userId } },
+              { member_3: { id: userId } },
+              { member_4: { id: userId } },
+            ],
+            Date: {
+              $gt: currentDate, // Filter by date
+            },
+          },
+          populate: {
+            match_owner: { 
+              populate: { 
+                profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
+              }
+            },
+            members: { 
+              populate: { 
+                profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
+              } 
+            },
+            member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
+            member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
+            member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
+            member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
+            location: true,  // Populate location
+            sport: true      // Populate sport 
+          },
+        });
+  
+        // Log the result of the matches query
+        // console.log('MATCHESSSSSSSSSSS', matches);
+  
+        // Check if matches is an array and has entries
+        if (!Array.isArray(matches) || matches.length === 0) {
+          return ctx.notFound('No matches found');
+        }
+  
+        // Format each match if needed
+        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+  
+        // Return the formatted match details
+        ctx.send(formattedMatches);
+      } catch (error) {
+        console.error('Error fetching matches by user:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    }
     
   }));
   

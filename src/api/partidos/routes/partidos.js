@@ -12,6 +12,18 @@ module.exports = {
 
     {
       method: 'GET',
+      path: '/partidos/own-matches/:userId', 
+       handler: 'partidos.findMatchesByUser',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+     },
+
+     
+
+    {
+      method: 'GET',
       path: '/partidos/:matchId',
       handler: 'partidos.getMatchDetails',
       config: {
