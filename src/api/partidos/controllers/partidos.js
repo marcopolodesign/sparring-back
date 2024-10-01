@@ -111,7 +111,10 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
     // Custom function to fetch all matches
     async findAllMatches(ctx) {
       try {
-        const { filters } = ctx.query;
+        const { filters, userId } = ctx.query;
+    
+        // Get current date and time
+        const currentDate = new Date();
     
         // Define default filters (fetch matches where the tournament ID is null)
         const defaultFilters = {
@@ -119,6 +122,10 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             id: {
               $null: true,
             },
+          },
+          // Filter matches that haven't happened yet (date is greater than current date)
+          date: {
+            $gt: currentDate.toISOString(), // Compare with today's date
           },
         };
     
@@ -137,7 +144,6 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
               populate: { 
                 profilePicture: { 
                   fields: ['url'], // Only fetch the URL of the profile picture
-                  // You can include 'formats' if you want the different sizes of the image
                 }
               }
             },
@@ -158,8 +164,28 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           return ctx.notFound('No matches found');
         }
     
+        // Filter matches where members.length < ammount_players and userId is not part of the members
+        const filteredMatches = matches.filter(match => {
+          const totalMembers = [
+            match.member_1,
+            match.member_2,
+            match.member_3,
+            match.member_4
+          ].filter(Boolean).length; // Filter out null or undefined members
+    
+          // Exclude matches where userId is a member
+          const isUserMember = [
+            match.member_1?.id,
+            match.member_2?.id,
+            match.member_3?.id,
+            match.member_4?.id
+          ].includes(Number(userId));
+    
+          return totalMembers < match.ammount_players && !isUserMember;
+        });
+    
         // Format each match if needed
-        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+        const formattedMatches = await Promise.all(filteredMatches.map(match => formatMatchDetails(match)));
     
         // Return the formatted match details
         ctx.send(formattedMatches);
