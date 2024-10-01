@@ -12,20 +12,12 @@ module.exports = {
           },
           $and: [
             {
-            //   $or: [
-            //     { member_1: { $null: true } },
-            //     { member_2: { $null: true } },
-            //     { member_3: { $null: true } },
-            //     { member_4: { $null: true } },
-            //   ],
-            },
-            {
-              // Exclude matches where the user is already a member
+              // Exclude matches where the user is already a member or, if match owner, match their ID
               $or: [
-                { member_1: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
-                { member_2: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
-                { member_3: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
-                { member_4: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } }  },
+                { member_1: { id: isMatchOwner ? userId : { $ne: userId } } },
+                { member_2: { id: isMatchOwner ? userId : { $ne: userId } } },
+                { member_3: { id: isMatchOwner ? userId : { $ne: userId } } },
+                { member_4: { id: isMatchOwner ? userId : { $ne: userId } } },
               ],
             },
           ],
@@ -51,7 +43,7 @@ module.exports = {
       };
   
 
-      console.log('query', query);
+      console.log('query', query.where.$and[0].$or);
       // Modify the query based on the isMatchOwner condition
     //   if (isMatchOwner) {
 
