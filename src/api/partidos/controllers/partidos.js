@@ -306,42 +306,48 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
 
     async findMatchesByUser(ctx) {
       try {
-        const { userId } = ctx.params;
-  
+        const { userId } = ctx.params;   // Get the userId from the path parameter
+        const { isMatchOwner } = ctx.query;  // Get the isMatchOwner from the query parameter
+    
+        // Convert isMatchOwner to a boolean (optional, based on your use case)
+        const isMatchOwnerBool = isMatchOwner === 'true';
+
         const currentDate = new Date().toISOString();
 
         // Fetch all matches where the user is a member
-        const matches = await strapi.db.query('api::match.match').findMany({
-          where: {
-            $or: [
-              { member_1: { id: userId } },
-              { member_2: { id: userId } },
-              { member_3: { id: userId } },
-              { member_4: { id: userId } },
-            ],
-            Date: {
-              $gt: currentDate, // Filter by date
-            },
-          },
-          populate: {
-            match_owner: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
-              }
-            },
-            members: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
-              } 
-            },
-            member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
-            member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
-            member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
-            member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
-            location: true,  // Populate location
-            sport: true      // Populate sport 
-          },
-        });
+        // const matches = await strapi.db.query('api::match.match').findMany({
+        //   where: {
+        //     $or: [
+        //       { member_1: { id: userId } },
+        //       { member_2: { id: userId } },
+        //       { member_3: { id: userId } },
+        //       { member_4: { id: userId } },
+        //     ],
+        //     Date: {
+        //       $gt: currentDate, // Filter by date
+        //     },
+        //   },
+        //   populate: {
+        //     match_owner: { 
+        //       populate: { 
+        //         profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
+        //       }
+        //     },
+        //     members: { 
+        //       populate: { 
+        //         profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
+        //       } 
+        //     },
+        //     member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
+        //     member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
+        //     member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
+        //     member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
+        //     location: true,  // Populate location
+        //     sport: true      // Populate sport 
+        //   },
+        // });
+
+        const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate, isMatchOwnerBool);
   
         // Log the result of the matches query
         // console.log('MATCHESSSSSSSSSSS', matches);

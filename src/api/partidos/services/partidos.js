@@ -1,42 +1,36 @@
-    module.exports = {
-        /**
-         * Fetches upcoming matches with filtering logic.
-         * @param {string} userId - The ID of the user to exclude from matches.
-         * @param {Date} currentDate - The current date for filtering upcoming matches.
-         * @returns {Promise<Array>} - List of upcoming matches.
-         */
-        async findUpcomingMatches(userId, currentDate) {
-       const matches = await strapi.db.query('api::match.match').findMany({
-          where: {
-            Date: {
-              $gt: currentDate, // Filter by date
-            },
-            tournament: {
-                id: {
-                  $null: true,
-                },
-              },
-              $and: [
-                {
-                  $or: [
-                    { member_1: { $null: true } }, // Check if member_1 is null
-                    { member_2: { $null: true } },
-                    { member_3: { $null: true } },
-                    { member_4: { $null: true } },
-                  ],
-                },
-                {
-                  // Exclude matches where the user is already a member
-                  $or: [
-                    { member_1: { id: { $ne: userId } } },
-                    { member_2: { id: { $ne: userId } } },
-                    { member_3: { id: { $ne: userId } } },
-                    { member_4: { id: { $ne: userId } } },
-                  ],
-                },
-              ],
+module.exports = {
+    async findUpcomingMatches(userId, currentDate, isMatchOwner) {
+      let query = {
+        where: {
+          Date: {
+            $gt: currentDate, // Filter by date
           },
-          populate: {
+          tournament: {
+            id: {
+              $null: true,
+            },
+          },
+          $and: [
+            {
+              $or: [
+                { member_1: { $null: true } },
+                { member_2: { $null: true } },
+                { member_3: { $null: true } },
+                { member_4: { $null: true } },
+              ],
+            },
+            {
+              // Exclude matches where the user is already a member
+              $or: [
+                { member_1: { id: { $ne: userId } } },
+                { member_2: { id: { $ne: userId } } },
+                { member_3: { id: { $ne: userId } } },
+                { member_4: { id: { $ne: userId } } },
+              ],
+            },
+          ],
+        },
+        populate: {
             match_owner: { 
               populate: { 
                 profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
@@ -54,10 +48,23 @@
             location: true,  // Populate location
             sport: true      // Populate sport
           },
+      };
+  
+      // Modify the query based on the isMatchOwner condition
+      if (isMatchOwner) {
+        query.where.$and.push({
+          // If the user is the match owner, add extra conditions
+          $or: [
+            { member_1: { id: { $ne: userId } } },
+            { member_2: { id: { $ne: userId } } },
+            { member_3: { id: { $ne: userId } } },
+            { member_4: { id: { $ne: userId } } },
+          ],
         });
-      
-          return matches;
-        }
       }
-
-
+  
+      // Perform the query
+      const matches = await strapi.db.query('api::match.match').findMany(query);
+      return matches;
+    },
+  };
