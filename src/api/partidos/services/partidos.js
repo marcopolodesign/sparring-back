@@ -1,5 +1,6 @@
 module.exports = {
     async findUpcomingMatches(userId, currentDate, isMatchOwner) {
+      // Initial query without checking members length (we will do this in JS)
       let query = {
         where: {
           Date: {
@@ -21,17 +22,24 @@ module.exports = {
                 ],
               }
             : {
-                $or: [
-                    { member_1: { id: { $ne: userId } } },
-                    { member_2: { id: { $ne: userId } } },
-                    { member_3: { id: { $ne: userId } } },
-                    { member_4: { id: { $ne: userId } } },
-                  ],
-                members: {
-                  id: {
-                    $ne: userId, // Exclude matches where the user is a member
+                $and: [
+                  // Exclude matches where the user is already a member or match owner
+                  {
+                    $or: [
+                      { member_1: { id: { $ne: userId } } },
+                      { member_2: { id: { $ne: userId } } },
+                      { member_3: { id: { $ne: userId } } },
+                      { member_4: { id: { $ne: userId } } },
+                    ],
                   },
-                },
+                  {
+                    match_owner: {
+                      id: {
+                        $ne: userId, // Exclude matches where the user is the match owner
+                      },
+                    },
+                  },
+                ],
               }),
         },
         populate: {
@@ -54,8 +62,30 @@ module.exports = {
         },
       };
   
-      // Perform the query
+      // Fetch the matches from the database
       const matches = await strapi.db.query('api::match.match').findMany(query);
-      return matches;
+  
+      // Post-process the matches in JavaScript
+      const filteredMatches = matches.filter((match) => {
+        // Exclude matches where members.length >= ammount_players
+        const membersCount = [match.member_1, match.member_2, match.member_3, match.member_4].filter(Boolean).length;
+  
+        if (membersCount >= match.ammount_players) {
+          return false; // Exclude matches that are already full
+        }
+  
+        // Exclude matches where the user is already a member
+        const isUserMember = [match.member_1, match.member_2, match.member_3, match.member_4].some(
+          (member) => member?.id === userId
+        );
+  
+        if (isUserMember) {
+          return false; // Exclude matches where the user is already a member
+        }
+  
+        return true;
+      });
+  
+      return filteredMatches;
     },
   };
