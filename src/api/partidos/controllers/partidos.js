@@ -276,9 +276,10 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         if (!Array.isArray(matches) || matches.length === 0) {
           return ctx.notFound('No matches found');
         }
-  
-        // Return the matches directly (or format them if needed)
-        ctx.send(matches);
+        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+    
+        // Return the formatted match details
+        ctx.send(formattedMatches);
       } catch (error) {
         console.error('Error fetching upcoming matches:', error);
         ctx.throw(500, 'Internal Server Error');
