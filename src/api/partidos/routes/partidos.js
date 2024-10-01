@@ -2,8 +2,8 @@ module.exports = {
   routes: [
     {
      method: 'GET',
-     path: '/partidos',
-     handler: 'partidos.findAllMatches',
+     path: '/partidos/user/:userId', 
+      handler: 'partidos.findUpcomingMatches',
      config: {
        policies: [],
        middlewares: [],

@@ -64,7 +64,7 @@ const getUserProfilePicture = async (profilePicture) => {
     const member_3 = match.member_3 ? await fetchMemberDetails(match.member_3) : null;
     const member_4 = match.member_4 ? await fetchMemberDetails(match.member_4) : null;
   
-    console.log(member_1, 'member_1')
+    // console.log(member_1, 'member_1')
     // Format the final match details, filtering out any null members
     const members = [
       member_1,
@@ -111,7 +111,10 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
     // Custom function to fetch all matches
     async findAllMatches(ctx) {
       try {
-        const { filters, userId } = ctx.query;
+        const { filters, userId } = ctx.params;
+
+        console.log('FILTERS:', filters);
+        console.log('USER ID:', userId);
     
         // Get current date and time
         const currentDate = new Date();
@@ -137,7 +140,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
     
         // Fetch all matches based on the combined filters
         const matches = await strapi.entityService.findMany('api::match.match', {
-          filters: combinedFilters,
+          filters: defaultFilters,
           populate: {
             match_owner: { populate: '*' }, // Populate all match owner fields
             members: { // Populate members and their profile pictures
@@ -157,7 +160,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         });
     
         // Log the result of the matches query
-        console.log('MATCHESSSSSSSSSSS', matches);
+        // console.log('MATCHESSSSSSSSSSS', matches);
     
         // Check if matches is an array and has entries
         if (!Array.isArray(matches) || matches.length === 0) {
@@ -191,6 +194,93 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         ctx.send(formattedMatches);
       } catch (error) {
         console.error('Error fetching all matches:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    },
+
+
+    async findUpcomingMatches(ctx) {
+      try {
+        const { userId } = ctx.params;
+  
+        // Get current date and time in ISO format
+        const currentDate = new Date().toISOString();
+  
+        // Apply filters directly in the query
+        const filters = {
+          // Tournament should be null (not part of any tournament)
+          tournament: {
+            id: {
+              $null: true,
+            },
+          },
+          // The match should be in the future
+          date: {
+            $gt: currentDate, // Only fetch matches where date is greater than the current date
+          },
+          // Check that the number of members is less than the ammount_players
+          $and: [
+            {
+              $or: [
+                { member_1: { $null: true } }, // Check if member_1 is null
+                { member_2: { $null: true } },
+                { member_3: { $null: true } },
+                { member_4: { $null: true } },
+              ],
+            },
+            {
+              // Exclude matches where the user is already a member
+              $or: [
+                { member_1: { id: { $ne: userId } } },
+                { member_2: { id: { $ne: userId } } },
+                { member_3: { id: { $ne: userId } } },
+                { member_4: { id: { $ne: userId } } },
+              ],
+            },
+          ],
+        };
+
+        console.log(currentDate, 'currentDate');
+  
+        // Fetch matches using the combined filters
+        const matches = await strapi.db.query('api::match.match').findMany({
+          where: {
+            Date: {
+              $gt: currentDate, // Filter by date
+            },
+          },
+          populate: {
+            match_owner: { 
+              populate: { 
+                profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
+              }
+            },
+            members: { 
+              populate: { 
+                profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
+              } 
+            },
+            member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
+            member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
+            member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
+            member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
+            location: true,  // Populate location
+            sport: true      // Populate sport
+          },
+        });
+  
+        // Log matches for debugging
+        console.log('Matches:', matches);
+  
+        // Check if matches is an array and has entries
+        if (!Array.isArray(matches) || matches.length === 0) {
+          return ctx.notFound('No matches found');
+        }
+  
+        // Return the matches directly (or format them if needed)
+        ctx.send(matches);
+      } catch (error) {
+        console.error('Error fetching upcoming matches:', error);
         ctx.throw(500, 'Internal Server Error');
       }
     },
