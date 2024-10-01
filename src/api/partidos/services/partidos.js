@@ -11,6 +11,30 @@
             Date: {
               $gt: currentDate, // Filter by date
             },
+            tournament: {
+                id: {
+                  $null: true,
+                },
+              },
+              $and: [
+                {
+                  $or: [
+                    { member_1: { $null: true } }, // Check if member_1 is null
+                    { member_2: { $null: true } },
+                    { member_3: { $null: true } },
+                    { member_4: { $null: true } },
+                  ],
+                },
+                {
+                  // Exclude matches where the user is already a member
+                  $or: [
+                    { member_1: { id: { $ne: userId } } },
+                    { member_2: { id: { $ne: userId } } },
+                    { member_3: { id: { $ne: userId } } },
+                    { member_4: { id: { $ne: userId } } },
+                  ],
+                },
+              ],
           },
           populate: {
             match_owner: { 
