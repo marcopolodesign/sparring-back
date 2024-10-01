@@ -11,39 +11,41 @@ module.exports = {
             },
           },
           // Condition based on isMatchOwner
-          $or: isMatchOwner 
-            ? [
-                { member_1: { id: userId } }, // Match if user is in any member slot
-                { member_2: { id: userId } },
-                { member_3: { id: userId } },
-                { member_4: { id: userId } },
-              ]
-            : [
-                { member_1: { id: { $ne: userId } } }, // Exclude if user is in any member slot
-                { member_2: { id: { $ne: userId } } },
-                { member_3: { id: { $ne: userId } } },
-                { member_4: { id: { $ne: userId } } },
-              ],
-          // Add the condition to exclude matches where the number of members is full
-          
+          ...(isMatchOwner
+            ? {
+                $or: [
+                  { member_1: { id: userId } }, // Match if user is in any member slot
+                  { member_2: { id: userId } },
+                  { member_3: { id: userId } },
+                  { member_4: { id: userId } },
+                ],
+              }
+            : {
+                $and: [
+                  { member_1: { id: { $ne: userId } } }, // Exclude if user is in any member slot
+                  { member_2: { id: { $ne: userId } } },
+                  { member_3: { id: { $ne: userId } } },
+                  { member_4: { id: { $ne: userId } } },
+                ],
+              }),
         },
         populate: {
           match_owner: {
             populate: {
-              profilePicture: { fields: ['url'] } // Populate profilePicture fields of match_owner
-            }
+              profilePicture: { fields: ['url'] }, // Populate profilePicture fields of match_owner
+            },
           },
           members: {
             populate: {
-              profilePicture: { fields: ['url'] } // Populate profilePicture fields of members
-            }
+              profilePicture: { fields: ['url'] }, // Populate profilePicture fields of members
+            },
           },
           member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
           member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
           member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
           member_4: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_4
-          location: true,  // Populate location
-          sport: true      // Populate sport
+          location: true, // Populate location
+          sport: true, // Populate sport
         },
       };
   
