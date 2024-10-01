@@ -3,7 +3,7 @@ module.exports = {
       let query = {
         where: {
           Date: {
-            $gt: currentDate, // Filter by date
+            $gt: currentDate, // Filter by date (upcoming matches)
           },
           tournament: {
             id: {
@@ -21,12 +21,11 @@ module.exports = {
                 ],
               }
             : {
-                $and: [
-                  { member_1: { id: { $ne: userId } } }, // Exclude if user is in any member slot
-                  { member_2: { id: { $ne: userId } } },
-                  { member_3: { id: { $ne: userId } } },
-                  { member_4: { id: { $ne: userId } } },
-                ],
+                members: {
+                  id: {
+                    $ne: userId, // Exclude matches where the user is a member
+                  },
+                },
               }),
         },
         populate: {
