@@ -347,7 +347,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         //   },
         // });
 
-        const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate, isMatchOwnerBool);
+        const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate, true);
   
         // Log the result of the matches query
         // console.log('MATCHESSSSSSSSSSS', matches);

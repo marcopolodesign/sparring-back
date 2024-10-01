@@ -12,20 +12,20 @@ module.exports = {
           },
           $and: [
             {
-              $or: [
-                { member_1: { $null: true } },
-                { member_2: { $null: true } },
-                { member_3: { $null: true } },
-                { member_4: { $null: true } },
-              ],
+            //   $or: [
+            //     { member_1: { $null: true } },
+            //     { member_2: { $null: true } },
+            //     { member_3: { $null: true } },
+            //     { member_4: { $null: true } },
+            //   ],
             },
             {
               // Exclude matches where the user is already a member
               $or: [
-                { member_1: { id: { $ne: userId } } },
-                { member_2: { id: { $ne: userId } } },
-                { member_3: { id: { $ne: userId } } },
-                { member_4: { id: { $ne: userId } } },
+                { member_1: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
+                { member_2: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
+                { member_3: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } } },
+                { member_4: { id: isMatchOwner ? {$eq: userId}: { $ne: userId } }  },
               ],
             },
           ],
@@ -50,18 +50,24 @@ module.exports = {
           },
       };
   
+
+      console.log('query', query);
       // Modify the query based on the isMatchOwner condition
-      if (isMatchOwner) {
-        query.where.$and.push({
-          // If the user is the match owner, add extra conditions
-          $or: [
-            { member_1: { id: { $ne: userId } } },
-            { member_2: { id: { $ne: userId } } },
-            { member_3: { id: { $ne: userId } } },
-            { member_4: { id: { $ne: userId } } },
-          ],
-        });
-      }
+    //   if (isMatchOwner) {
+
+    //     console.log('isMatchOwnerrrrr', isMatchOwner);
+    //     query.where.$and.push({
+    //       // If the user is the match owner, add extra conditions
+    //       $or: [
+    //         { member_1: { id: { $ne: userId } } },
+    //         { member_2: { id: { $ne: userId } } },
+    //         { member_3: { id: { $ne: userId } } },
+    //         { member_4: { id: { $ne: userId } } },
+    //       ],
+    //     });
+
+        
+    //   }
   
       // Perform the query
       const matches = await strapi.db.query('api::match.match').findMany(query);
