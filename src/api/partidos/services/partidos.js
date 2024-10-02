@@ -70,8 +70,10 @@ module.exports = {
         // Exclude matches where members.length >= ammount_players
         const membersCount = [match.member_1, match.member_2, match.member_3, match.member_4].filter(Boolean).length;
   
-        if (membersCount >= match.ammount_players) {
-          return false; // Exclude matches that are already full
+        if (!isMatchOwner) {
+            if (membersCount >= match.ammount_players) {
+            return false; // Exclude matches that are already full
+            }
         }
   
         // Exclude matches where the user is already a member
