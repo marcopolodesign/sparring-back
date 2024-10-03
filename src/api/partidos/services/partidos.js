@@ -72,14 +72,15 @@ module.exports = {
   
         if (!isMatchOwner) {
             if (membersCount >= match.ammount_players) {
-            return false; // Exclude matches that are already full
+              return false; // Exclude matches that are already full
             }
         }
   
         // Exclude matches where the user is already a member
-        const isUserMember = [match.member_1, match.member_2, match.member_3, match.member_4].some(
-          (member) => member?.id === userId
-        );
+        // const isUserMember = [match.member_1, match.member_2, match.member_3, match.member_4].some(
+        //   (member) => member?.id === userId
+        // );
+        const isUserMember = match.members?.some((member) => member.id === userId);
   
         if (isUserMember) {
           return false; // Exclude matches where the user is already a member
