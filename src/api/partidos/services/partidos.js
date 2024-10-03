@@ -80,6 +80,10 @@ module.exports = {
         // const isUserMember = [match.member_1, match.member_2, match.member_3, match.member_4].some(
         //   (member) => member?.id === userId
         // );
+
+        console.log(match.members);
+        console.log(match.members.some((member) => member.id));
+        console.log(userId)
         const isUserMember = match.members?.some((member) => member.id === userId);
   
         if (isUserMember) {
