@@ -85,13 +85,14 @@ module.exports = {
         console.log(match.members, 'MATCH MEMBERS UPCOMING MATCHES');
         match.members.some((member) => console.log (member.id, "MEMBER ID UPCOMING MATCHES MATCH.MEMBERS"));
         match.members.forEach((member) => {
-        console.log(member.id, 'MEMBER ID UPCOMING MATCHES MEMBER_1, MEMBER_2, MEMBER_3, MEMBER_4')
-        console.log(member.id === userId, 'MEMBER ID === USER ID UPCOMING MATCHES MEMBER_1, MEMBER_2, MEMBER_3, MEMBER_4')
+        console.log(member.id, 'MEMBER ID UPCOMING Match')
+        console.log(Number(member.id) === Number(userId), 'MEMBER ID === USER ID UPCOMING MATCHES')
         console.log(userId, 'USER ID FROM UPCOMING MATCHES INSIDE MATCH LOOP')
 
     });
         console.log(userId, 'USER ID FROM UPCOMING MATCHES')
-        const isUserMember = match.members?.some((member) => member.id === userId);
+        // const isUserMember = match.members?.some((member) => member.id === userId);
+        const isUserMember = match.members?.some((member) => Number(member.id) === Number(userId));
         console.log(isUserMember, 'IS USER MEMBER UPCOMING MATCHES');
 
         if (isUserMember) {
