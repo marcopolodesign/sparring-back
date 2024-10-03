@@ -240,7 +240,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           ],
         };
 
-        console.log(currentDate, 'currentDate');
+        console.log(userId, 'USER ID FROM CONTROLLER');
   
         const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate);
   

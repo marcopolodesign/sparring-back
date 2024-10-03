@@ -85,7 +85,7 @@ module.exports = {
         console.log(match.members, 'MATCH MEMBERS UPCOMING MATCHES');
         console.log(match.members.some((member) => member.id), "MEMBER ID UPCOMING MATCHES MATCH.MEMBERS");
         console.log([match.member_1, match.member_2, match.member_3, match.member_4].some((member) => member?.id), 'MEMBER ID UPCOMING MATCHES MEMBER_1, MEMBER_2, MEMBER_3, MEMBER_4');
-        console.log(userId, 'USER ID UPCOMING MATCHES')
+        console.log(userId, 'USER ID FROM UPCOMING MATCHES')
         const isUserMember = match.members?.some((member) => member.id === userId);
   
         if (isUserMember) {
