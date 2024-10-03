@@ -95,7 +95,7 @@ module.exports = {
         const isUserMember = match.members?.some((member) => Number(member.id) === Number(userId));
         console.log(isUserMember, 'IS USER MEMBER UPCOMING MATCHES');
 
-        if (isUserMember) {
+        if (isUserMember && !isMatchOwner) {
           return false; // Exclude matches where the user is already a member
         }
   
