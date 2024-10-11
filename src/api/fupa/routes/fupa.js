@@ -65,6 +65,15 @@ module.exports = {
 
     {
       method: 'GET',
+      path: '/fupa/:tournamentId/leaderboard',
+      handler: 'fupa.getTournamentLeaderboard',
+      config: {
+         auth: false
+      },
+    },
+
+    {
+      method: 'GET',
       path: '/fupa/:tournamentId/results/:memberId',
       handler: 'fupa.getGroupResults',
       config: {

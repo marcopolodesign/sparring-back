@@ -1477,66 +1477,134 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   },
 
 
-    async assignTournamentToMatches(ctx) {
-      const { tournamentId } = ctx.params;
-  
-      try {
-        // Step 1: Fetch the tournament by ID and populate groups and matches within the groups
-        const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+  async assignTournamentToMatches(ctx) {
+    const { tournamentId } = ctx.params;
+
+    try {
+      // Step 1: Fetch the tournament by ID and populate groups and matches within the groups
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+        populate: {
+          groups: {
+            populate: {
+              matches: true, // Populate the matches within the groups
+            },
+          },
+        },
+      });
+
+      // If tournament is not found, return a 404 error
+      if (!tournament) {
+        return ctx.notFound('Tournament not found');
+      }
+
+      // Step 2: Loop through all groups and their matches
+      const groups = tournament.groups;
+      if (!groups || groups.length === 0) {
+        return ctx.send({ message: 'No groups found in this tournament' });
+      }
+
+      // Collect all matches from all groups
+      let allMatches = [];
+      groups.forEach(group => {
+        if (group.matches && group.matches.length > 0) {
+          allMatches = allMatches.concat(group.matches);
+        }
+      });
+
+      if (allMatches.length === 0) {
+        return ctx.send({ message: 'No matches found in the tournament groups' });
+      }
+
+      console.log('All matchesssssss:', allMatches);
+
+      // Step 3: Update each match to assign the tournament ID
+      await Promise.all(
+        allMatches.map(async (match) => {
+          await strapi.entityService.update('api::match.match', match.id, {
+            data: {
+              tournament: tournamentId, // Assign the tournament ID to the match
+            },
+          });
+        })
+      );
+
+      // Step 4: Return success response
+      ctx.send({
+        message: `Tournament ID ${tournamentId} has been successfully added to all matches in the groups of the tournament`,
+      });
+    } catch (error) {
+      console.error('Error assigning tournament to matches:', error);
+      ctx.throw(500, 'Internal Server Error');
+    }
+  },
+
+
+async getTournamentLeaderboard(ctx) {
+  const { tournamentId } = ctx.params;
+
+  try {
+    // Fetch the tournament and populate the necessary fields
+    const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+      populate: {
+        groups: {
           populate: {
-            groups: {
+            couples: {
               populate: {
-                matches: true, // Populate the matches within the groups
+                members: {
+                  populate: {
+                    profilePicture: {
+                      populate: {
+                        formats: true,
+                      }
+                    }
+                  },
+                  fields: ['id', 'firstName', 'lastName'],
+                },
+                points: true,  // Fetch the points for each couple
               },
             },
           },
-        });
-  
-        // If tournament is not found, return a 404 error
-        if (!tournament) {
-          return ctx.notFound('Tournament not found');
-        }
-  
-        // Step 2: Loop through all groups and their matches
-        const groups = tournament.groups;
-        if (!groups || groups.length === 0) {
-          return ctx.send({ message: 'No groups found in this tournament' });
-        }
-  
-        // Collect all matches from all groups
-        let allMatches = [];
-        groups.forEach(group => {
-          if (group.matches && group.matches.length > 0) {
-            allMatches = allMatches.concat(group.matches);
-          }
-        });
-  
-        if (allMatches.length === 0) {
-          return ctx.send({ message: 'No matches found in the tournament groups' });
-        }
+        },
+      },
+    });
 
-        console.log('All matchesssssss:', allMatches);
-  
-        // Step 3: Update each match to assign the tournament ID
-        await Promise.all(
-          allMatches.map(async (match) => {
-            await strapi.entityService.update('api::match.match', match.id, {
-              data: {
-                tournament: tournamentId, // Assign the tournament ID to the match
-              },
-            });
-          })
-        );
-  
-        // Step 4: Return success response
-        ctx.send({
-          message: `Tournament ID ${tournamentId} has been successfully added to all matches in the groups of the tournament`,
-        });
-      } catch (error) {
-        console.error('Error assigning tournament to matches:', error);
-        ctx.throw(500, 'Internal Server Error');
-      }
-    },
+    if (!tournament) {
+      ctx.throw(404, 'Tournament not found');
+      return;
+    }
+
+    const couplesWithPoints = [];
+
+    // Iterate over each group and each couple to collect their points
+    tournament.groups.forEach(group => {
+      group.couples.forEach(couple => {
+        // Create a formatted object for each couple including their members and points
+        const coupleWithPoints = {
+          couple: {
+            members: couple.members.map(member => ({
+              id: member.id,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              profilePicture: member.profilePicture?.formats?.small?.url || null,
+            })),
+          },
+          points: couple.points || 0, // Fetch points, default to 0 if not available
+        };
+        couplesWithPoints.push(coupleWithPoints);
+      });
+    });
+
+    // Sort couples by their points in descending order
+    const sortedCouplesWithPoints = couplesWithPoints.sort((a, b) => b.points - a.points);
+
+    // Send the formatted response
+    ctx.send(sortedCouplesWithPoints);
+
+  } catch (error) {
+    console.error('Error fetching tournament couples and points:', error);
+    ctx.throw(500, 'Failed to fetch tournament couples and points.');
+  }
+},
 }));
 
 
@@ -1595,3 +1663,4 @@ async function removeFourthSetFromTournamentMatches(tournamentId) {
     console.error('Error removing extra sets from matches:', error);
   }
 }
+

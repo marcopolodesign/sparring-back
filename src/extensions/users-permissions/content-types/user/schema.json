@@ -129,6 +129,9 @@
       "relation": "manyToMany",
       "target": "api::match.match",
       "mappedBy": "members"
+    },
+    "expo_pushtoken": {
+      "type": "string"
     }
   }
 }
