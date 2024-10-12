@@ -147,6 +147,15 @@ module.exports = {
       },
     },
 
+    {
+      method: 'POST', 
+      path: '/fupa/:tournamentId/create',
+      handler: 'fupa.createMatches',
+      config: {
+        auth: false
+      }
+    },
+
     
     
 
