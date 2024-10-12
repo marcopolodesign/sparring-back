@@ -196,7 +196,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
       ctx.body = { message: 'Matches generated and added to groups successfully', matches };
     } catch (err) {
-      ctx.throw(500, err.message);
+      ctx.throw(500, err.message)
     }
   },
   
