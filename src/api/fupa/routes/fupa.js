@@ -8,17 +8,17 @@ module.exports = {
         auth: false, // Set to true if authentication is required
       },
     },
-    {
-      method: 'POST',
-      path: '/fupa/:id/generate-group-matches',
-      handler: 'fupa.generateMatchesForTournament',
-      config: {
-        auth: false, // Set to true if authentication is required
-      },
-    },
+    // {
+    //   method: 'POST',
+    //   path: '/fupa/:id/generate-group-matches',
+    //   handler: 'fupa.generateMatchesForTournament',
+    //   config: {
+    //     auth: false, // Set to true if authentication is required
+    //   },
+    // },
 
     {
-      method: 'POST',
+      method: 'PUT',
       path: '/fupa/:id/new-matches',
       handler: 'fupa.generateMatchesForTournament',
       config: {
