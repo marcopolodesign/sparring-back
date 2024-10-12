@@ -123,9 +123,9 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       for (const group of tournament.groups) {
         const couples = group.couples;
   
-        if (couples.length !== 4) {
-          throw new Error(`Group ${group.name} must have exactly 4 couples`);
-        }
+        // if (couples.length !== 4) {
+        //   throw new Error(`Group ${group.name} must have exactly 4 couples`);
+        // }
   
         const groupMatchIds = [];
   
@@ -136,7 +136,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
             // Create 4 sets for each couple
             const sets = [];
   
-            for (let setNumber = 1; setNumber <= 4; setNumber++) {
+            for (let setNumber = 1; setNumber <= 3; setNumber++) {
               const setComponent = {
                 gamesWon: 0,  // Initialize with 0 games won
               };
