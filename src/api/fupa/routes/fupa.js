@@ -18,6 +18,15 @@ module.exports = {
     },
 
     {
+      method: 'POST',
+      path: '/fupa/:id/new-matches',
+      handler: 'fupa.generateMatchesForTournament',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
+    {
       method: 'GET',
       path: '/fupa/:id/match-result',
       handler: 'fupa.findMatchesWithCouples',
