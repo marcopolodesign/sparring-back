@@ -95,7 +95,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   },
 
   // New function to generate matches for each group in the tournament
-  async generateMatchesForTournament(ctx) {
+  async generateMatches(ctx) {
     const { id } = ctx.params;
   
     try {

@@ -20,7 +20,7 @@ module.exports = {
     {
       method: 'PUT',
       path: '/fupa/:id/new-matches',
-      handler: 'fupa.generateMatchesForTournament',
+      handler: 'fupa.generateMatches',
       config: {
         auth: false, // Set to true if authentication is required
       },
