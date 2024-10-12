@@ -8,7 +8,6 @@ module.exports = {
         auth: false, // Set to true if authentication is required
       },
     },
-
     {
       method: 'POST',
       path: '/fupa/:id/generate-group-matches',
@@ -26,16 +25,6 @@ module.exports = {
         auth: false, // Set to true if authentication is required
       },
     },
-    
-    {
-      method: 'GET',
-      path: '/fupa/:id/groups',
-      handler: 'fupa.findGroupMatches',
-      config: {
-        auth: false, // Set to true if authentication is required
-      },
-    },
-
     {
       method: 'GET',
       path: '/fupa/:id/groups',
