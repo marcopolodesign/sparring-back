@@ -11,7 +11,7 @@ module.exports = {
 
     {
       method: 'POST',
-      path: '/fupa/:id/generate-matches',
+      path: '/fupa/:id/generate-group-matches',
       handler: 'fupa.generateMatchesForTournament',
       config: {
         auth: false, // Set to true if authentication is required
