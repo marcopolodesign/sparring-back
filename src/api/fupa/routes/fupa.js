@@ -137,6 +137,16 @@ module.exports = {
       },
     },
 
+
+    {
+      method: 'GET',
+      path: '/fupa/testing',
+      handler: 'fupa.getTest',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
     
     
 

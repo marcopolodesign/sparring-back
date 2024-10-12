@@ -1605,6 +1605,10 @@ async getTournamentLeaderboard(ctx) {
     ctx.throw(500, 'Failed to fetch tournament couples and points.');
   }
 },
+
+async getTest (ctx) {
+  ctx.send('Testing!')
+},
 }));
 
 
