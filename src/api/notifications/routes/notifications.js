@@ -7,7 +7,18 @@ module.exports = {
      config: {
        policies: [],
        middlewares: [],
+       auth: false,
      },
     },
+    {
+      method: 'POST',
+      path: '/notifications/test',
+      handler: 'notifications.test',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     },
   ],
 };
