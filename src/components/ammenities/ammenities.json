@@ -1,8 +1,17 @@
 {
   "collectionName": "components_ammenities_ammenities",
   "info": {
-    "displayName": "ammenities"
+    "displayName": "ammenities",
+    "description": ""
   },
   "options": {},
-  "attributes": {}
+  "attributes": {
+    "Canchas": {
+      "type": "enumeration",
+      "enum": [
+        "Indoor",
+        "Outdoor"
+      ]
+    }
+  }
 }

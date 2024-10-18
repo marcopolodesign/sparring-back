@@ -4,8 +4,11 @@ export interface AmmenitiesAmmenities extends Schema.Component {
   collectionName: 'components_ammenities_ammenities';
   info: {
     displayName: 'ammenities';
+    description: '';
   };
-  attributes: {};
+  attributes: {
+    Canchas: Attribute.Enumeration<['Indoor', 'Outdoor']>;
+  };
 }
 
 export interface AttributesAttributes extends Schema.Component {

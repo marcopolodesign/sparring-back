@@ -61,6 +61,12 @@
     },
     "whatsapp": {
       "type": "string"
+    },
+    "opening_hours": {
+      "type": "string"
+    },
+    "est_pricing": {
+      "type": "string"
     }
   }
 }

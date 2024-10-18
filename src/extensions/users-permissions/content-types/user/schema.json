@@ -132,6 +132,15 @@
     },
     "expo_pushtoken": {
       "type": "string"
+    },
+    "nivel": {
+      "type": "string"
+    },
+    "court_pos": {
+      "type": "string"
+    },
+    "good_hand": {
+      "type": "string"
     }
   }
 }

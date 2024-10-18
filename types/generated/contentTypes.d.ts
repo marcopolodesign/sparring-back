@@ -801,6 +801,9 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'api::match.match'
     >;
     expo_pushtoken: Attribute.String;
+    nivel: Attribute.String;
+    court_pos: Attribute.String;
+    good_hand: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -842,6 +845,8 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'api::tournament.tournament'
     >;
     whatsapp: Attribute.String;
+    opening_hours: Attribute.String;
+    est_pricing: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
