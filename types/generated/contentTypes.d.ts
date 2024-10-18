@@ -824,6 +824,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     singularName: 'court';
     pluralName: 'courts';
     displayName: 'Courts';
+    description: '';
   };
   options: {
     draftAndPublish: true;
@@ -840,6 +841,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'oneToMany',
       'api::tournament.tournament'
     >;
+    whatsapp: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

@@ -4,7 +4,8 @@
   "info": {
     "singularName": "court",
     "pluralName": "courts",
-    "displayName": "Courts"
+    "displayName": "Courts",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -15,14 +16,15 @@
       "type": "string"
     },
     "gallery": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": true
+      ]
     },
     "location": {
       "type": "component",
@@ -41,20 +43,24 @@
       "component": "ammenities.ammenities"
     },
     "cover": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
     },
     "tournaments": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::tournament.tournament",
       "mappedBy": "venue"
+    },
+    "whatsapp": {
+      "type": "string"
     }
   }
 }
