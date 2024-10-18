@@ -18,39 +18,27 @@ module.exports = {
           populate: {
             match_owner: true,  // Populate the match_owner relation
             location: true, 
-            Date: true,    // Populate the location component
+            Date: true,
+            members: true,     // Populate the location component
           },
         });
       console.log(match, 'match from sendSignupNotification');
-
-      // Step 1: Fetch the signed-up user using the correct query
-    const signedUpUser = await strapi.query('plugin::users-permissions.user').findOne({
-      where: { id: userId },  // Fetch the user by ID passed in the request
-    });
-    console.log(signedUpUser, 'SIGNED UP USER from sendSignupNotification');
-
-    // Step 2: Fetch the match owner (already populated in the match query)
-    const matchOwner = match.match_owner;  // Access the populated match_owner
-    console.log(matchOwner, 'MATCH OWNER from sendSignupNotification');
-
-      // Check if the match owner has an Expo push token
-      if (!matchOwner || !matchOwner.expo_pushtoken) {
-        return ctx.badRequest('Match owner does not have an Expo push token');
-      }
-
+      const signedUpUser = await strapi.query('plugin::users-permissions.user').findOne({ where: { id: userId } });
+      const matchOwner = match.match_owner;
       const formattedDate = format(new Date(match.Date), "EEEE d 'a las' HH:mm", { locale: es });
-
-      // Prepare the notification message
-      const message = `${signedUpUser.firstName} se anotó para tu partido del ${formattedDate} en ${match.location?.address}.`;
-      const title = `🎾 Nuevo jugador anotado en tu partido!`;
-
-      // Send the push notification to the match owner using Expo's API
-      await sendPushNotification(matchOwner.expo_pushtoken, message, title);
-
-      return ctx.send({ message: 'Notification sent successfully' });
+  
+      // Notify the match owner
+      await notifyMatchOwner(matchOwner, signedUpUser, match, formattedDate);
+  
+      // Notify all members if the match is full
+      if (match.members.length === match.ammount_players) {
+        await notifyAllMembers(match.members, match, formattedDate);
+      }
+  
+      return ctx.send({ message: 'Notifications sent successfully.' });
     } catch (error) {
-      console.error('Error sending notification:', error);
-      return ctx.internalServerError('Failed to send notification');
+      console.error('Error sending notifications:', error);
+      return ctx.internalServerError('Failed to send notifications.');
     }
   }, 
 
@@ -80,4 +68,34 @@ const sendPushNotification = async (expoPushToken, message, title) => {
   } catch (error) {
     console.error('Error sending push notification:', error.response ? error.response.data : error.message);
   }
+};
+
+// Helper function to notify the match owner
+const notifyMatchOwner = async (matchOwner, signedUpUser, match, formattedDate) => {
+  if (!matchOwner.expo_pushtoken) {
+    console.log('Match owner does not have an Expo push token');
+    return;
+  }
+
+  const message = `${signedUpUser.firstName} se anotó para tu partido del ${formattedDate} en ${match.location?.address}.`;
+  const title = `🎾 Nuevo jugador anotado en tu partido!`;
+
+  await sendPushNotification(matchOwner.expo_pushtoken, message, title);
+};
+
+// Helper function to notify all members when the match is full
+const notifyAllMembers = async (members, match, formattedDate) => {
+  const fullMatchMessage = `Tu partido del ${formattedDate} en ${match.location?.address} ya tiene todos los jugadores!`;
+  const fullMatchTitle = `🎾 ¡Tu partido está completo!`;
+
+  const notificationPromises = members.map(async (member) => {
+    const memberUser = await strapi.query('plugin::users-permissions.user').findOne({ where: { id: member.id } });
+
+    if (memberUser && memberUser.expo_pushtoken) {
+      console.log(`Sending notification to member: ${memberUser.firstName}`);
+      await sendPushNotification(memberUser.expo_pushtoken, fullMatchMessage, fullMatchTitle);
+    }
+  });
+
+  await Promise.all(notificationPromises);
 };
