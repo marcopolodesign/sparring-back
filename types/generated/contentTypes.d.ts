@@ -833,7 +833,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     name: Attribute.String;
     gallery: Attribute.Media;
     location: Attribute.Component<'location.location'>;
-    available_sports: Attribute.Component<'sports.sport'>;
+    available_sports: Attribute.Component<'sports.sport', true>;
     amenities: Attribute.Component<'ammenities.ammenities', true>;
     cover: Attribute.Media;
     tournaments: Attribute.Relation<

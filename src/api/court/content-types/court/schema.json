@@ -33,7 +33,7 @@
     },
     "available_sports": {
       "type": "component",
-      "repeatable": false,
+      "repeatable": true,
       "component": "sports.sport"
     },
     "amenities": {
