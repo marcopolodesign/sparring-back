@@ -100,6 +100,7 @@ const getUserProfilePicture = async (profilePicture) => {
   if (member_2) response.member_2 = member_2;
   if (member_3) response.member_3 = member_3;
   if (member_4) response.member_4 = member_4;
+  if (match.couples) response.couples = match.couples
 
   return response;
   };
@@ -348,6 +349,38 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         // });
 
         const matches = await strapi.service('api::partidos.partidos').findUpcomingMatches(userId, currentDate, true);
+  
+        // Log the result of the matches query
+        // console.log('MATCHESSSSSSSSSSS', matches);
+  
+        // Check if matches is an array and has entries
+        if (!Array.isArray(matches) || matches.length === 0) {
+          return ctx.notFound('No matches found');
+        }
+  
+        // Format each match if needed
+        const formattedMatches = await Promise.all(matches.map(match => formatMatchDetails(match)));
+  
+        // Return the formatted match details
+        ctx.send(formattedMatches);
+      } catch (error) {
+        console.error('Error fetching matches by user:', error);
+        ctx.throw(500, 'Internal Server Error');
+      }
+    },
+
+    async findHistoricMatchesByUser(ctx) {
+      try {
+        const { userId } = ctx.params;   // Get the userId from the path parameter
+        const { isMatchOwner } = ctx.query;  // Get the isMatchOwner from the query parameter
+    
+        // Convert isMatchOwner to a boolean (optional, based on your use case)
+        const isMatchOwnerBool = isMatchOwner === 'true';
+
+        const currentDate = new Date().toISOString();
+
+       
+        const matches = await strapi.service('api::partidos.partidos').findEndedMatches(userId, currentDate, true);
   
         // Log the result of the matches query
         // console.log('MATCHESSSSSSSSSSS', matches);

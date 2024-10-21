@@ -20,6 +20,17 @@ module.exports = {
       },
      },
 
+     {
+      method: 'GET',
+      path: '/partidos/own-matches/:userId/historic', 
+       handler: 'partidos.findHistoricMatchesByUser',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+     },
+
+
      
 
     {
