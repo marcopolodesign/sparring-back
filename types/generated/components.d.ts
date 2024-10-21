@@ -39,6 +39,7 @@ export interface CoupleCouple extends Schema.Component {
     >;
     sets: Attribute.Component<'games.games', true>;
     points: Attribute.Integer;
+    score: Attribute.JSON;
   };
 }
 

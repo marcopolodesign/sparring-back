@@ -18,6 +18,9 @@
     },
     "points": {
       "type": "integer"
+    },
+    "score": {
+      "type": "json"
     }
   }
 }
