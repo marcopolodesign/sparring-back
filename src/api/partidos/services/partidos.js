@@ -53,6 +53,7 @@ module.exports = {
               profilePicture: { fields: ['url'] }, // Populate profilePicture fields of members
             },
           },
+          couples: { populate: true }, 
           member_1: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_1
           member_2: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_2
           member_3: { populate: { profilePicture: { fields: ['url'] } } }, // Populate member_3
