@@ -77,6 +77,7 @@ const getUserProfilePicture = async (profilePicture) => {
     id: match.id,
     date: capitalizedDate,
     time: formattedTime,
+    originalDate: match.Date,
     createdAt: match.createdAt,
     updatedAt: match.updatedAt,
     publishedAt: match.publishedAt,
