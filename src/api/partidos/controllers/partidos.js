@@ -284,6 +284,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             member_4: { populate: '*' },    // Populate member_4 details
             location: true,   // Populate location details
             sport: true,  
+            couples: true,    // Populate couples
           },
         });
     
