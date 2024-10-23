@@ -4,7 +4,7 @@
   "info": {
     "singularName": "court",
     "pluralName": "courts",
-    "displayName": "Courts",
+    "displayName": "Venues",
     "description": ""
   },
   "options": {
@@ -67,6 +67,12 @@
     },
     "est_pricing": {
       "type": "string"
+    },
+    "tracks": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::track.track",
+      "mappedBy": "venue"
     }
   }
 }

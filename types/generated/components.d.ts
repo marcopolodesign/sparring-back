@@ -136,6 +136,24 @@ export interface SportsSport extends Schema.Component {
   };
 }
 
+export interface TimeslotsTimeslots extends Schema.Component {
+  collectionName: 'components_timeslots_timeslots';
+  info: {
+    displayName: 'Timeslots';
+    description: '';
+  };
+  attributes: {
+    start_time: Attribute.Time;
+    end_time: Attribute.Time;
+    reserved_by: Attribute.Relation<
+      'timeslots.timeslots',
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+    is_reserved: Attribute.Boolean;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface Components {
@@ -149,6 +167,7 @@ declare module '@strapi/types' {
       'location.location': LocationLocation;
       'sets.sets': SetsSets;
       'sports.sport': SportsSport;
+      'timeslots.timeslots': TimeslotsTimeslots;
     }
   }
 }

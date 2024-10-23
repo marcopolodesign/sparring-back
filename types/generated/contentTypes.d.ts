@@ -826,7 +826,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
   info: {
     singularName: 'court';
     pluralName: 'courts';
-    displayName: 'Courts';
+    displayName: 'Venues';
     description: '';
   };
   options: {
@@ -847,6 +847,11 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     whatsapp: Attribute.String;
     opening_hours: Attribute.String;
     est_pricing: Attribute.String;
+    tracks: Attribute.Relation<
+      'api::court.court',
+      'oneToMany',
+      'api::track.track'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -996,6 +1001,43 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
   };
 }
 
+export interface ApiTrackTrack extends Schema.CollectionType {
+  collectionName: 'tracks';
+  info: {
+    singularName: 'track';
+    pluralName: 'tracks';
+    displayName: 'Tracks';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.String;
+    venue: Attribute.Relation<
+      'api::track.track',
+      'manyToOne',
+      'api::court.court'
+    >;
+    timeslots: Attribute.Component<'timeslots.timeslots', true>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::track.track',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::track.track',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -1017,6 +1059,7 @@ declare module '@strapi/types' {
       'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
       'api::tournament.tournament': ApiTournamentTournament;
+      'api::track.track': ApiTrackTrack;
     }
   }
 }

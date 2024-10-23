@@ -1,0 +1,24 @@
+{
+  "collectionName": "components_timeslots_timeslots",
+  "info": {
+    "displayName": "Timeslots",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "start_time": {
+      "type": "time"
+    },
+    "end_time": {
+      "type": "time"
+    },
+    "reserved_by": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::users-permissions.user"
+    },
+    "is_reserved": {
+      "type": "boolean"
+    }
+  }
+}

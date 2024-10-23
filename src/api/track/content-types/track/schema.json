@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tracks",
+  "info": {
+    "singularName": "track",
+    "pluralName": "tracks",
+    "displayName": "Tracks",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "venue": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::court.court",
+      "inversedBy": "tracks"
+    },
+    "timeslots": {
+      "type": "component",
+      "repeatable": true,
+      "component": "timeslots.timeslots"
+    }
+  }
+}
