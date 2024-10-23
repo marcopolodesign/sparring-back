@@ -46,7 +46,7 @@ module.exports = createCoreController('api::court.court', ({ strapi }) => ({
         const newTrack = await strapi.entityService.create('api::track.track', {
           data: {
             name: trackName,
-            court: venue.id,  // Relate the track to the venue using the venue's ID
+            venue: venue.id,  // Relate the track to the venue using the venue's ID
             timeslots,  // Add timeslots (component) to the track
           },
         });
