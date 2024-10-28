@@ -12,10 +12,10 @@
     "end_time": {
       "type": "time"
     },
-    "reserved_by": {
+    "reservation": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "plugin::users-permissions.user"
+      "relation": "oneToOne",
+      "target": "api::reservation.reservation"
     },
     "is_reserved": {
       "type": "boolean"

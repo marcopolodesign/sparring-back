@@ -141,6 +141,18 @@
     },
     "good_hand": {
       "type": "string"
+    },
+    "club": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::club.club",
+      "inversedBy": "users_permissions_users"
+    },
+    "reservations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reservation.reservation",
+      "mappedBy": "owner"
     }
   }
 }

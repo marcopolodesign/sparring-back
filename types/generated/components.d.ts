@@ -145,10 +145,10 @@ export interface TimeslotsTimeslots extends Schema.Component {
   attributes: {
     start_time: Attribute.Time;
     end_time: Attribute.Time;
-    reserved_by: Attribute.Relation<
+    reservation: Attribute.Relation<
       'timeslots.timeslots',
-      'oneToMany',
-      'plugin::users-permissions.user'
+      'oneToOne',
+      'api::reservation.reservation'
     >;
     is_reserved: Attribute.Boolean;
   };

@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reservations",
+  "info": {
+    "singularName": "reservation",
+    "pluralName": "reservations",
+    "displayName": "Reservations",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "reservations"
+    },
+    "date": {
+      "type": "date"
+    },
+    "court": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::track.track",
+      "inversedBy": "reservation"
+    },
+    "start_time": {
+      "type": "time"
+    },
+    "end_time": {
+      "type": "time"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending_payment",
+        "confirmed",
+        "cancelled"
+      ]
+    },
+    "duration": {
+      "type": "integer"
+    }
+  }
+}

@@ -73,6 +73,12 @@
       "relation": "oneToMany",
       "target": "api::track.track",
       "mappedBy": "venue"
+    },
+    "club": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::club.club",
+      "inversedBy": "venues"
     }
   }
 }

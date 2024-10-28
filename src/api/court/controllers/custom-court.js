@@ -51,6 +51,7 @@ module.exports = createCoreController('api::court.court', ({ strapi }) => ({
           },
         });
 
+
         // Add the newly created track to the array of newTracks
         newTracks.push(newTrack);
       }

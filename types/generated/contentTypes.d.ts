@@ -804,6 +804,16 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     nivel: Attribute.String;
     court_pos: Attribute.String;
     good_hand: Attribute.String;
+    club: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToOne',
+      'api::club.club'
+    >;
+    reservations: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::reservation.reservation'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -817,6 +827,39 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToOne',
       'admin::user'
     > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiClubClub extends Schema.CollectionType {
+  collectionName: 'clubs';
+  info: {
+    singularName: 'club';
+    pluralName: 'clubs';
+    displayName: 'Club';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.String;
+    venues: Attribute.Relation<
+      'api::club.club',
+      'oneToMany',
+      'api::court.court'
+    >;
+    users_permissions_users: Attribute.Relation<
+      'api::club.club',
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<'api::club.club', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<'api::club.club', 'oneToOne', 'admin::user'> &
       Attribute.Private;
   };
 }
@@ -852,6 +895,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'oneToMany',
       'api::track.track'
     >;
+    club: Attribute.Relation<'api::court.court', 'manyToOne', 'api::club.club'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -941,6 +985,53 @@ export interface ApiMatchMatch extends Schema.CollectionType {
   };
 }
 
+export interface ApiReservationReservation extends Schema.CollectionType {
+  collectionName: 'reservations';
+  info: {
+    singularName: 'reservation';
+    pluralName: 'reservations';
+    displayName: 'Reservations';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    owner: Attribute.Relation<
+      'api::reservation.reservation',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    date: Attribute.Date;
+    court: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'api::track.track'
+    >;
+    start_time: Attribute.Time;
+    end_time: Attribute.Time;
+    status: Attribute.Enumeration<
+      ['pending_payment', 'confirmed', 'cancelled']
+    >;
+    duration: Attribute.Integer;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiTournamentTournament extends Schema.CollectionType {
   collectionName: 'tournaments';
   info: {
@@ -1019,7 +1110,11 @@ export interface ApiTrackTrack extends Schema.CollectionType {
       'manyToOne',
       'api::court.court'
     >;
-    timeslots: Attribute.Component<'timeslots.timeslots', true>;
+    reservation: Attribute.Relation<
+      'api::track.track',
+      'oneToOne',
+      'api::reservation.reservation'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1056,8 +1151,10 @@ declare module '@strapi/types' {
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
+      'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
+      'api::reservation.reservation': ApiReservationReservation;
       'api::tournament.tournament': ApiTournamentTournament;
       'api::track.track': ApiTrackTrack;
     }
