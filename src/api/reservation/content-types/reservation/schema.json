@@ -21,12 +21,6 @@
     "date": {
       "type": "date"
     },
-    "court": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::track.track",
-      "inversedBy": "reservation"
-    },
     "start_time": {
       "type": "time"
     },
@@ -43,6 +37,12 @@
     },
     "duration": {
       "type": "integer"
+    },
+    "court": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::track.track",
+      "inversedBy": "reservations"
     }
   }
 }

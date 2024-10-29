@@ -1003,17 +1003,17 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     date: Attribute.Date;
-    court: Attribute.Relation<
-      'api::reservation.reservation',
-      'oneToOne',
-      'api::track.track'
-    >;
     start_time: Attribute.Time;
     end_time: Attribute.Time;
     status: Attribute.Enumeration<
       ['pending_payment', 'confirmed', 'cancelled']
     >;
     duration: Attribute.Integer;
+    court: Attribute.Relation<
+      'api::reservation.reservation',
+      'manyToOne',
+      'api::track.track'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1110,9 +1110,9 @@ export interface ApiTrackTrack extends Schema.CollectionType {
       'manyToOne',
       'api::court.court'
     >;
-    reservation: Attribute.Relation<
+    reservations: Attribute.Relation<
       'api::track.track',
-      'oneToOne',
+      'oneToMany',
       'api::reservation.reservation'
     >;
     createdAt: Attribute.DateTime;

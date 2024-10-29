@@ -21,9 +21,9 @@
       "target": "api::court.court",
       "inversedBy": "tracks"
     },
-    "reservation": {
+    "reservations": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::reservation.reservation",
       "mappedBy": "court"
     }
