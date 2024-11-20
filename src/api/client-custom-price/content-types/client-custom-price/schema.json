@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "client_custom_prices",
+  "info": {
+    "singularName": "client-custom-price",
+    "pluralName": "client-custom-prices",
+    "displayName": "Client Custom Price",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "product": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::product.product"
+    },
+    "custom_ammount": {
+      "type": "decimal"
+    },
+    "venue": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::court.court",
+      "inversedBy": "custom_prices"
+    }
+  }
+}

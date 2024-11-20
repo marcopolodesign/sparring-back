@@ -1,0 +1,86 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transactions",
+  "info": {
+    "singularName": "transaction",
+    "pluralName": "transactions",
+    "displayName": "Transaction",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "reservation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reservation.reservation",
+      "inversedBy": "transactions"
+    },
+    "client": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "transactions"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "payment_method": {
+      "type": "enumeration",
+      "enum": [
+        "cash",
+        "credit_card",
+        "bank_transfer",
+        "gateway-mp",
+        "gateway-stripe"
+      ]
+    },
+    "date": {
+      "type": "datetime"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "Pending",
+        "Completed",
+        "Failed",
+        "Refunded"
+      ]
+    },
+    "original_transaction": {
+      "type": "string"
+    },
+    "discounts": {
+      "type": "decimal"
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": [
+        "app",
+        "front-web",
+        "sparring-club",
+        "mostrador",
+        "whatsapp"
+      ]
+    },
+    "notes": {
+      "type": "text"
+    },
+    "payment_details": {
+      "type": "json"
+    },
+    "seller": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "sales"
+    },
+    "products": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::product.product"
+    }
+  }
+}

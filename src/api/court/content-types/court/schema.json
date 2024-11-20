@@ -79,6 +79,22 @@
       "relation": "manyToOne",
       "target": "api::club.club",
       "inversedBy": "venues"
+    },
+    "logo": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
+    },
+    "custom_prices": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::client-custom-price.client-custom-price",
+      "inversedBy": "venue"
     }
   }
 }

@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_members_members",
+  "info": {
+    "displayName": "Members"
+  },
+  "options": {},
+  "attributes": {
+    "member": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "price": {
+      "type": "decimal"
+    }
+  }
+}

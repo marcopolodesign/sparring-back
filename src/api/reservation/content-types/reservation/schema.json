@@ -43,6 +43,37 @@
       "relation": "manyToOne",
       "target": "api::track.track",
       "inversedBy": "reservations"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "abono",
+        "alquiler",
+        "armado",
+        "clase",
+        "torneo"
+      ]
+    },
+    "products": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::product.product"
+    },
+    "transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction",
+      "mappedBy": "reservation"
+    },
+    "seller": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "coach": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
     }
   }
 }

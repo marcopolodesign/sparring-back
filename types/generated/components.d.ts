@@ -114,6 +114,21 @@ export interface LocationLocation extends Schema.Component {
   };
 }
 
+export interface MembersMembers extends Schema.Component {
+  collectionName: 'components_members_members';
+  info: {
+    displayName: 'Members';
+  };
+  attributes: {
+    member: Attribute.Relation<
+      'members.members',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    price: Attribute.Decimal;
+  };
+}
+
 export interface SetsSets extends Schema.Component {
   collectionName: 'components_sets_sets';
   info: {
@@ -165,6 +180,7 @@ declare module '@strapi/types' {
       'games.games': GamesGames;
       'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;
       'location.location': LocationLocation;
+      'members.members': MembersMembers;
       'sets.sets': SetsSets;
       'sports.sport': SportsSport;
       'timeslots.timeslots': TimeslotsTimeslots;

@@ -814,6 +814,17 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::reservation.reservation'
     >;
+    transactions: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    sales: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    gender: Attribute.Enumeration<['male', 'female']>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -824,6 +835,48 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'plugin::users-permissions.user',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiClientCustomPriceClientCustomPrice
+  extends Schema.CollectionType {
+  collectionName: 'client_custom_prices';
+  info: {
+    singularName: 'client-custom-price';
+    pluralName: 'client-custom-prices';
+    displayName: 'Client Custom Price';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    product: Attribute.Relation<
+      'api::client-custom-price.client-custom-price',
+      'oneToOne',
+      'api::product.product'
+    >;
+    custom_ammount: Attribute.Decimal;
+    venue: Attribute.Relation<
+      'api::client-custom-price.client-custom-price',
+      'oneToOne',
+      'api::court.court'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::client-custom-price.client-custom-price',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::client-custom-price.client-custom-price',
       'oneToOne',
       'admin::user'
     > &
@@ -896,6 +949,12 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'api::track.track'
     >;
     club: Attribute.Relation<'api::court.court', 'manyToOne', 'api::club.club'>;
+    logo: Attribute.Media;
+    custom_prices: Attribute.Relation<
+      'api::court.court',
+      'oneToOne',
+      'api::client-custom-price.client-custom-price'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -985,6 +1044,50 @@ export interface ApiMatchMatch extends Schema.CollectionType {
   };
 }
 
+export interface ApiProductProduct extends Schema.CollectionType {
+  collectionName: 'products';
+  info: {
+    singularName: 'product';
+    pluralName: 'products';
+    displayName: 'Product';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Name: Attribute.String;
+    type: Attribute.Enumeration<['alquiler', 'producto']>;
+    price: Attribute.Decimal;
+    sku: Attribute.String;
+    custom_price: Attribute.Relation<
+      'api::product.product',
+      'oneToMany',
+      'api::client-custom-price.client-custom-price'
+    >;
+    venues: Attribute.Relation<
+      'api::product.product',
+      'oneToMany',
+      'api::court.court'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::product.product',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::product.product',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiReservationReservation extends Schema.CollectionType {
   collectionName: 'reservations';
   info: {
@@ -1013,6 +1116,29 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'api::reservation.reservation',
       'manyToOne',
       'api::track.track'
+    >;
+    type: Attribute.Enumeration<
+      ['abono', 'alquiler', 'armado', 'clase', 'torneo']
+    >;
+    products: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToMany',
+      'api::product.product'
+    >;
+    transactions: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    seller: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    coach: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'plugin::users-permissions.user'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1133,6 +1259,71 @@ export interface ApiTrackTrack extends Schema.CollectionType {
   };
 }
 
+export interface ApiTransactionTransaction extends Schema.CollectionType {
+  collectionName: 'transactions';
+  info: {
+    singularName: 'transaction';
+    pluralName: 'transactions';
+    displayName: 'Transaction';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    reservation: Attribute.Relation<
+      'api::transaction.transaction',
+      'manyToOne',
+      'api::reservation.reservation'
+    >;
+    client: Attribute.Relation<
+      'api::transaction.transaction',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    amount: Attribute.Decimal;
+    payment_method: Attribute.Enumeration<
+      ['cash', 'credit_card', 'bank_transfer', 'gateway-mp', 'gateway-stripe']
+    >;
+    date: Attribute.DateTime;
+    status: Attribute.Enumeration<
+      ['Pending', 'Completed', 'Failed', 'Refunded']
+    >;
+    original_transaction: Attribute.String;
+    discounts: Attribute.Decimal;
+    source: Attribute.Enumeration<
+      ['app', 'front-web', 'sparring-club', 'mostrador', 'whatsapp']
+    >;
+    notes: Attribute.Text;
+    payment_details: Attribute.JSON;
+    seller: Attribute.Relation<
+      'api::transaction.transaction',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    products: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToMany',
+      'api::product.product'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -1151,12 +1342,15 @@ declare module '@strapi/types' {
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
+      'api::client-custom-price.client-custom-price': ApiClientCustomPriceClientCustomPrice;
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
+      'api::product.product': ApiProductProduct;
       'api::reservation.reservation': ApiReservationReservation;
       'api::tournament.tournament': ApiTournamentTournament;
       'api::track.track': ApiTrackTrack;
+      'api::transaction.transaction': ApiTransactionTransaction;
     }
   }
 }
