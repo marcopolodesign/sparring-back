@@ -172,6 +172,11 @@
         "male",
         "female"
       ]
+    },
+    "level": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::player-level.player-level"
     }
   }
 }

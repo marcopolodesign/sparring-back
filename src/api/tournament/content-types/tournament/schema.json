@@ -111,6 +111,19 @@
       "type": "component",
       "repeatable": false,
       "component": "cup.cup"
+    },
+    "gender": {
+      "type": "enumeration",
+      "enum": [
+        "Masculino",
+        "Femenino",
+        "Mixto"
+      ]
+    },
+    "accepted_levels": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::player-level.player-level"
     }
   }
 }

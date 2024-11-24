@@ -72,6 +72,11 @@
       "relation": "manyToMany",
       "target": "api::tournament.tournament",
       "inversedBy": "matches"
+    },
+    "accepted_levels": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::player-level.player-level"
     }
   }
 }

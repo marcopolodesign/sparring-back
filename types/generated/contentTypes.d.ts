@@ -825,6 +825,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'api::transaction.transaction'
     >;
     gender: Attribute.Enumeration<['male', 'female']>;
+    level: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToOne',
+      'api::player-level.player-level'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1026,6 +1031,11 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'manyToMany',
       'api::tournament.tournament'
     >;
+    accepted_levels: Attribute.Relation<
+      'api::match.match',
+      'oneToMany',
+      'api::player-level.player-level'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1037,6 +1047,38 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'api::match.match',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiPlayerLevelPlayerLevel extends Schema.CollectionType {
+  collectionName: 'player_levels';
+  info: {
+    singularName: 'player-level';
+    pluralName: 'player-levels';
+    displayName: 'Player Level';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Category: Attribute.String;
+    Level: Attribute.Integer;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::player-level.player-level',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::player-level.player-level',
       'oneToOne',
       'admin::user'
     > &
@@ -1200,6 +1242,12 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     details: Attribute.Component<'details.details'>;
     golden_cup: Attribute.Component<'cup.cup'>;
     silver_cup: Attribute.Component<'cup.cup'>;
+    gender: Attribute.Enumeration<['Masculino', 'Femenino', 'Mixto']>;
+    accepted_levels: Attribute.Relation<
+      'api::tournament.tournament',
+      'oneToMany',
+      'api::player-level.player-level'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1346,6 +1394,7 @@ declare module '@strapi/types' {
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
       'api::match.match': ApiMatchMatch;
+      'api::player-level.player-level': ApiPlayerLevelPlayerLevel;
       'api::product.product': ApiProductProduct;
       'api::reservation.reservation': ApiReservationReservation;
       'api::tournament.tournament': ApiTournamentTournament;
