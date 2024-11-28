@@ -1335,7 +1335,7 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
     >;
     date: Attribute.DateTime;
     status: Attribute.Enumeration<
-      ['Pending', 'Completed', 'Failed', 'Refunded']
+      ['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled']
     >;
     original_transaction: Attribute.String;
     discounts: Attribute.Decimal;

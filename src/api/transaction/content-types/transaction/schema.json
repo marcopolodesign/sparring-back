@@ -46,7 +46,8 @@
         "Pending",
         "Completed",
         "Failed",
-        "Refunded"
+        "Refunded",
+        "Cancelled"
       ]
     },
     "original_transaction": {

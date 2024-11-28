@@ -15,5 +15,16 @@ module.exports = {
         auth: false,  // Change to true if authentication is required
       },
     },
+
+    {
+      method: 'POST',
+      path: '/custom-reservation/create-reservations/:courtId/:count',
+      handler: 'custom-reservation.createRandomReservations',  // Custom controller method
+      config: {
+        "policies": [],
+        auth: false,  // Change to true if authentication is required
+      },
+    },
+
   ],
 };
