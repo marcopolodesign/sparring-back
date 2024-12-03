@@ -16,7 +16,7 @@ module.exports = {
             populate: {
               transactions: {
                 populate: {
-                  client: { fields: ['firstName', 'lastName'] },
+                  client: { fields: ['firstName', 'lastName', 'email'] },
                   seller: { fields: ['firstName', 'lastName'] },
                   products: {
                     populate: {
@@ -60,9 +60,9 @@ module.exports = {
       
               return {
                 id: String(transaction.id),
-                cliente: transaction.client
+                cliente: transaction.client.firstName
                   ? `${transaction.client.firstName} ${transaction.client.lastName}`.trim()
-                  : 'Unknown Client',
+                  : transaction.client.email,
                 vendedor: transaction.seller
                   ? `${transaction.seller.firstName} ${transaction.seller.lastName}`.trim()
                   : 'Unknown Seller',

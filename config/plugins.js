@@ -20,6 +20,16 @@ module.exports = ({ env }) => ({
         },
       },
     },
+    "strapi-google-auth": {
+      enabled: true,
+      config: {
+        clientId: '589343674391-k1mtsl9qhunk1b1cgpogbgs70da4m1hg.apps.googleusercontent.com', // Replace with your Google OAuth Client ID
+        clientSecret: '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', // Replace with your Google OAuth Client Secret
+        callback: '/api/connect/google/callback', // Default callback endpoint
+        successRedirect: '/', // Frontend redirect URL on success
+        failureRedirect: '/login', // Frontend redirect URL on failure
+      },
+    },
   });
   
 
