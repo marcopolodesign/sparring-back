@@ -65,7 +65,7 @@ module.exports = {
                   : transaction.client.email,
                 vendedor: transaction.seller
                   ? `${transaction.seller.firstName} ${transaction.seller.lastName}`.trim()
-                  : 'Unknown Seller',
+                  : 'Unknown Seller', 
                 tipoProducto: productType,
                 producto: productName,
                 metodoPago: transaction.payment_method || 'N/A',
