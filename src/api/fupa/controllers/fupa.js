@@ -97,6 +97,8 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   // New function to generate matches for each group in the tournament
   async generateMatches(ctx) {
     const { id, setAmount } = ctx.params;
+
+    console.log(setAmount, 'setAmount');
   
     try {
       // Fetch the tournament by ID, and populate groups with couples and matches
@@ -136,7 +138,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
             // Create 4 sets for each couple
             const sets = [];
   
-            for (let setNumber = 0; setNumber <= 1; setNumber++) {
+            for (let setNumber = 1; setNumber <= 1; setNumber++) {
               const setComponent = {
                 gamesWon: 0,  // Initialize with 0 games won
               };
