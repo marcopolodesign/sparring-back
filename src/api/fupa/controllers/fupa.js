@@ -153,7 +153,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
               ammount_players: 4, // Set the number of players
               group_name: group.name,  // Store group name or ID,
               tournament: id,
-              description: `${group.name} - ${couples[i].members[0].firstName} & ${couples[i].members[1].firstName} vs ${couples[j].members[0].firstName} & ${couples[j].members[1].firstName}`,
+              description: `${group.name} - ${couples[i].members[0].lastName} & ${couples[i].members[1].lastName} vs ${couples[j].members[0].lastName} & ${couples[j].members[1].lastName}`,
               date: new Date().toISOString(), // You can customize the date logic
               publishedAt: new Date().toISOString(), // Ensure the match is published
               couples: [
