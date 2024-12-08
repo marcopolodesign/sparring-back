@@ -136,7 +136,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
             // Create 4 sets for each couple
             const sets = [];
   
-            for (let setNumber = 1; setNumber <= setAmount; setNumber++) {
+            for (let setNumber = 0; setNumber <= setAmount; setNumber++) {
               const setComponent = {
                 gamesWon: 0,  // Initialize with 0 games won
               };
@@ -375,7 +375,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
-  
   async removeFourthSet(ctx) {
     const { id } = ctx.params;
 
