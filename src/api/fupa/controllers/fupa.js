@@ -814,6 +814,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'An error occurred while checking login statuses.');
     }
   },
+
   async generateKnockoutMatches(ctx) {
     const { tournamentId } = ctx.params;  // Get the tournament ID from the URL params
   
@@ -1582,6 +1583,165 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+  async generateGoldenCupKnockoutMatches(ctx) {
+    const { tournamentId } = ctx.params;
+  
+    try {
+      // Fetch the tournament with groups and couples populated
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+        populate: {
+          groups: {
+            populate: {
+              couples: {
+                populate: {
+                  members: {
+                    populate: {
+                      profilePicture: {
+                        populate: { formats: true },
+                      },
+                    },
+                    fields: ['id', 'firstName', 'lastName'],
+                  },
+                  sets: true, // Populate sets for calculating points
+                },
+              },
+            },
+          },
+        },
+      });
+  
+      if (!tournament) {
+        return ctx.notFound('Tournament not found');
+      }
+  
+      const groups = tournament.groups;
+  
+      const quarterfinals = [];
+      const semifinalists = [];
+  
+      // Helper function to calculate points using calculateSetsWon logic
+      const calculateSetsWon = (couple) => {
+        let setsWon = 0;
+        couple.sets.forEach((set) => {
+          if (set.gamesWon >= 6) {
+            setsWon += 1;
+          }
+        });
+        return setsWon;
+      };
+  
+      // Process each group to determine quarterfinalists and semifinalists
+      for (const group of groups) {
+        if (!group || !group.couples) continue;
+  
+        // Calculate points for each couple
+        group.couples.forEach((couple) => {
+          couple.points = calculateSetsWon(couple);
+        });
+  
+        // Sort couples by points in descending order
+        group.couples.sort((a, b) => b.points - a.points);
+  
+        // Add 2nd and 3rd place couples to quarterfinals
+        if (group.couples[1] && group.couples[2]) {
+          quarterfinals.push({
+            team1: group.couples[1],
+            team2: group.couples[2],
+          });
+        }
+  
+        // Add 1st place couple to semifinalists
+        if (group.couples[0]) {
+          semifinalists.push(group.couples[0]);
+        }
+      }
+  
+      // Create quarterfinal matches
+      const quarterfinalMatchIds = [];
+      for (const match of quarterfinals) {
+        if (!match.team1 || !match.team2) continue;
+  
+        // Create 3 sets for each match
+        const sets = [];
+        for (let setNumber = 1; setNumber <= 3; setNumber++) {
+          sets.push({ gamesWon: 0 });
+        }
+  
+        const matchData = {
+          match_owner: match.team1.members[0].id,
+          couples: [
+            {
+              id: match.team1.id,
+              members: match.team1.members.map((member) => ({ id: member.id })),
+              sets: sets,
+            },
+            {
+              id: match.team2.id,
+              members: match.team2.members.map((member) => ({ id: member.id })),
+              sets: sets,
+            },
+          ],
+          cup_type: 'Golden',
+          description: `Golden Cup Quarterfinal - ${match.team1.members[0].lastName} & ${match.team1.members[1].lastName} vs ${match.team2.members[0].lastName} & ${match.team2.members[1].lastName}`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+  
+        const newMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        quarterfinalMatchIds.push(newMatch.id);
+      }
+  
+      // Create semifinal matches
+      const semifinalMatchIds = [];
+      for (let i = 0; i < semifinalists.length; i += 2) {
+        if (!semifinalists[i] || !semifinalists[i + 1]) continue;
+  
+        // Create 3 sets for the semifinal match
+        const sets = [];
+        for (let setNumber = 1; setNumber <= 3; setNumber++) {
+          sets.push({ gamesWon: 0 });
+        }
+  
+        const matchData = {
+          match_owner: semifinalists[i].members[0].id,
+          couples: [
+            {
+              id: semifinalists[i].id,
+              members: semifinalists[i].members.map((member) => ({ id: member.id })),
+              sets: sets,
+            },
+            {
+              id: semifinalists[i + 1].id,
+              members: semifinalists[i + 1].members.map((member) => ({ id: member.id })),
+              sets: sets,
+            },
+          ],
+          cup_type: 'Golden',
+          description: `Golden Cup Semifinal - ${semifinalists[i].members[0].lastName} & ${semifinalists[i].members[1].lastName} vs ${semifinalists[i + 1].members[0].lastName} & ${semifinalists[i + 1].members[1].lastName}`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+  
+        const newMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        semifinalMatchIds.push(newMatch.id);
+      }
+  
+      // Update the tournament with the Golden Cup structure
+      await strapi.entityService.update('api::tournament.tournament', tournamentId, {
+        data: {
+          golden_cup: {
+            quarterfinals: quarterfinalMatchIds,
+            semifinals: semifinalMatchIds,
+          },
+        },
+      });
+  
+      ctx.send({ message: 'Golden Cup quarterfinals and semifinals generated successfully' });
+    } catch (err) {
+      console.error('Error generating Golden Cup matches:', err);
+      ctx.throw(500, err.message);
+    }
+  },
 
   async assignTournamentToMatches(ctx) {
     const { tournamentId } = ctx.params;

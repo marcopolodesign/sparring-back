@@ -156,6 +156,16 @@ module.exports = {
       }
     },
 
+    {
+      method: 'POST',
+      path: '/fupa/:tournamentId/generateBabolat',
+      handler: 'fupa.generateGoldenCupKnockoutMatches',
+      config: {
+        auth: false
+      }
+    }
+
+
     
     
 
