@@ -1004,6 +1004,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'oneToOne',
       'api::client-custom-price.client-custom-price'
     >;
+    is_premium: Attribute.Boolean;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

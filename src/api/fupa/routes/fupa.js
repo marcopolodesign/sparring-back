@@ -10,7 +10,7 @@ module.exports = {
     },
     {
       method: 'POST',
-      path: '/fupa/:id/new-matches',
+      path: '/fupa/:id/new-matches/:sets',
       handler: 'fupa.generateMatches',
       config: {
         auth: false, // Set to true if authentication is required

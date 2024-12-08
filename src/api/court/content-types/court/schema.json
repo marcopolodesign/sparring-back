@@ -81,20 +81,24 @@
       "inversedBy": "venues"
     },
     "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
     },
     "custom_prices": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::client-custom-price.client-custom-price",
       "inversedBy": "venue"
+    },
+    "is_premium": {
+      "type": "boolean"
     }
   }
 }
