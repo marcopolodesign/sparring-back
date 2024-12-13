@@ -129,6 +129,39 @@ export interface MembersMembers extends Schema.Component {
   };
 }
 
+export interface MembersRanking extends Schema.Component {
+  collectionName: 'components_members_rankings';
+  info: {
+    displayName: 'Ranking';
+    description: '';
+  };
+  attributes: {
+    player: Attribute.Relation<
+      'members.ranking',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    points: Attribute.Integer;
+  };
+}
+
+export interface RankingRankingTest extends Schema.Component {
+  collectionName: 'components_ranking_ranking_tests';
+  info: {
+    displayName: 'ranking_test';
+    description: '';
+  };
+  attributes: {
+    player: Attribute.Relation<
+      'ranking.ranking-test',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    points: Attribute.Integer;
+    description: Attribute.String;
+  };
+}
+
 export interface SetsSets extends Schema.Component {
   collectionName: 'components_sets_sets';
   info: {
@@ -181,6 +214,8 @@ declare module '@strapi/types' {
       'groups-tournament.groups-tournament': GroupsTournamentGroupsTournament;
       'location.location': LocationLocation;
       'members.members': MembersMembers;
+      'members.ranking': MembersRanking;
+      'ranking.ranking-test': RankingRankingTest;
       'sets.sets': SetsSets;
       'sports.sport': SportsSport;
       'timeslots.timeslots': TimeslotsTimeslots;

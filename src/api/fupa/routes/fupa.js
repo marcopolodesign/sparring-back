@@ -163,11 +163,15 @@ module.exports = {
       config: {
         auth: false
       }
+    },
+
+    {
+      method: 'GET',
+      path: '/fupa/:tournamentId/ranking',
+      handler: 'fupa.getIndividualTournamentLeaderboard',
+      config: {
+        auth: false
+      }
     }
-
-
-    
-    
-
   ],
 };

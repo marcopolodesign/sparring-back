@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_ranking_ranking_tests",
+  "info": {
+    "displayName": "ranking_test",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "player": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "points": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

@@ -1872,6 +1872,68 @@ async getTournamentLeaderboard(ctx) {
   }
 },
 
+async getIndividualTournamentLeaderboard(ctx) {
+  const { tournamentId } = ctx.params;
+
+  try {
+    // Fetch the tournament and populate the necessary fields for the ranking
+    const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+      populate: {
+        ranking: {
+          populate: {
+            player: {
+              populate: {
+                profilePicture: {
+                  populate: {
+                    formats: true,
+                  },
+                },
+              },
+              fields: ['id', 'firstName', 'lastName'],
+            },
+          },
+        },
+      },
+    });
+
+    if (!tournament) {
+      ctx.throw(404, 'Tournament not found');
+      return;
+    }
+
+    console.log('Tournament ranking:', tournament.ranking);
+
+    const playersWithPoints = [];
+
+    // Iterate over the ranking to collect individual player data
+    tournament.ranking.forEach(entry => {
+      if (entry.player) {
+        // Create a formatted object for each player including their points
+        const playerWithPoints = {
+          player: {
+            id: entry.player.id,
+            firstName: entry.player.firstName,
+            lastName: entry.player.lastName,
+            profilePicture: entry.player.profilePicture?.formats?.small?.url || null,
+          },
+          points: entry.points || 0, // Fetch points, default to 0 if not available
+        };
+        playersWithPoints.push(playerWithPoints);
+      }
+    });
+
+    // Sort players by their points in descending order
+    const sortedPlayersWithPoints = playersWithPoints.sort((a, b) => b.points - a.points);
+
+    // Send the formatted response
+    ctx.send(sortedPlayersWithPoints);
+
+  } catch (error) {
+    console.error('Error fetching tournament players and points:', error);
+    ctx.throw(500, 'Failed to fetch tournament players and points.');
+  }
+},
+
 async getTest (ctx) {
   ctx.send('Testing!')
 },

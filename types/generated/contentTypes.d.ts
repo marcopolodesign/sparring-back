@@ -1262,7 +1262,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     location: Attribute.Component<'location.location', true>;
     sport: Attribute.Component<'sports.sport', true>;
     name: Attribute.String;
-    description: Attribute.Text;
+    description: Attribute.String;
     participants: Attribute.Relation<
       'api::tournament.tournament',
       'manyToMany',
@@ -1293,6 +1293,8 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
       'oneToMany',
       'api::player-level.player-level'
     >;
+    ranking: Attribute.Component<'members.ranking', true>;
+    ranking_test: Attribute.Component<'ranking.ranking-test', true>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1398,6 +1400,11 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
       'api::transaction.transaction',
       'oneToMany',
       'api::product.product'
+    >;
+    venue: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToOne',
+      'api::court.court'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;

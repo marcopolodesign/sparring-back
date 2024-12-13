@@ -15,5 +15,15 @@ module.exports = {
         auth: false,  // Change to true if authentication is required
       },
     },
+
+    {
+      method: 'GET',
+      path: '/custom-transactions/by-reservation',
+      handler: 'custom-transaction.getTransactionsByReservation',
+      config: {
+        policies: [], // Add any policies if needed
+        middlewares: [], // Add any middlewares if needed
+      },
+    },
   ],
 };

@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_members_rankings",
+  "info": {
+    "displayName": "Ranking",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "player": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "points": {
+      "type": "integer"
+    }
+  }
+}

@@ -32,7 +32,7 @@
       "type": "string"
     },
     "description": {
-      "type": "text"
+      "type": "string"
     },
     "participants": {
       "type": "relation",
@@ -124,6 +124,18 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::player-level.player-level"
+    },
+    "ranking": {
+      "displayName": "Ranking",
+      "type": "component",
+      "repeatable": true,
+      "component": "members.ranking"
+    },
+    "ranking_test": {
+      "displayName": "ranking_test",
+      "type": "component",
+      "repeatable": true,
+      "component": "ranking.ranking-test"
     }
   }
 }
