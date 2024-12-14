@@ -1295,6 +1295,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
     >;
     ranking: Attribute.Component<'members.ranking', true>;
     ranking_test: Attribute.Component<'ranking.ranking-test', true>;
+    main_sponsors: Attribute.Media;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

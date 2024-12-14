@@ -136,6 +136,16 @@
       "type": "component",
       "repeatable": true,
       "component": "ranking.ranking-test"
+    },
+    "main_sponsors": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": true
     }
   }
 }
