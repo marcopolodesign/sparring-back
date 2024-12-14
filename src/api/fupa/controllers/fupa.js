@@ -38,6 +38,56 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+  async findCouplesByGroup(ctx) {
+    const { id } = ctx.params;
+  
+    try {
+      // Fetch the tournament by ID, populating groups and their couples
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', id, {
+        populate: {
+          groups: {
+            populate: {
+              couples: {
+                populate: {
+                  members: {
+                    fields: ['id', 'firstName', 'lastName'],
+                    populate: {
+                      profilePicture: {
+                        fields: ['url'],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+  
+      if (!tournament) {
+        return ctx.notFound('Tournament not found');
+      }
+  
+      // Map each group to its couples and their members
+      const groups = tournament.groups.map(group => ({
+        groupName: group.name,
+        couples: group.couples.map(couple => ({
+          coupleId: couple.id,
+          members: couple.members.map(member => ({
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePictureUrl: member.profilePicture?.url || null,
+          })),
+        })),
+      }));
+  
+      ctx.body = groups;
+    } catch (err) {
+      ctx.throw(500, err);
+    }
+  },
+
   // Existing findGroupMatches function
   async findGroupMatches(ctx) {
     const { id } = ctx.params;

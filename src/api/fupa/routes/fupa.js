@@ -9,6 +9,11 @@ module.exports = {
       },
     },
     {
+      "method": "GET",
+      "path": "/tournaments/:id/couples",
+      "handler": "fupa.findCouplesByGroup"
+    },
+    {
       method: 'POST',
       path: '/fupa/:id/new-matches/:sets',
       handler: 'fupa.generateMatches',
