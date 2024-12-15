@@ -2,6 +2,53 @@ const { createCoreController } = require('@strapi/strapi').factories;
 const axios = require('axios');
 
 module.exports = createCoreController('api::tournament.tournament', ({ strapi }) => ({
+
+
+  async findTournamentDetails(ctx) {
+    const { id } = ctx.params; // Get the tournament ID from the request params
+
+    try {
+      // Fetch the tournament and populate the required fields
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', id, {
+        populate: {
+          venue: {
+            populate: {
+              location: true, // Populate location inside venue
+              logo: {         // Populate logo inside venue
+                populate: {
+                  formats: true, // Include all image formats for logo
+                },
+              },
+              cover: {        // Populate cover inside venue
+                populate: {
+                  formats: true, // Include all image formats for cover
+                },
+              },
+            },
+          },
+          accepted_levels: true, // Populate accepted levels
+          logo: true,            // Populate logo
+          cover: true,           // Populate cover
+          main_sponsors: true,   // Populate main sponsors
+          sponsors: true,        // Populate sponsors
+          participants: true,    // Populate participants
+          sport: true,           // Populate sport
+          ranking: true,         // Populate ranking
+        },
+      });
+
+      if (!tournament) {
+        return ctx.notFound('Tournament not found');
+      }
+
+      ctx.send(tournament);
+    } catch (err) {
+      console.error('Error fetching tournament details:', err);
+      ctx.throw(500, 'Internal server error');
+    }
+  },
+
+
   // Existing findParticipants function
   async findParticipants(ctx) {
     const { id } = ctx.params;

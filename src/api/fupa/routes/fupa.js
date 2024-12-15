@@ -14,6 +14,15 @@ module.exports = {
       "handler": "fupa.findCouplesByGroup"
     },
     {
+      method: 'GET',
+      path: '/tournaments/:id/details',
+      handler: 'fupa.findTournamentDetails',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'POST',
       path: '/fupa/:id/new-matches/:sets',
       handler: 'fupa.generateMatches',
