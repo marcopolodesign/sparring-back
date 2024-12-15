@@ -186,6 +186,25 @@ module.exports = {
       config: {
         auth: false
       }
-    }
+    },
+    {
+      method: 'DELETE',
+      path: '/tournaments/:id/matches',
+      handler: 'fupa.deleteTournamentMatches',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+
+    {
+      method: 'POST',
+      path: '/tournaments/:tournamentId/golden-cup/generate-matches',
+      handler: 'fupa.generateGoldenCupMatches',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

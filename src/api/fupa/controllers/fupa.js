@@ -2035,6 +2035,164 @@ async getIndividualTournamentLeaderboard(ctx) {
   }
 },
 
+
+async deleteTournamentMatches(ctx) {
+  const { id: tournamentId } = ctx.params; // Extract the tournament ID from the request params
+
+  try {
+    // Find all matches associated with the tournament
+    const matches = await strapi.entityService.findMany('api::match.match', {
+      filters: { tournament: tournamentId },
+    });
+
+    if (!matches || matches.length === 0) {
+      return ctx.send({ message: 'No matches found for the specified tournament.' }, 200);
+    }
+
+    // Delete all the matches
+    const deletedMatches = await Promise.all(
+      matches.map(match => 
+        strapi.entityService.delete('api::match.match', match.id)
+      )
+    );
+
+    return ctx.send({ 
+      message: `Successfully deleted ${deletedMatches.length} matches for tournament ID: ${tournamentId}.` 
+    }, 200);
+
+  } catch (error) {
+    console.error('Error deleting matches:', error);
+    ctx.throw(500, 'Failed to delete matches.');
+  }
+},
+
+async generateGoldenCupMatches(ctx) {
+  const { tournamentId } = ctx.params; // Extract the tournament ID from the request params
+
+  try {
+    // Fetch the tournament with groups and couples populated
+    const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+      populate: {
+        groups: {
+          populate: {
+            couples: {
+              populate: {
+                members: {
+                  populate: {
+                    profilePicture: {
+                      populate: { formats: true }, // Populate profile picture formats
+                    },
+                  },
+                  fields: ['id', 'firstName', 'lastName'],
+                },
+              },
+              points: true, // Fetch points for sorting
+            },
+          },
+        },
+      },
+    });
+
+    if (!tournament) {
+      return ctx.notFound('Tournament not found');
+    }
+
+    const sixteenFinalMatches = [];
+    const quarterFinalMatches = [];
+
+    // Process each group to generate matches
+    for (const group of tournament.groups) {
+      if (!group || !group.couples || group.couples.length < 3) {
+        console.error(`Group ${group.name} does not have enough couples to generate matches.`);
+        continue;
+      }
+
+      // Sort couples by points in descending order
+      const sortedCouples = group.couples.sort((a, b) => (b.points || 0) - (a.points || 0));
+
+      // Get first, second, and third place couples
+      const firstPlace = sortedCouples[0];
+      const secondPlace = sortedCouples[1];
+      const thirdPlace = sortedCouples[2];
+
+      // Generate a round of sixteen match (second vs third)
+      if (secondPlace && thirdPlace) {
+        const matchData = {
+          match_owner: secondPlace.members[0].id,
+          couples: [
+            {
+              id: secondPlace.id,
+              members: secondPlace.members.map(member => ({
+                id: member.id,
+              })),
+            },
+            {
+              id: thirdPlace.id,
+              members: thirdPlace.members.map(member => ({
+                id: member.id,
+              })),
+            },
+          ],
+          description: `Round of Sixteen: ${secondPlace.members[0].lastName} & ${secondPlace.members[1].lastName} vs ${thirdPlace.members[0].lastName} & ${thirdPlace.members[1].lastName}`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+
+        // Create the match and store the ID
+        const createdMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        sixteenFinalMatches.push(createdMatch.id);
+      }
+
+      // Generate a quarterfinal match (first vs empty couple)
+      if (firstPlace) {
+        const emptyCouple = {
+          id: null, // Indicate an empty couple
+          members: [],
+        };
+
+        const matchData = {
+          match_owner: firstPlace.members[0].id,
+          couples: [
+            {
+              id: firstPlace.id,
+              members: firstPlace.members.map(member => ({
+                id: member.id,
+              })),
+            },
+            emptyCouple, // Add an empty couple
+          ],
+          description: `Quarterfinal: ${firstPlace.members[0].lastName} & ${firstPlace.members[1].lastName} vs TBD`,
+          date: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        };
+
+        // Create the match and store the ID
+        const createdMatch = await strapi.entityService.create('api::match.match', { data: matchData });
+        quarterFinalMatches.push(createdMatch.id);
+      }
+    }
+
+    // Update the tournament's golden cup with the generated matches
+    await strapi.entityService.update('api::tournament.tournament', tournamentId, {
+      data: {
+        golden_cup: {
+          sixteen: sixteenFinalMatches,
+          quarterfinals: quarterFinalMatches,
+        },
+      },
+    });
+
+    ctx.send({
+      message: 'Golden Cup matches (round of sixteen and quarterfinals) generated successfully.',
+      sixteenFinalMatches,
+      quarterFinalMatches,
+    });
+  } catch (err) {
+    console.error('Error generating Golden Cup matches:', err);
+    ctx.throw(500, 'Failed to generate Golden Cup matches.');
+  }
+},
+
 async getTest (ctx) {
   ctx.send('Testing!')
 },

@@ -57,6 +57,7 @@ export interface CupCup extends Schema.Component {
     >;
     semifinals: Attribute.Relation<'cup.cup', 'oneToMany', 'api::match.match'>;
     final: Attribute.Relation<'cup.cup', 'oneToOne', 'api::match.match'>;
+    sixteen: Attribute.Relation<'cup.cup', 'oneToMany', 'api::match.match'>;
   };
 }
 

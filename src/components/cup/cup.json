@@ -1,25 +1,30 @@
 {
-    "collectionName": "cups",
-    "info": {
-      "displayName": "Cup",
-      "description": "Golden or Silver Cup rounds"
+  "collectionName": "cups",
+  "info": {
+    "displayName": "Cup",
+    "description": "Golden or Silver Cup rounds"
+  },
+  "options": {},
+  "attributes": {
+    "quarterfinals": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::match.match"
     },
-    "options": {},
-    "attributes": {
-      "quarterfinals": {
-        "type": "relation",
-        "relation": "oneToMany",
-        "target": "api::match.match"
-      },
-      "semifinals": {
-        "type": "relation",
-        "relation": "oneToMany",
-        "target": "api::match.match"
-      },
-      "final": {
-        "type": "relation",
-        "relation": "oneToOne",
-        "target": "api::match.match"
-      }
+    "semifinals": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::match.match"
+    },
+    "final": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::match.match"
+    },
+    "sixteen": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::match.match"
     }
   }
+}

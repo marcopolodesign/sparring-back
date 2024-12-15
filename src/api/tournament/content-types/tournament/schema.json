@@ -138,14 +138,15 @@
       "component": "ranking.ranking-test"
     },
     "main_sponsors": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": true
+      ]
     }
   }
 }
