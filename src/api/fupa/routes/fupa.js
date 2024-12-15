@@ -123,11 +123,10 @@ module.exports = {
       },
     },
 
-
     {
       method: 'GET',
-      path: '/fupa/:tournamentId/quarters/:userId',
-      handler: 'fupa.getQuarterfinalMatchesByUser',
+      path: '/fupa/:tournamentId/sixteen',
+      handler: 'fupa.getSixteenMatches',
       config: {
         auth: false, // Set to true if authentication is required
       },
@@ -135,7 +134,16 @@ module.exports = {
 
     {
       method: 'GET',
-      path: '/fupa/:tournamentId/semis/:userId',
+      path: '/fupa/:tournamentId/quarters',
+      handler: 'fupa.getQuarterfinalMatches',
+      config: {
+        auth: false, // Set to true if authentication is required
+      },
+    },
+
+    {
+      method: 'GET',
+      path: '/fupa/:tournamentId/semis',
       handler: 'fupa.getSemifinalMatches',
       config: {
         auth: false, // Set to true if authentication is required
@@ -144,8 +152,8 @@ module.exports = {
 
     {
       method: 'GET',
-      path: '/fupa/:tournamentId/final/:userId',
-      handler: 'fupa.getFinalMatches',
+      path: '/fupa/:tournamentId/final',
+      handler: 'fupa.getFinalMatch',
       config: {
         auth: false, // Set to true if authentication is required
       },

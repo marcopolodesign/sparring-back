@@ -1352,8 +1352,107 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
-  async getQuarterfinalMatchesByUser(ctx) {
-    const { userId, tournamentId } = ctx.params;  // Get the user ID and tournament ID from the URL params
+
+  async getSixteenMatches(ctx) {
+    const { tournamentId } = ctx.params; // Get the tournament ID from the URL params
+  
+    try {
+      // Fetch the tournament with Golden Cup "sixteen" matches populated
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+        populate: {
+          golden_cup: {
+            populate: {
+              sixteen: {
+                populate: {
+                  couples: {
+                    populate: {
+                      members: {
+                        populate: {
+                          profilePicture: { populate: { formats: true } }
+                        }
+                      },
+                      sets: true
+                    },
+                  },
+                },
+              },
+            },
+          },
+          // If Silver Cup also has a "sixteen" stage, include it. If not, remove this section.
+          // silver_cup: {
+          //   populate: {
+          //     sixteen: {
+          //       populate: {
+          //         couples: {
+          //           populate: {
+          //             members: {
+          //               populate: {
+          //                 profilePicture: { populate: { formats: true } }
+          //               }
+          //             },
+          //             sets: true
+          //           },
+          //         },
+          //       },
+          //     },
+          //   },
+          // },
+        },
+      });
+  
+      if (!tournament) {
+        return ctx.notFound('Tournament not found');
+      }
+  
+      // Helper function to format match results with couples and their sets
+      const formatMatchResult = (match) => {
+        const formattedCouples = match.couples.map(couple => ({
+          coupleId: couple.id,
+          members: couple.members.map(member => ({
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
+          })),
+          sets: couple.sets ? couple.sets.map(set => ({
+            setId: set.id,
+            gamesWon: set.gamesWon,
+          })) : [],
+        }));
+  
+        return {
+          id: match.id,
+          description: match.description,
+          couples: formattedCouples,
+        };
+      };
+  
+      const sixteenMatches = {
+        goldenCupMatches: [],
+        silverCupMatches: []
+      };
+  
+      // If golden cup sixteen matches exist, format them
+      if (tournament.golden_cup && tournament.golden_cup.sixteen) {
+        sixteenMatches.goldenCupMatches = tournament.golden_cup.sixteen.map(formatMatchResult);
+      }
+  
+      // If silver cup sixteen matches exist, uncomment and format them
+      // if (tournament.silver_cup && tournament.silver_cup.sixteen) {
+      //   sixteenMatches.silverCupMatches = tournament.silver_cup.sixteen.map(formatMatchResult);
+      // }
+  
+      ctx.send(sixteenMatches);
+  
+    } catch (err) {
+      console.error('Error fetching sixteen matches:', err);
+      ctx.throw(500, 'Failed to fetch sixteen matches');
+    }
+  },
+  
+
+  async getQuarterfinalMatches(ctx) {
+    const { tournamentId } = ctx.params;  // Get the tournament ID from the URL params
   
     try {
       // Fetch the tournament with Golden and Silver Cup quarterfinal matches populated
@@ -1406,33 +1505,20 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return ctx.notFound('Tournament not found');
       }
   
-      const userQuarterfinalMatches = {
-        goldenCupMatches: [],
-        silverCupMatches: [],
-        cupType: '' // To indicate which cup the user is in
-      };
-  
-      // Function to check if a user is part of a match's couples
-      const isUserInMatch = (match, userId) => {
-        return match.couples.some(couple => {
-          return couple.members.some(member => member && member.id === parseInt(userId, 10));
-        });
-      };
-  
       // Helper function to format match results with couples and their sets
       const formatMatchResult = (match) => {
         const formattedCouples = match.couples.map(couple => ({
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            firstName: `${member.firstName}`,
-            lastName: `${member.lastName}`,
-            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
             gamesWon: set.gamesWon,
-          })) : [] // Ensure sets exists, otherwise return an empty array
+          })) : [],
         }));
   
         return {
@@ -1442,46 +1528,36 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         };
       };
   
-      // Check if the user is in Golden Cup quarterfinals
+      const quarterfinalMatches = {
+        goldenCupMatches: [],
+        silverCupMatches: []
+      };
+  
+      // If golden cup quarterfinals exist, format them
       if (tournament.golden_cup && tournament.golden_cup.quarterfinals) {
-        for (const match of tournament.golden_cup.quarterfinals) {
-          if (isUserInMatch(match, userId)) {
-            userQuarterfinalMatches.goldenCupMatches = tournament.golden_cup.quarterfinals.map(formatMatchResult);
-            userQuarterfinalMatches.cupType = 'Golden';
-            break;
-          }
-        }
+        quarterfinalMatches.goldenCupMatches = tournament.golden_cup.quarterfinals.map(formatMatchResult);
       }
   
-      // Check if the user is in Silver Cup quarterfinals
-      if (tournament.silver_cup && tournament.silver_cup.quarterfinals && userQuarterfinalMatches.cupType === '') {
-        for (const match of tournament.silver_cup.quarterfinals) {
-          if (isUserInMatch(match, userId)) {
-            userQuarterfinalMatches.silverCupMatches = tournament.silver_cup.quarterfinals.map(formatMatchResult);
-            userQuarterfinalMatches.cupType = 'Silver';
-            break;
-          }
-        }
+      // If silver cup quarterfinals exist, format them
+      if (tournament.silver_cup && tournament.silver_cup.quarterfinals) {
+        quarterfinalMatches.silverCupMatches = tournament.silver_cup.quarterfinals.map(formatMatchResult);
       }
   
       // Send the results back to the client
-      if (userQuarterfinalMatches.cupType) {
-        ctx.send(userQuarterfinalMatches);
-      } else {
-        ctx.send({ message: 'User is not part of any quarterfinal matches' });
-      }
+      ctx.send(quarterfinalMatches);
   
     } catch (err) {
-      console.error('Error fetching quarterfinal matches by user:', err);
+      console.error('Error fetching quarterfinal matches:', err);
       ctx.throw(500, 'Failed to fetch quarterfinal matches');
     }
   },
 
+  
   async getSemifinalMatches(ctx) {
-    const { tournamentId } = ctx.params;
+    const { tournamentId } = ctx.params; // Get the tournament ID from the URL params
   
     try {
-      // Fetch the tournament with the semifinals populated
+      // Fetch the tournament with Golden and Silver Cup semifinal matches populated
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           golden_cup: {
@@ -1492,12 +1568,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                     populate: {
                       members: {
                         populate: {
-                          profilePicture: {
-                            populate: { formats: true } // Populate profile picture formats
-                          }
-                        },
+                          profilePicture: { populate: { formats: true } }
+                        }
                       },
-                      sets: true,    // Populate sets in couples
+                      sets: true,
                     },
                   },
                 },
@@ -1512,12 +1586,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                     populate: {
                       members: {
                         populate: {
-                          profilePicture: {
-                            populate: { formats: true } // Populate profile picture formats
-                          }
-                        },
+                          profilePicture: { populate: { formats: true } }
+                        }
                       },
-                      sets: true,    // Populate sets in couples
+                      sets: true,
                     },
                   },
                 },
@@ -1531,20 +1603,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return ctx.notFound('Tournament not found');
       }
   
-      const allSemifinalMatches = {
-        goldenCupSemifinals: [],
-        silverCupSemifinals: [],
-      };
-  
-      // Helper function to format match results with couples and their sets
       const formatMatchResult = (match) => {
         const formattedCouples = match.couples.map(couple => ({
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            firstName: `${member.firstName}`,
-            lastName: `${member.lastName}`,
-            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
@@ -1559,33 +1625,33 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         };
       };
   
-      // Collect all Golden Cup semifinal matches
+      const semifinalMatches = {
+        goldenCupSemifinals: [],
+        silverCupSemifinals: []
+      };
+  
       if (tournament.golden_cup && tournament.golden_cup.semifinals) {
-        for (const match of tournament.golden_cup.semifinals) {
-          allSemifinalMatches.goldenCupSemifinals.push(formatMatchResult(match));
-        }
+        semifinalMatches.goldenCupSemifinals = tournament.golden_cup.semifinals.map(formatMatchResult);
       }
   
-      // Collect all Silver Cup semifinal matches
       if (tournament.silver_cup && tournament.silver_cup.semifinals) {
-        for (const match of tournament.silver_cup.semifinals) {
-          allSemifinalMatches.silverCupSemifinals.push(formatMatchResult(match));
-        }
+        semifinalMatches.silverCupSemifinals = tournament.silver_cup.semifinals.map(formatMatchResult);
       }
   
-      // Send the results back to the client
-      ctx.send(allSemifinalMatches);
+      ctx.send(semifinalMatches);
   
     } catch (err) {
       console.error('Error fetching semifinal matches:', err);
       ctx.throw(500, 'Failed to fetch semifinal matches');
     }
   },
-  async getFinalMatches(ctx) {
-    const { tournamentId } = ctx.params;
+  
+  
+  async getFinalMatch(ctx) {
+    const { tournamentId } = ctx.params; // Get the tournament ID from the URL params
   
     try {
-      // Fetch the tournament with the finals populated
+      // Fetch the tournament with Golden and Silver Cup final matches populated
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           golden_cup: {
@@ -1596,12 +1662,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                     populate: {
                       members: {
                         populate: {
-                          profilePicture: {
-                            populate: { formats: true } // Populate profile picture formats
-                          }
-                        },
+                          profilePicture: { populate: { formats: true } }
+                        }
                       },
-                      sets: true,    // Populate sets in couples
+                      sets: true,
                     },
                   },
                 },
@@ -1616,12 +1680,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                     populate: {
                       members: {
                         populate: {
-                          profilePicture: {
-                            populate: { formats: true } // Populate profile picture formats
-                          }
-                        },
+                          profilePicture: { populate: { formats: true } }
+                        }
                       },
-                      sets: true,    // Populate sets in couples
+                      sets: true,
                     },
                   },
                 },
@@ -1635,20 +1697,14 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return ctx.notFound('Tournament not found');
       }
   
-      const allFinalMatches = {
-        goldenCupFinal: [],
-        silverCupFinal: [],
-      };
-  
-      // Helper function to format match results with couples and their sets
       const formatMatchResult = (match) => {
         const formattedCouples = match.couples.map(couple => ({
           coupleId: couple.id,
           members: couple.members.map(member => ({
             id: member.id,
-            firstName: `${member.firstName}`,
-            lastName: `${member.lastName}`,
-            profilePicture: member.profilePicture?.formats?.small?.url || null,  // Fetch the small format URL of profile picture
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
           })),
           sets: couple.sets ? couple.sets.map(set => ({
             setId: set.id,
@@ -1663,20 +1719,24 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         };
       };
   
-      // Collect the Golden Cup final match
+      const finalMatches = {
+        goldenCupFinal: [],
+        silverCupFinal: []
+      };
+  
       if (tournament.golden_cup && tournament.golden_cup.final) {
-        const finalMatch = tournament.golden_cup.final;
-        allFinalMatches.goldenCupFinal.push(formatMatchResult(finalMatch));
+        // In some configurations, final might be a single object rather than an array.
+        // Ensure it's treated as an array for consistency:
+        const goldenFinalMatches = Array.isArray(tournament.golden_cup.final) ? tournament.golden_cup.final : [tournament.golden_cup.final];
+        finalMatches.goldenCupFinal = goldenFinalMatches.map(formatMatchResult);
       }
   
-      // Collect the Silver Cup final match
       if (tournament.silver_cup && tournament.silver_cup.final) {
-        const finalMatch = tournament.silver_cup.final;
-        allFinalMatches.silverCupFinal.push(formatMatchResult(finalMatch));
+        const silverFinalMatches = Array.isArray(tournament.silver_cup.final) ? tournament.silver_cup.final : [tournament.silver_cup.final];
+        finalMatches.silverCupFinal = silverFinalMatches.map(formatMatchResult);
       }
   
-      // Send the results back to the client
-      ctx.send(allFinalMatches);
+      ctx.send(finalMatches);
   
     } catch (err) {
       console.error('Error fetching final matches:', err);
