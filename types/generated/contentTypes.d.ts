@@ -1227,6 +1227,11 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    venue: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'api::court.court'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

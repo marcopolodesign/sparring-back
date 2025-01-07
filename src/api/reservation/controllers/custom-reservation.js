@@ -1,6 +1,10 @@
 'use strict';
+// @ts-ignore
+// @ts-ignore
 const qs = require('qs');
-
+// @ts-ignore
+// @ts-ignore
+const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore } = require('date-fns');
 
 /**
  * reservation controller
@@ -139,4 +143,277 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       ctx.throw(500, 'Failed to create random reservations.');
     }
   },
+
+  async checkAvailabilityWithinPeriod(ctx) {
+    try {
+      let { date, time, tracks } = ctx.params; // from URL params
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      // ----------------------------------------------------------------
+      // 1) Resolve date/time
+      //    (Same logic as your snippet)
+      // ----------------------------------------------------------------
+      const noDate = !date || date === 'undefined' || date === ':date';
+      const noTime = !time || time === 'undefined' || time === ':time';
+
+      if (noDate && noTime) {
+        if (currentHour >= 23) {
+          const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          const yyyy = tomorrow.getFullYear();
+          const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+          const dd = String(tomorrow.getDate()).padStart(2, '0');
+          date = `${yyyy}-${mm}-${dd}`;
+          time = '08:00';
+        } else {
+          if (currentHour < 8) {
+            now.setHours(8, 0, 0, 0);
+          }
+          const currentMinutes = now.getMinutes();
+          const nextHalfHour = currentMinutes < 30 ? 30 : 60;
+          now.setMinutes(nextHalfHour, 0, 0);
+
+          const yyyy = now.getFullYear();
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          date = `${yyyy}-${mm}-${dd}`;
+
+          const hh = String(now.getHours()).padStart(2, '0');
+          const minStr = String(now.getMinutes()).padStart(2, '0');
+          time = `${hh}:${minStr}`;
+        }
+      } else {
+        if (noDate) {
+          const yyyy = now.getFullYear();
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          date = `${yyyy}-${mm}-${dd}`;
+        }
+        if (noTime) {
+          if (currentHour < 8) {
+            now.setHours(8, 0, 0, 0);
+          }
+          const currentMinutes = now.getMinutes();
+          const nextHalfHour = currentMinutes < 30 ? 30 : 60;
+          now.setMinutes(nextHalfHour, 0, 0);
+
+          const hh = String(now.getHours()).padStart(2, '0');
+          const minStr = String(now.getMinutes()).padStart(2, '0');
+          time = `${hh}:${minStr}`;
+        }
+      }
+
+      // Build baseDate from date + time
+      const baseDateString = `${date}T${time}:00.000Z`; // naive approach
+      const baseDate = new Date(baseDateString);
+
+      // ----------------------------------------------------------------
+      // 2) +/- 90 minutes logic
+      // ----------------------------------------------------------------
+      const startTime = subMinutes(baseDate, 90);
+      const endTime = addMinutes(baseDate, 90);
+
+      // ----------------------------------------------------------------
+      // 3) Resolve tracks
+      // ----------------------------------------------------------------
+      let trackIds = [];
+      if (!tracks || tracks === 'undefined' || tracks === ':tracks') {
+        const allTracksInSystem = await strapi.entityService.findMany('api::track.track', {
+          fields: ['id'],
+        });
+        // @ts-ignore
+        trackIds = allTracksInSystem.map((t) => t.id);
+      } else {
+        trackIds = tracks.split(',').map((t) => parseInt(t, 10));
+      }
+
+      // ----------------------------------------------------------------
+      // 4) Build reservedSlotsMap for each track
+      // ----------------------------------------------------------------
+      const reservedSlotsMap = {};
+      for (const trackId of trackIds) {
+        reservedSlotsMap[trackId] = new Set();
+      }
+
+      // 4a) Actually fetch reservations for this date & these tracks
+      const allReservations = await strapi.entityService.findMany('api::reservation.reservation', {
+        filters: {
+          date: date,
+          court: {
+            id: {
+              $in: trackIds,
+            },
+          },
+        },
+        populate: {
+          court: true,
+          venue: true,
+        },
+      });
+
+      // 4b) Convert each reservation into half-hour increments
+      for (const r of allReservations) {
+        if (!r.start_time || !r.end_time || !r.court) continue;
+
+        const trackId = r.court.id;
+
+        const startTimeString = r.start_time.toString();
+        const endTimeString = r.end_time.toString();
+        const [startHour, startMinute] = startTimeString.split(':').map(Number);
+        const [endHour, endMinute] = endTimeString.split(':').map(Number);
+
+        let startMins = startHour * 60 + startMinute;
+        const endMins = endHour * 60 + endMinute;
+
+        while (startMins < endMins) {
+          reservedSlotsMap[trackId].add(startMins);
+          startMins += 30;
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // 5) Build list of half-hour increments within [startTime, endTime]
+      // ----------------------------------------------------------------
+      const timeslots = [];
+      for (let mins = 8 * 60; mins <= 23 * 60; mins += 30) {
+        timeslots.push(mins);
+      }
+
+      const isToday = (() => {
+        const todayStr = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+        return date === todayStr;
+      })();
+
+      const nowInMinutes = now.getHours() * 60 + now.getMinutes();
+
+      const startMinsRange = startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
+      const endMinsRange = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
+
+      // Build "results" => one item per track
+      const results = [];
+      for (const trackId of trackIds) {
+        const increments = [];
+        for (const slot of timeslots) {
+          if (isToday && slot < nowInMinutes) {
+            continue;
+          }
+          if (slot < startMinsRange || slot > endMinsRange) {
+            continue;
+          }
+          // If track is reserved, skip
+          const isReserved = reservedSlotsMap[trackId].has(slot);
+          if (!isReserved) {
+            const hh = String(Math.floor(slot / 60)).padStart(2, '0');
+            const mm = String(slot % 60).padStart(2, '0');
+            increments.push(`${hh}:${mm}`);
+          }
+        }
+
+        // get the track entity with venue
+        const trackEntity = await strapi.entityService.findOne('api::track.track', trackId, {
+          fields: ['id', 'name'],
+          populate: { venue: true },
+        });
+
+        // @ts-ignore
+        const venueObj = trackEntity?.venue ?? null;
+
+        results.push({
+          // @ts-ignore
+          id: trackEntity?.id || trackId,
+          // @ts-ignore
+          name: trackEntity?.name || `Track ${trackId}`,
+          availability: increments,
+          venue: venueObj
+            ? { id: venueObj.id, name: venueObj.name }
+            : null,
+        });
+      }
+
+      // ----------------------------------------------------------------
+      // A) Group the results by venue
+      // ----------------------------------------------------------------
+      const venueMap = new Map();
+      for (const trackResult of results) {
+        const { venue } = trackResult;
+        if (!venue) {
+          // If there's no venue in track, skip or handle differently
+          continue;
+        }
+        const venueId = venue.id;
+        if (!venueMap.has(venueId)) {
+          venueMap.set(venueId, {
+            venueName: venue.name,
+            venueId: venueId,
+            trackResults: [],
+          });
+        }
+        venueMap.get(venueId).trackResults.push(trackResult);
+      }
+
+      // ----------------------------------------------------------------
+      // B) Compute "venueAvaiability" = union of track avails
+      // ----------------------------------------------------------------
+      function unionOfTimes(arrayOfTimeArrays) {
+        const combined = arrayOfTimeArrays.flat();
+        const set = new Set(combined);
+        return [...set].sort();
+      }
+
+      const finalVenues = [];
+      for (const [venueId, venueInfo] of venueMap.entries()) {
+        const { venueName, trackResults } = venueInfo;
+        const allAvailabilityArrays = trackResults.map((tr) => tr.availability);
+        const venueAvaiability = unionOfTimes(allAvailabilityArrays);
+
+        finalVenues.push({
+          venue: venueName,
+          venueAvaiability,
+          venueId,
+          results: trackResults,
+        });
+      }
+
+      // ----------------------------------------------------------------
+      // C) Merge with allVenues => return the FULL Strapi shape
+      // ----------------------------------------------------------------
+      // 1) Fetch ALL venues with their normal Strapi attributes
+      //    so we can keep amenities, location, etc.
+      const allVenues = await strapi.entityService.findMany('api::court.court', {
+        populate: '*',  // or a detailed object specifying each relation
+      });
+
+      // 2) Build an array in the Strapi shape: [{ id, attributes: {...} }, ...]
+      const merged = allVenues.map((v) => {
+        // v is a plain JS object with all fields (including .id, .name, etc.)
+        // We want: "id" plus an "attributes" object that has everything else.
+        const found = finalVenues.find((fv) => fv.venueId === v.id);
+
+        // The "attributes" object is basically everything from "v" except the "id".
+        // If you need EXACT Strapi shape, you do something like:
+        const { id, ...restFields } = v; // remove id
+
+        // We'll insert "venueAvaiability" + "results" if found, else empty arrays
+        const venueAvaiability = found ? found.venueAvaiability : [];
+        const results = found ? found.results : [];
+
+        // Return the standard Strapi shape: { id, attributes: {...} }
+        return {
+          id: v.id,
+          attributes: {
+            ...restFields,   // all the existing fields from the DB
+            venueAvaiability,
+            results,
+          },
+        };
+      });
+
+      // Finally, return the array
+      return ctx.send(merged);
+    } catch (err) {
+      console.error('Error in checkAvailabilityWithinPeriod:', err);
+      return ctx.badRequest('Something went wrong.');
+    }
+  },
+  
 }));

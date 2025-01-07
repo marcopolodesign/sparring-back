@@ -25,6 +25,27 @@ module.exports = {
         auth: false,  // Change to true if authentication is required
       },
     },
+    {
+      method: 'GET',    // or POST if you prefer
+      path: '/custom-reservation/check-availability/:date/:time/:tracks',
+      handler: 'custom-reservation.checkAvailabilityWithinPeriod',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+    },
+
+    {
+      method: 'GET',
+      path: '/custom-reservation/check-availability/',
+      handler: 'custom-reservation.checkAvailabilityWithinPeriod',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+    }
 
   ],
 };
