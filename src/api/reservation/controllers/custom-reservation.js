@@ -207,7 +207,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       const baseDateString = `${date}T${time}:00.000`; // naive approach
       const baseDate = new Date(baseDateString);
 
-      // Desde aca se controla cuanto para adelante y cuanto para atras----------------------------------------------------------------
+      // Desde aca se controla cuanto para adelante y cuanto para atras ----------------------------------------------------------------
       // 2) +/- 90 minutes logic
       // ----------------------------------------------------------------
       const startTime = subMinutes(baseDate, 90);
