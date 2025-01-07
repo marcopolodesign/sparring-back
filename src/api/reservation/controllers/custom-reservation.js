@@ -152,7 +152,6 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
 
       // ----------------------------------------------------------------
       // 1) Resolve date/time
-      //    (Same logic as your snippet)
       // ----------------------------------------------------------------
       const noDate = !date || date === 'undefined' || date === ':date';
       const noTime = !time || time === 'undefined' || time === ':time';
@@ -204,7 +203,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       }
 
       // Build baseDate from date + time
-      const baseDateString = `${date}T${time}:00.000Z`; // naive approach
+      const baseDateString = `${date}T${time}:00.000`; // naive approach
       const baseDate = new Date(baseDateString);
 
       // ----------------------------------------------------------------
