@@ -171,6 +171,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
           const currentMinutes = now.getMinutes();
           const nextHalfHour = currentMinutes < 30 ? 30 : 60;
           now.setMinutes(nextHalfHour, 0, 0);
+          
 
           const yyyy = now.getFullYear();
           const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -206,11 +207,11 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       const baseDateString = `${date}T${time}:00.000`; // naive approach
       const baseDate = new Date(baseDateString);
 
-      // ----------------------------------------------------------------
+      // Desde aca se controla cuanto para adelante y cuanto para atras----------------------------------------------------------------
       // 2) +/- 90 minutes logic
       // ----------------------------------------------------------------
       const startTime = subMinutes(baseDate, 90);
-      const endTime = addMinutes(baseDate, 90);
+      const endTime = addMinutes(baseDate, 240); // 4 hours = 240 minutes
 
       // ----------------------------------------------------------------
       // 3) Resolve tracks
@@ -285,8 +286,8 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
 
       const nowInMinutes = now.getHours() * 60 + now.getMinutes();
 
-      const startMinsRange = startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
-      const endMinsRange = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
+       const startMinsRange = startTime.getHours() * 60 + startTime.getMinutes();
+       const endMinsRange = endTime.getHours() * 60 + endTime.getMinutes();
 
       // Build "results" => one item per track
       const results = [];
