@@ -12,21 +12,14 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "name": {
-      "type": "enumeration",
-      "enum": [
-        "Zona-Norte",
-        "CABA",
-        "Zona-Sur",
-        "Zona-Oeste",
-        "Corredor-Norte"
-      ]
-    },
     "zones": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::zone.zone",
       "mappedBy": "general_zone"
+    },
+    "name": {
+      "type": "string"
     }
   }
 }

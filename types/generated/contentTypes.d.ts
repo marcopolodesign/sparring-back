@@ -1036,14 +1036,12 @@ export interface ApiGeneralZoneGeneralZone extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    name: Attribute.Enumeration<
-      ['Zona-Norte', 'CABA', 'Zona-Sur', 'Zona-Oeste', 'Corredor-Norte']
-    >;
     zones: Attribute.Relation<
       'api::general-zone.general-zone',
       'oneToMany',
       'api::zone.zone'
     >;
+    name: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1481,27 +1479,13 @@ export interface ApiZoneZone extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    name: Attribute.Enumeration<
-      [
-        'Pilar',
-        'Escobar',
-        'Nordelta',
-        'Tigre',
-        'Olivos',
-        'Vicente-Lopez',
-        'San-Isidro',
-        'Palermo',
-        'Recoleta',
-        'Nunez',
-        'Belgrano'
-      ]
-    >;
     general_zone: Attribute.Relation<
       'api::zone.zone',
       'manyToOne',
       'api::general-zone.general-zone'
     >;
     location: Attribute.Component<'location.location', true>;
+    name: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
