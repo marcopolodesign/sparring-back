@@ -912,7 +912,7 @@ export interface ApiClientCustomPriceClientCustomPrice
     custom_ammount: Attribute.Decimal;
     venue: Attribute.Relation<
       'api::client-custom-price.client-custom-price',
-      'oneToOne',
+      'manyToOne',
       'api::court.court'
     >;
     createdAt: Attribute.DateTime;
@@ -1001,7 +1001,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     logo: Attribute.Media;
     custom_prices: Attribute.Relation<
       'api::court.court',
-      'oneToOne',
+      'oneToMany',
       'api::client-custom-price.client-custom-price'
     >;
     is_premium: Attribute.Boolean;

@@ -22,9 +22,9 @@
     },
     "venue": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "manyToOne",
       "target": "api::court.court",
-      "mappedBy": "custom_prices"
+      "inversedBy": "custom_prices"
     }
   }
 }

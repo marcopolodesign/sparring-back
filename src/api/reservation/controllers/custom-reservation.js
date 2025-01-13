@@ -415,5 +415,80 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       return ctx.badRequest('Something went wrong.');
     }
   },
+
+  async getVenueRentals(ctx) {
+    // Extract venueId from URL parameters
+    const { venueId } = ctx.params;
+
+    try {
+      // 1. Fetch products where:
+      //    - the 'venues' relation includes the provided venueId
+      //    - the type equals 'alquiler'
+      //    Populate custom_price.venue and venues relations.
+      const products = await strapi.entityService.findMany('api::product.product', {
+        filters: {
+          venues: { id: { $eq: venueId } },
+          type: { $eq: 'alquiler' },
+        },
+        populate: ['custom_price.venue', 'venues'],
+      });
+
+      // 2. Fetch the court/venue data for name verification
+      const venue = await strapi.entityService.findOne('api::court.court', venueId);
+      if (!venue) {
+        return ctx.notFound('Venue not found.');
+      }
+      const venueName = venue.name;
+
+      // 3. Map through the fetched products and attach the venue-specific custom price
+      const enrichedProducts = products.map((product) => {
+        console.log(product, 'PRODUCT')
+        // @ts-ignore
+        const customPrices = product.custom_price || [];
+
+        // Filter valid custom prices:
+        // Exclude prices with a null venue and keep only those where the venue name matches.
+        const validCustomPrices = customPrices.filter((price) => {
+          console.log(price, 'PRICE')
+
+          const priceVenueData = price.venue || null;
+          return (
+            priceVenueData !== null &&
+            priceVenueData.name === venueName
+          );
+        });
+
+        // Use the first valid custom price found (if any)
+        const venueSpecificPrice =
+          validCustomPrices[0]?.custom_ammount || null;
+
+        // Build the enriched product object
+        return {
+          // @ts-ignore
+          id: product.id,
+          // @ts-ignore
+          name: product.Name,
+          // @ts-ignore
+          sku: product.sku,
+        // @ts-ignore
+          type: product.type,
+          // @ts-ignore
+          defaultPrice: product.price,
+          customPrice: venueSpecificPrice,
+          // Find the specific venue within the product's venues relation:
+          venue:
+          // @ts-ignore
+            product.venues?.find((v) => v.id == venueId) ||
+            null,
+        };
+      });
+
+      // Return the enriched products as the response
+      ctx.send(enrichedProducts);
+    } catch (error) {
+      strapi.log.error('Error fetching rentals by venue ID:', error);
+      ctx.throw(500, 'Error fetching rentals by venue ID.');
+    }
+  },
   
 }));

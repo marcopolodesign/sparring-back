@@ -93,9 +93,9 @@
     },
     "custom_prices": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::client-custom-price.client-custom-price",
-      "inversedBy": "venue"
+      "mappedBy": "venue"
     },
     "is_premium": {
       "type": "boolean"

@@ -45,7 +45,20 @@ module.exports = {
         middlewares: [],
         auth: false,
       },
-    }
+    }, 
+
+    {
+      method: 'GET',
+      path: '/custom-reservation/check-venue-availability/:venueId',
+      handler: 'custom-reservation.getVenueRentals',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+    }, 
+    
+
 
   ],
 };
