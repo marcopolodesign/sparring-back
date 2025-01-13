@@ -1005,6 +1005,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'api::client-custom-price.client-custom-price'
     >;
     is_premium: Attribute.Boolean;
+    zone: Attribute.Relation<'api::court.court', 'oneToOne', 'api::zone.zone'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1016,6 +1017,44 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'api::court.court',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiGeneralZoneGeneralZone extends Schema.CollectionType {
+  collectionName: 'general_zones';
+  info: {
+    singularName: 'general-zone';
+    pluralName: 'general-zones';
+    displayName: 'GeneralZone';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.Enumeration<
+      ['Zona-Norte', 'CABA', 'Zona-Sur', 'Zona-Oeste', 'Corredor-Norte']
+    >;
+    zones: Attribute.Relation<
+      'api::general-zone.general-zone',
+      'oneToMany',
+      'api::zone.zone'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::general-zone.general-zone',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::general-zone.general-zone',
       'oneToOne',
       'admin::user'
     > &
@@ -1430,6 +1469,49 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
   };
 }
 
+export interface ApiZoneZone extends Schema.CollectionType {
+  collectionName: 'zones';
+  info: {
+    singularName: 'zone';
+    pluralName: 'zones';
+    displayName: 'Zone';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    name: Attribute.Enumeration<
+      [
+        'Pilar',
+        'Escobar',
+        'Nordelta',
+        'Tigre',
+        'Olivos',
+        'Vicente-Lopez',
+        'San-Isidro',
+        'Palermo',
+        'Recoleta',
+        'Nunez',
+        'Belgrano'
+      ]
+    >;
+    general_zone: Attribute.Relation<
+      'api::zone.zone',
+      'manyToOne',
+      'api::general-zone.general-zone'
+    >;
+    location: Attribute.Component<'location.location', true>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<'api::zone.zone', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<'api::zone.zone', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -1452,6 +1534,7 @@ declare module '@strapi/types' {
       'api::client-custom-price.client-custom-price': ApiClientCustomPriceClientCustomPrice;
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
+      'api::general-zone.general-zone': ApiGeneralZoneGeneralZone;
       'api::match.match': ApiMatchMatch;
       'api::player-level.player-level': ApiPlayerLevelPlayerLevel;
       'api::product.product': ApiProductProduct;
@@ -1459,6 +1542,7 @@ declare module '@strapi/types' {
       'api::tournament.tournament': ApiTournamentTournament;
       'api::track.track': ApiTrackTrack;
       'api::transaction.transaction': ApiTransactionTransaction;
+      'api::zone.zone': ApiZoneZone;
     }
   }
 }

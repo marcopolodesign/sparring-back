@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "general_zones",
+  "info": {
+    "singularName": "general-zone",
+    "pluralName": "general-zones",
+    "displayName": "GeneralZone",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "enumeration",
+      "enum": [
+        "Zona-Norte",
+        "CABA",
+        "Zona-Sur",
+        "Zona-Oeste",
+        "Corredor-Norte"
+      ]
+    },
+    "zones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::zone.zone",
+      "mappedBy": "general_zone"
+    }
+  }
+}

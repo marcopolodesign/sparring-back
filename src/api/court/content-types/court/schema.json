@@ -99,6 +99,11 @@
     },
     "is_premium": {
       "type": "boolean"
+    },
+    "zone": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::zone.zone"
     }
   }
 }

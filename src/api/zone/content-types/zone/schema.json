@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "zones",
+  "info": {
+    "singularName": "zone",
+    "pluralName": "zones",
+    "displayName": "Zone",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "enumeration",
+      "enum": [
+        "Pilar",
+        "Escobar",
+        "Nordelta",
+        "Tigre",
+        "Olivos",
+        "Vicente-Lopez",
+        "San-Isidro",
+        "Palermo",
+        "Recoleta",
+        "Nunez",
+        "Belgrano"
+      ]
+    },
+    "general_zone": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::general-zone.general-zone",
+      "inversedBy": "zones"
+    },
+    "location": {
+      "type": "component",
+      "repeatable": true,
+      "component": "location.location"
+    }
+  }
+}
