@@ -733,6 +733,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
           // Here we're returning the track number (or identifier) along with the matched products.
           tracksAvailability.push({
             track: `Cancha ${i + 1}`,
+            trackId: trackId,
             products: matchedProducts,
           });
         });
