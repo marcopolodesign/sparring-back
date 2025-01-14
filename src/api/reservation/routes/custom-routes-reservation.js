@@ -57,6 +57,17 @@ module.exports = {
         auth: false,
       },
     }, 
+
+    {
+      method: 'GET', 
+      path: '/custom-reservation/get-availability/:venueId/:trackIds?/:date?/:time?',
+      handler: 'custom-reservation.getTrackAvailability',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+    }
     
 
 

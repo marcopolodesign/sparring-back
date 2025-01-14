@@ -4,13 +4,151 @@
 const qs = require('qs');
 // @ts-ignore
 // @ts-ignore
-const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore } = require('date-fns');
+const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore, parse,  startOfDay, isToday } = require('date-fns');
 
 /**
  * reservation controller
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
+
+const DEFAULT_START_SLOT = 480; // 8:00 in minutes
+const DEFAULT_END_SLOT = 1380;  // 23:00 in minutes
+
+/**
+ * Helper: Converts a time string "HH:mm" to minutes past midnight.
+ * @param {string} timeStr - e.g. "20:00"
+ * @returns {number} Minutes past midnight.
+ */
+const convertTimeToMinutes = (timeStr) => {
+  const [hour, minute] = timeStr.split(':').map(Number);
+  return hour * 60 + minute;
+};
+
+/**
+ * Helper: Rounds the given time (in minutes) to the next half-hour slot.
+ * E.g., 1210 minutes (20:10) becomes 1230 minutes (20:30).
+ *
+ * @param {number} minutes
+ * @returns {number} Rounded minutes value.
+ */
+const roundToNextHalfHour = (minutes) => {
+  if (minutes % 30 === 0) return minutes;
+  return minutes + (30 - (minutes % 30));
+};
+
+/**
+ * Helper: Generates an array of valid timeslots (in minutes) from DEFAULT_START_SLOT to DEFAULT_END_SLOT.
+ *
+ * @returns {number[]} Array of timeslots.
+ */
+const generateTimeslots = () => {
+  const slots = [];
+  for (let m = DEFAULT_START_SLOT; m <= DEFAULT_END_SLOT; m += 30) {
+    slots.push(m);
+  }
+  return slots;
+};
+
+const timeslots = generateTimeslots();
+
+/**
+ * Helper: Converts minutes (from midnight) to a readable "HH:mm" format using date-fns.
+ * @param {number} minutes
+ * @returns {string} e.g. "20:30"
+ */
+function convertMinutesToReadable(minutes) {
+  const dayStart = startOfDay(new Date());
+  return format(addMinutes(dayStart, minutes), 'HH:mm');
+}
+
+
+/**
+ * Helper: Matches durations to products.
+ *
+ * It receives an array of durations (in minutes) and uses the global `products`
+ * array (fetched via getVenueRentals) to match a product.
+ */
+const matchProductsWithDurations = (durations, products) => {
+  return durations.map((duration) => {
+    // Assumes product name format is like "padel-60" (or "padel 60") so that splitting gives the duration.
+    const matchedProduct = products.find(
+      (product) => parseInt(product.name.split(' ')[1]) === duration
+    );
+    return matchedProduct
+      ? {
+          id: matchedProduct.id,
+          name: matchedProduct.name,
+          duration,
+          price: matchedProduct.customPrice || matchedProduct.defaultPrice,
+        }
+      : null;
+  }).filter(Boolean);
+};
+
+
+// Helper getVenueRentals
+const getVenueRentals = async (venueId) => {
+  try {
+    // Fetch products by venue ID and type 'alquiler'
+    const products = await strapi.entityService.findMany('api::product.product', {
+      filters: {
+        venues: {
+          id: {
+            $eq: venueId,
+          },
+        },
+        type: {
+          $eq: 'alquiler',
+        },
+      },
+      populate: {
+        custom_price: {
+          populate: ['venue'],
+        },
+        venues: true,
+      },
+    });
+
+    // 2. Fetch venue details to verify the venue name.
+    const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+      populate: '*',
+    });
+    const venueName = venue.name;
+
+    // 3. Map through products and attach custom prices specific to the venue.
+    const enrichedProducts = products.map((product) => {
+      const customPrices = product.custom_price || [];
+      // Filter custom prices where the price is set for the given venue.
+      const validCustomPrices = customPrices.filter((price) => {
+        return (
+          price.venue !== null && // Ensure the price has a venue
+          price.venue.name === venueName // Must match venue name
+        );
+      });
+
+      // Get the first valid custom price, or null if none exist.
+      const venueSpecificPrice =
+        validCustomPrices[0]?.custom_ammount || null;
+
+      return {
+        id: product.id,
+        name: product.Name, // Assumes product name is stored in "Name"
+        type: product.type,
+        defaultPrice: product.price,
+        customPrice: venueSpecificPrice,
+        // Optionally, attach venue details for the product.
+        venue: product.venues?.find((v) => v.id == venueId),
+      };
+    });
+
+    return enrichedProducts;
+  } catch (error) {
+    strapi.log.error('Error fetching rentals by venue ID:', error);
+    throw error;
+  }
+}
+
 
 module.exports = createCoreController('api::reservation.reservation', ({ strapi }) => ({
   async createTransaction(ctx) {
@@ -490,5 +628,124 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       ctx.throw(500, 'Error fetching rentals by venue ID.');
     }
   },
+
+  async getTrackAvailability(ctx) {
+    try {
+      // 1. Get parameters from ctx.params or default them.
+      let { venueId, trackIds, date, time } = ctx.params;
+  
+      if (!trackIds) {
+        return ctx.throw(400, 'Missing trackIds parameter');
+      }
+      // Convert trackIds string into an array.
+      trackIds = trackIds.split(',').map(id => id.trim());
+  
+      // Date: default to today if not provided.
+      const selectedDate = date ? new Date(date) : new Date();
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+  
+      // Time: if not provided, default to current time (rounded if today, else start at DEFAULT_START_SLOT).
+      let chosenTimeMinutes;
+      if (time) {
+        chosenTimeMinutes = convertTimeToMinutes(time);
+      } else {
+        const now = new Date();
+        chosenTimeMinutes = isToday(selectedDate)
+          ? roundToNextHalfHour(now.getHours() * 60 + now.getMinutes())
+          : DEFAULT_START_SLOT;
+      }
+
+       // 2. Fetch reservations for the given tracks and date.
+    // Build the query similar to the frontend implementation.
+    const reservationQuery = {
+      filters: {
+        court: {
+          id: {
+            $in: trackIds,
+          },
+        },
+        date: {
+          $eq: formattedDate,
+        },
+      },
+      populate: {
+        court: true,
+      },
+    };
+
+    // Use Strapi’s entity service (adjust according to your Strapi version).
+    const reservationsResponse = await strapi.entityService.findMany(
+      'api::reservation.reservation',
+      reservationQuery
+    );
+
+     // 3. Build a reserved slots map (using a Set for each track).
+     const reservedSlotsMap = {};
+     trackIds.forEach(trackId => {
+       reservedSlotsMap[trackId] = new Set();
+     });
+ 
+     reservationsResponse.forEach((reservation) => {
+       // Adjust based on your data model.
+       const resAttrs = reservation;
+       const trackId = resAttrs.court?.id?.toString();
+       if (trackId && resAttrs.start_time && resAttrs.end_time) {
+         const startTime = convertTimeToMinutes(resAttrs.start_time.toString().slice(0, 5));
+         const endTime = convertTimeToMinutes(resAttrs.end_time.toString().slice(0, 5));
+ 
+         for (let t = startTime; t < endTime; t += 30) {
+           if (reservedSlotsMap[trackId]) {
+             reservedSlotsMap[trackId].add(t);
+           }
+         }
+       }
+     });
+ 
+        // 4. Fetch products for the given venue.
+        const products = await getVenueRentals(venueId);
+
+        // 5. For each track and each allowed duration, check availability and match to a product.
+        const allowedDurations = [60, 90, 120];
+        const tracksAvailability = [];
+    
+        trackIds.forEach((trackId, i) => {
+          const availableDurations = [];
+          allowedDurations.forEach((duration) => {
+            let isValid = true;
+            // Check each half-hour block for this duration.
+            for (let offset = 0; offset < duration; offset += 30) {
+              const checkSlot = chosenTimeMinutes + offset;
+              if (
+                !timeslots.includes(checkSlot) ||
+                reservedSlotsMap[trackId].has(checkSlot)
+              ) {
+                isValid = false;
+                break;
+              }
+            }
+            if (isValid) {
+              availableDurations.push(duration);
+            }
+          });
+          // Use the helper to convert durations to product objects.
+          const matchedProducts = matchProductsWithDurations(availableDurations, products);
+    
+          // Here we're returning the track number (or identifier) along with the matched products.
+          tracksAvailability.push({
+            track: `Cancha ${i + 1}`,
+            products: matchedProducts,
+          });
+        });
+
+    ctx.send({
+      date: formattedDate,
+      requestedTime: convertMinutesToReadable(chosenTimeMinutes),
+      tracksAvailability,
+    });
+    } catch (error) {
+      strapi.log.error('Error fetching track availability:', error);
+      ctx.throw(500, 'Error fetching track availability.');
+    }
+  }
   
 }));
