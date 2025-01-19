@@ -5,7 +5,7 @@
  */
 
 const { format, parseISO } = require('date-fns');
-const { utcToZonedTime, format: formatTz } = require('date-fns-tz');
+const { toZonedTime, format: formatTz } = require('date-fns-tz');
 
 const { es } = require('date-fns/locale');
 
@@ -37,7 +37,7 @@ const getUserProfilePicture = async (profilePicture) => {
     // Get the device's current time zone dynamically
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
-    const zonedDate = utcToZonedTime(matchDate, timeZone); // Convert to the device's time zone
+    const zonedDate = toZonedTime(matchDate, timeZone); // Convert to the device's time zone
     const formattedDate = format(zonedDate, "EEEE d 'de' MMMM", { locale: es });
     const capitalizedDate = capitalizeFirstLetter(formattedDate);
   
@@ -303,7 +303,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         ctx.send(formattedMatch);
       } catch (error) {
         console.error('Error fetching match details:', error);
-        ctx.throw(500, 'Internal Server Error');
+        ctx.throw(500, 'Internal Server Error!!');
       }
     },
 
