@@ -27,7 +27,7 @@ module.exports = {
     },
     {
       method: 'GET',    // or POST if you prefer
-      path: '/custom-reservation/check-availability/:date/:time/:tracks',
+      path: '/custom-reservation/check-availability/:date?/:time?/:tracks?',
       handler: 'custom-reservation.checkAvailabilityWithinPeriod',
       config: {
         policies: [],

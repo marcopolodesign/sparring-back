@@ -5,7 +5,7 @@ const qs = require('qs');
 // @ts-ignore
 // @ts-ignore
 const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore, parse,  startOfDay, isToday } = require('date-fns');
-
+const { toZonedTime  } = require('date-fns-tz');
 /**
  * reservation controller
  */
@@ -14,6 +14,16 @@ const { createCoreController } = require('@strapi/strapi').factories;
 
 const DEFAULT_START_SLOT = 480; // 8:00 in minutes
 const DEFAULT_END_SLOT = 1380;  // 23:00 in minutes
+
+
+// Define your timezone (e.g., for Argentina)
+const TIMEZONE = 'America/Argentina/Buenos_Aires';
+
+const formatToTimezone = (date, formatStr) => {
+  const zonedDate = toZonedTime(date, TIMEZONE);
+  return format(zonedDate, formatStr);
+};
+
 
 /**
  * Helper: Converts a time string "HH:mm" to minutes past midnight.
@@ -292,7 +302,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       // 1) Resolve date/time
       // ----------------------------------------------------------------
       const noDate = !date || date === 'undefined' || date === ':date';
-      const noTime = !time || time === 'undefined' || time === ':time';
+      const noTime = !time || time === 'undefined' || time === ':time?';
 
       if (noDate && noTime) {
         if (currentHour >= 23) {

@@ -1118,6 +1118,7 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'oneToMany',
       'api::player-level.player-level'
     >;
+    zone: Attribute.Relation<'api::match.match', 'oneToOne', 'api::zone.zone'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
