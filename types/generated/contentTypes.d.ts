@@ -874,6 +874,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToOne',
       'api::player-level.player-level'
     >;
+    zones: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::zone.zone'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

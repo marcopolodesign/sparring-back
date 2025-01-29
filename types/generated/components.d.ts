@@ -16,12 +16,19 @@ export interface AttributesAttributes extends Schema.Component {
   info: {
     displayName: 'attributes';
     icon: 'chartBubble';
+    description: '';
   };
   attributes: {
     utm_term: Attribute.String;
     utm_source: Attribute.String;
     utm_campaign: Attribute.String;
     utm_medium: Attribute.String;
+    game_age: Attribute.Enumeration<['beginner', 'medium', 'advanced', 'pro']>;
+    padel_lessons: Attribute.Boolean;
+    competition_status: Attribute.Enumeration<
+      ['friends', 'tournaments', 'league']
+    >;
+    sports: Attribute.JSON;
   };
 }
 

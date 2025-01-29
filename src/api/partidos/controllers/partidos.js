@@ -303,7 +303,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         ctx.send(formattedMatch);
       } catch (error) {
         console.error('Error fetching match details:', error);
-        ctx.throw(500, 'Internal Server Error!!');
+        ctx.throw(500, 'Internal Server Error!! ');
       }
     },
 

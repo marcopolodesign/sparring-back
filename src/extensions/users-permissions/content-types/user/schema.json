@@ -177,6 +177,11 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::player-level.player-level"
+    },
+    "zones": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::zone.zone"
     }
   }
 }

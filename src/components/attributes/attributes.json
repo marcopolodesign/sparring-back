@@ -2,7 +2,8 @@
   "collectionName": "components_attributes_attributes",
   "info": {
     "displayName": "attributes",
-    "icon": "chartBubble"
+    "icon": "chartBubble",
+    "description": ""
   },
   "options": {},
   "attributes": {
@@ -17,6 +18,29 @@
     },
     "utm_medium": {
       "type": "string"
+    },
+    "game_age": {
+      "type": "enumeration",
+      "enum": [
+        "beginner",
+        "medium",
+        "advanced",
+        "pro"
+      ]
+    },
+    "padel_lessons": {
+      "type": "boolean"
+    },
+    "competition_status": {
+      "type": "enumeration",
+      "enum": [
+        "friends",
+        "tournaments",
+        "league"
+      ]
+    },
+    "sports": {
+      "type": "json"
     }
   }
 }
