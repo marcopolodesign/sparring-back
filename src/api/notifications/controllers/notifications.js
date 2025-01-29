@@ -41,6 +41,44 @@ module.exports = {
       return ctx.internalServerError('Failed to send notifications.');
     }
   }, 
+  async notifyNewFollower(ctx) {
+    const { followerId, followedUserId } = ctx.params;
+
+    console.log(followerId, followedUserId, 'followerId, followedUserId from notifyNewFollower');
+
+    try {
+      // Fetch the follower's details
+      const follower = await strapi.query('plugin::users-permissions.user').findOne({ where: { id: followerId } });
+
+      // Fetch the followed user's details
+      const followedUser = await strapi.query('plugin::users-permissions.user').findOne({ where: { id: followedUserId } });
+
+      if (!follower || !followedUser) {
+        console.error('Follower or followed user not found');
+        return ctx.badRequest('Invalid follower or followed user ID.');
+      }
+
+      // Check if the followed user has an Expo push token
+      if (!followedUser.expo_pushtoken) {
+        console.log(`User ${followedUser.firstName} does not have a push token.`);
+        return ctx.send({ message: 'User does not have a push token.' });
+      }
+
+      // Construct the notification message
+      const message = `${follower.firstName} ${follower.lastName} empezó a seguirte!`;
+      const title = `👥 Nuevo seguidor!`;
+
+      // Send push notification
+      await sendPushNotification(followedUser.expo_pushtoken, message, title, followedUserId);
+
+      console.log(`Notification sent to ${followedUser.firstName} about new follower.`);
+
+      return ctx.send({ message: 'Follower notification sent successfully.' });
+    } catch (error) {
+      console.error('Error sending new follower notification:', error);
+      return ctx.internalServerError('Failed to send follower notification.');
+    }
+  },
 
   async test(ctx) {
     return ctx.send({ message: 'Test notification sent successfully' });

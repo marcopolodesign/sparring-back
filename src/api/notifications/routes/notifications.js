@@ -10,6 +10,18 @@ module.exports = {
        auth: false,
      },
     },
+
+    {
+      method: 'POST',
+      path: '/notifications/new-follower/:followerId/user/:followedUserId',
+      handler: 'notifications.notifyNewFollower',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     },
+
     {
       method: 'POST',
       path: '/notifications/test',
@@ -20,5 +32,6 @@ module.exports = {
         auth: false,
       },
      },
+
   ],
 };
