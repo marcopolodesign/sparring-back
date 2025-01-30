@@ -1,7 +1,7 @@
 'use strict';
 const axios = require('axios');
 const { format } = require('date-fns');
-const { es } = require('date-fns/locale');
+const { es, ca } = require('date-fns/locale');
 
 
 
@@ -79,6 +79,56 @@ module.exports = {
       return ctx.internalServerError('Failed to send follower notification.');
     }
   },
+
+  async notifyNewMatch(ctx) {
+    const { userId, matchId } = ctx.params;
+
+    try {
+        // Fetch the user's details including `friends_received`
+        const user = await strapi.query('plugin::users-permissions.user').findOne({ 
+            where: { id: userId }, 
+            populate: { friends_received: true } 
+        });
+
+        // Fetch the match details
+        const match = await strapi.query('api::match.match').findOne({ where: { id: matchId } });
+
+        if (!user || !match) {
+            console.error('User or match not found');
+            return ctx.badRequest('Invalid user or match ID.');
+        }
+
+        // Check if the user has any friends_received
+        if (!user.friends_received || user.friends_received.length === 0) {
+            console.log(`User ${user.firstName} has no friends_received to notify.`);
+            return ctx.send({ message: 'No friends to notify about new match.' });
+        }
+
+        // Construct the notification message
+        const formattedDate = format(new Date(match.Date), "EEEE d 'a las' HH:mm", { locale: es });
+        const message = `¡Nuevo partido disponible! ${match.location?.address} el ${formattedDate}.`;
+        const title = `🎾 ${user.firstName} ${user.lastName} armó un partido, anotate ahora!`;
+
+        // Send push notifications to all friends_received
+        const notificationPromises = user.friends_received.map(async (friend) => {
+            const friendUser = await strapi.query('plugin::users-permissions.user').findOne({ where: { id: friend.id } });
+
+            if (friendUser && friendUser.expo_pushtoken) {
+                console.log(`Sending notification to ${friendUser.firstName}`);
+                await sendPushNotification(friendUser.expo_pushtoken, message, title, matchId);
+            }
+        });
+
+        await Promise.all(notificationPromises); // Wait for all notifications to be sent
+
+        console.log(`Notifications sent to ${user.friends_received.length} friends about new match.`);
+
+        return ctx.send({ message: 'New match notifications sent successfully.' });
+    } catch (error) {
+        console.error('Error sending new match notifications:', error);
+        return ctx.internalServerError('Failed to send new match notifications.');
+    }
+},
 
   async test(ctx) {
     return ctx.send({ message: 'Test notification sent successfully' });

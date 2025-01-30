@@ -33,5 +33,16 @@ module.exports = {
       },
      },
 
+     {
+      method: 'POST',
+      path: '/notifications/new-match/:matchId/user/:userId',
+      handler: 'notifications.notifyNewMatch',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     }
+
   ],
 };
