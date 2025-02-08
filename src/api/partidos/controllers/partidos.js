@@ -55,6 +55,7 @@ const getUserProfilePicture = async (profilePicture) => {
         firstName: member.firstName,
         lastName: member.lastName,
         profilePictureUrl,
+        phone: member.phone || null,
       };
     };
   
