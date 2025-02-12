@@ -9,6 +9,7 @@ const { toZonedTime, format: formatTz } = require('date-fns-tz');
 
 const { es } = require('date-fns/locale');
 
+
 // Helper function to fetch user profile picture
 const getUserProfilePicture = async (profilePicture) => {
     if (!profilePicture) return null;
@@ -401,6 +402,33 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
       } catch (error) {
         console.error('Error fetching matches by user:', error);
         ctx.throw(500, 'Internal Server Error');
+      }
+    },
+
+    async getCommonMatches(ctx) {
+      try {
+        const { userId, friendId } = ctx.params;
+  
+        if (!userId || !friendId) {
+          return ctx.badRequest('Both userId and friendId are required.');
+        }
+  
+        // Fetch matches where both userId and friendId are members
+        const commonMatches = await strapi.db.query('api::match.match').findMany({
+          where: {
+            $and: [
+              { members: { id: userId } },
+              { members: { id: friendId } }
+            ]
+          },
+          populate: true, // Add necessary relationships
+        });
+  
+        return ctx.send(commonMatches);
+  
+      } catch (error) {
+        strapi.log.error('Error fetching common matches:', error);
+        return ctx.internalServerError('Something went wrong while fetching common matches.');
       }
     }
     

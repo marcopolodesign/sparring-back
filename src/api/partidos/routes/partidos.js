@@ -29,10 +29,6 @@ module.exports = {
         middlewares: [],
       },
      },
-
-
-     
-
     {
       method: 'GET',
       path: '/partidos/:matchId',
@@ -43,6 +39,15 @@ module.exports = {
         auth: false,
       },
      },
+
+     {
+      method: "GET",
+      path: "/partidos/common/:userId/:friendId",
+      handler: "partidos.getCommonMatches",
+      config: {
+        auth: false, // Change to true if authentication is required
+      },
+    },
 
   ],
 };
