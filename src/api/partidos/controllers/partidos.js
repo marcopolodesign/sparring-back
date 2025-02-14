@@ -413,7 +413,6 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           return ctx.badRequest('Both userId and friendId are required.');
         }
   
-        // Fetch matches where both userId and friendId are members
         const commonMatches = await strapi.db.query('api::match.match').findMany({
           where: {
             $and: [
@@ -422,20 +421,18 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             ]
           },
           populate: {
-            match_owner: { populate: '*' }, // Populate all match owner fields
-            members: { // Populate members and their profile pictures
+            match_owner: { populate: { profilePicture: { fields: ['url'] } } }, 
+            members: { 
               populate: { 
-          profilePicture: { 
-            fields: ['url'], // Only fetch the URL of the profile picture
-          }
-              }
+                profilePicture: { fields: ['url'] } // Ensure profilePicture URL is fetched
+              } 
             },
-            member_1: { populate: '*' },    // Populate member_1 details
-            member_2: { populate: '*' },    // Populate member_2 details
-            member_3: { populate: '*' },    // Populate member_3 details
-            member_4: { populate: '*' },    // Populate member_4 details
-            location: true,   // Populate location details
-            sport: true,  
+            member_1: { populate: { profilePicture: { fields: ['url'] } } },
+            member_2: { populate: { profilePicture: { fields: ['url'] } } },
+            member_3: { populate: { profilePicture: { fields: ['url'] } } },
+            member_4: { populate: { profilePicture: { fields: ['url'] } } },
+            location: true,
+            sport: true,
           },
         });
   
