@@ -424,7 +424,9 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           populate: true, // Add necessary relationships
         });
   
-        return ctx.send(commonMatches);
+        const formattedMatches = await Promise.all(commonMatches.map(match => formatMatchDetails(match)));
+
+        return ctx.send(formattedMatches);
   
       } catch (error) {
         strapi.log.error('Error fetching common matches:', error);
