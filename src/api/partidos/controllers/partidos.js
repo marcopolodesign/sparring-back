@@ -421,7 +421,22 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
               { members: { id: friendId } }
             ]
           },
-          populate: true, // Add necessary relationships
+          populate: {
+            match_owner: { populate: '*' }, // Populate all match owner fields
+            members: { // Populate members and their profile pictures
+              populate: { 
+          profilePicture: { 
+            fields: ['url'], // Only fetch the URL of the profile picture
+          }
+              }
+            },
+            member_1: { populate: '*' },    // Populate member_1 details
+            member_2: { populate: '*' },    // Populate member_2 details
+            member_3: { populate: '*' },    // Populate member_3 details
+            member_4: { populate: '*' },    // Populate member_4 details
+            location: true,   // Populate location details
+            sport: true,  
+          },
         });
   
         const formattedMatches = await Promise.all(commonMatches.map(match => formatMatchDetails(match)));
