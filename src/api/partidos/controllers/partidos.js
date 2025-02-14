@@ -433,6 +433,15 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             member_4: { populate: { profilePicture: { fields: ['url'] } } },
             location: true,
             sport: true,
+            couples: { 
+              populate: { 
+                members: { 
+                  populate: { 
+                    profilePicture: { fields: ['url'] } // Ensure couples' members have profile pictures populated
+                  } 
+                } 
+              } 
+            },
           },
         });
   
