@@ -879,6 +879,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::zone.zone'
     >;
+    match_history: Attribute.String;
+    wins: Attribute.Integer;
+    looses: Attribute.Integer;
+    best_streak: Attribute.Integer;
+    current_streak: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
