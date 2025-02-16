@@ -49,5 +49,15 @@ module.exports = {
       },
     },
 
+
+    {
+      method: "GET",
+      path: "/partidos/common/metrics/:userId/:friendId",
+      handler: "partidos.getUserMatchMetrics",
+      config: {
+        auth: false, // Change to true if authentication is required
+      },
+    },
+
   ],
 };

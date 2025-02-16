@@ -422,11 +422,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           },
           populate: {
             match_owner: { populate: { profilePicture: { fields: ['url'] } } }, 
-            members: { 
-              populate: { 
-                profilePicture: { fields: ['url'] } // Ensure profilePicture URL is fetched
-              } 
-            },
+            members: { populate: { profilePicture: { fields: ['url'] } } },
             member_1: { populate: { profilePicture: { fields: ['url'] } } },
             member_2: { populate: { profilePicture: { fields: ['url'] } } },
             member_3: { populate: { profilePicture: { fields: ['url'] } } },
@@ -436,9 +432,7 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             couples: { 
               populate: { 
                 members: { 
-                  populate: { 
-                    profilePicture: { fields: ['url'] } // Ensure couples' members have profile pictures populated
-                  } 
+                  populate: { profilePicture: { fields: ['url'] } } 
                 } 
               } 
             },
@@ -446,14 +440,72 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
         });
   
         const formattedMatches = await Promise.all(commonMatches.map(match => formatMatchDetails(match)));
-
+  
         return ctx.send(formattedMatches);
   
       } catch (error) {
         strapi.log.error('Error fetching common matches:', error);
         return ctx.internalServerError('Something went wrong while fetching common matches.');
       }
-    }
+    },
+  
+    // ✅ New function to calculate wins/losses against a specific user
+    async getUserMatchMetrics(ctx) {
+      try {
+        const { userId, friendId } = ctx.params;
+  
+        if (!userId || !friendId) {
+          return ctx.badRequest('Both userId and friendId are required.');
+        }
+  
+        // Reuse `getCommonMatches` function
+        const commonMatches = await strapi.db.query('api::match.match').findMany({
+          where: {
+            $and: [
+              { members: { id: userId } },
+              { members: { id: friendId } }
+            ]
+          },
+          populate: ['couples.members'], // Populate teams
+        });
+  
+        let wins = 0;
+        let losses = 0;
+  
+        commonMatches.forEach(match => {
+          const { couples } = match;
+  
+          if (!couples || couples.length === 0) return;
+  
+          // Determine winning couple (highest last set score)
+          const winningCouple = couples.reduce((winner, couple) => {
+            const lastSetScore = couple.score?.[couple.score.length - 1] || 0;
+            return lastSetScore > (winner?.score?.[winner.score.length - 1] || 0) ? couple : winner;
+          }, null);
+  
+          // Check if the user was in the winning couple
+          const userInWinningCouple = winningCouple?.members.some(member => member.id === parseInt(userId));
+  
+          if (userInWinningCouple) {
+            wins++;
+          } else {
+            losses++;
+          }
+        });
+  
+        return ctx.send({
+          userId,
+          friendId,
+          totalMatches: commonMatches.length,
+          wins,
+          losses,
+        });
+  
+      } catch (error) {
+        strapi.log.error('Error fetching match metrics:', error);
+        return ctx.internalServerError('Something went wrong while calculating match metrics.');
+      }
+    },
     
   }));
   
