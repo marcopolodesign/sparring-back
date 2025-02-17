@@ -197,6 +197,10 @@
     },
     "current_streak": {
       "type": "integer"
+    },
+    "hasLogged": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

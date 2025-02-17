@@ -884,6 +884,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     looses: Attribute.Integer;
     best_streak: Attribute.Integer;
     current_streak: Attribute.Integer;
+    hasLogged: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
