@@ -1,13 +1,14 @@
 
 const { format, parseISO } = require('date-fns');
-const { utcToZonedTime, format: formatTz } = require('date-fns-tz');
+const { toZonedTime, format: formatTz } = require('date-fns-tz');
 
 const { es } = require('date-fns/locale');
 
 // Helper function to fetch user profile picture
 const getUserProfilePicture = async (profilePicture) => {
     if (!profilePicture) return null;
-    return profilePicture?.formats?.small?.url || profilePicture?.url || null;  };
+    return profilePicture?.formats?.small?.url || profilePicture?.url || null; 
+};
 
   
   const formatMatchDetails = async (match) => {
@@ -32,7 +33,7 @@ const getUserProfilePicture = async (profilePicture) => {
     // Get the device's current time zone dynamically
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
-    const zonedDate = utcToZonedTime(matchDate, timeZone); // Convert to the device's time zone
+    const zonedDate = toZonedTime(matchDate, timeZone); // Convert to the device's time zone
     const formattedDate = format(zonedDate, "EEEE d 'de' MMMM", { locale: es });
     const capitalizedDate = capitalizeFirstLetter(formattedDate);
   

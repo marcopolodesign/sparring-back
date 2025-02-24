@@ -82,6 +82,14 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::zone.zone"
+    },
+    "is_private": {
+      "type": "boolean",
+      "default": false
+    },
+    "has_reservation": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

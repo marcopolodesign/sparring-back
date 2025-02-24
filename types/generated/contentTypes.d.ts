@@ -1130,6 +1130,8 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'api::player-level.player-level'
     >;
     zone: Attribute.Relation<'api::match.match', 'oneToOne', 'api::zone.zone'>;
+    is_private: Attribute.Boolean & Attribute.DefaultTo<false>;
+    has_reservation: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
