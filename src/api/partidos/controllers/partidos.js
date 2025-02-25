@@ -96,6 +96,8 @@ const getUserProfilePicture = async (profilePicture) => {
       profilePictureUrl: member_1 ? member_1.profilePictureUrl : null,
     } : null,
     members,
+    is_private: match.is_private,
+    has_reservation: match.has_reservation,
   };
 
   // Add individual members to the response only if they are not null
