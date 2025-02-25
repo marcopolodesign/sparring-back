@@ -288,6 +288,8 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             location: true,   // Populate location details
             sport: true,  
             couples: true,    // Populate couples
+            is_private: true, // Populate is_private
+            has_reservation: true,
           },
         });
     
@@ -429,6 +431,8 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
             member_4: { populate: { profilePicture: { fields: ['url'] } } },
             location: true,
             sport: true,
+            is_private: true, // Populate is_private
+            has_reservation: true,
             couples: { 
               populate: { 
                 members: { 
