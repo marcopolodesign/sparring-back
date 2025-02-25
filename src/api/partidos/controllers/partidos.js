@@ -22,7 +22,7 @@ const getUserProfilePicture = async (profilePicture) => {
     }
   
     // Parse the match date
-    const matchDate = match?.Date ? parseISO(match.Date) : null;
+    const matchDate = match?.Date ? new Date(match.Date + "Z") : null;
   
     if (!matchDate) {
       return {
@@ -36,14 +36,14 @@ const getUserProfilePicture = async (profilePicture) => {
     };
   
     // Get the device's current time zone dynamically
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
-    const zonedDate = toZonedTime(matchDate, timeZone); // Convert to the device's time zone
-    const formattedDate = format(zonedDate, "EEEE d 'de' MMMM", { locale: es });
+    // const zonedDate = toZonedTime(matchDate, timeZone); // Convert to the device's time zone
+    const formattedDate = format(matchDate, "EEEE d 'de' MMMM", { locale: es });
     const capitalizedDate = capitalizeFirstLetter(formattedDate);
   
     // Format the time to the device's local timezone
-    const formattedTime = formatTz(zonedDate, 'HH:mm', { timeZone });
+    const formattedTime = format(matchDate, 'HH:mm'); // ✅ Prevents conversion to UTC
   
     // Helper function to fetch member details
     const fetchMemberDetails = async (member) => {
