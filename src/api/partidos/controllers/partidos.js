@@ -224,6 +224,10 @@ module.exports = createCoreController('api::match.match', ({ strapi }) => ({
           date: {
             $gt: currentDate, // Only fetch matches where date is greater than the current date
           },
+            // Ensure the match is not private
+          is_private: {
+            $ne: true, // Exclude matches where is_private is true
+          },
           // Check that the number of members is less than the ammount_players
           $and: [
             {
