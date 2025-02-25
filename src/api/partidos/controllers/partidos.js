@@ -22,7 +22,7 @@ const getUserProfilePicture = async (profilePicture) => {
     }
   
     // Parse the match date
-    const matchDate = match?.Date ? new Date(match.Date + "Z") : null;
+    const matchDate = match?.Date ? new Date(match.Date) : null;
   
     if (!matchDate) {
       return {
