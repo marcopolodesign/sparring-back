@@ -94,6 +94,7 @@ const getUserProfilePicture = async (profilePicture) => {
       firstName: match.match_owner.firstName,
       lastName: match.match_owner.lastName,
       profilePictureUrl: member_1 ? member_1.profilePictureUrl : null,
+      level: match.match_owner.level,
     } : null,
     members,
     is_private: match.is_private,
