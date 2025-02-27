@@ -6,6 +6,9 @@ module.exports = {
           Date: {
             $gt: currentDate, // Filter by date (upcoming matches)
           },
+          is_private: {
+            $ne: !isMatchOwner ? true : false, // Exclude matches where is_private is true
+          },
           tournament: {
             id: {
               $null: true, // Only matches with no tournament
