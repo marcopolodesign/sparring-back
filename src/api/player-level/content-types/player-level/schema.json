@@ -12,11 +12,14 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "Category": {
+    "category": {
       "type": "string"
     },
     "Level": {
       "type": "integer"
+    },
+    "description": {
+      "type": "string"
     }
   }
 }
