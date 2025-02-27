@@ -1,13 +1,11 @@
 module.exports = {
     async findUpcomingMatches(userId, currentDate, isMatchOwner) {
+      console.log(isMatchOwner, 'IS MATCH OWNER TESTING SERVICE');
       // Initial query without checking members length (we will do this in JS)
       let query = {
         where: {
           Date: {
             $gt: currentDate, // Filter by date (upcoming matches)
-          },
-          is_private: {
-            $ne: !isMatchOwner ? true : false, // Exclude matches where is_private is true
           },
           tournament: {
             id: {
@@ -41,6 +39,9 @@ module.exports = {
                         $ne: userId, // Exclude matches where the user is the match owner
                       },
                     },
+                  },
+                  {
+                    is_private: { $ne: true }, // Exclude private matches if not matchOwner
                   },
                 ],
               }),
