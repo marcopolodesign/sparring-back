@@ -1163,7 +1163,7 @@ export interface ApiPlayerLevelPlayerLevel extends Schema.CollectionType {
   };
   attributes: {
     category: Attribute.String;
-    Level: Attribute.Integer;
+    level: Attribute.Integer;
     description: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
