@@ -885,6 +885,16 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     best_streak: Attribute.Integer;
     current_streak: Attribute.Integer;
     hasLogged: Attribute.Boolean & Attribute.DefaultTo<false>;
+    matches_won: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'api::match.match'
+    >;
+    matches_lost: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'api::match.match'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1132,6 +1142,16 @@ export interface ApiMatchMatch extends Schema.CollectionType {
     zone: Attribute.Relation<'api::match.match', 'oneToOne', 'api::zone.zone'>;
     is_private: Attribute.Boolean & Attribute.DefaultTo<false>;
     has_reservation: Attribute.Boolean & Attribute.DefaultTo<false>;
+    winners: Attribute.Relation<
+      'api::match.match',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    loosers: Attribute.Relation<
+      'api::match.match',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

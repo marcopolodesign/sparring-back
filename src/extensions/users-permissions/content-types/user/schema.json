@@ -201,6 +201,18 @@
     "hasLogged": {
       "type": "boolean",
       "default": false
+    },
+    "matches_won": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::match.match",
+      "mappedBy": "winners"
+    },
+    "matches_lost": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::match.match",
+      "mappedBy": "loosers"
     }
   }
 }
