@@ -97,7 +97,7 @@
       "target": "plugin::users-permissions.user",
       "inversedBy": "matches_won"
     },
-    "loosers": {
+    "losers": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",

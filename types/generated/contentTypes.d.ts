@@ -1147,7 +1147,7 @@ export interface ApiMatchMatch extends Schema.CollectionType {
       'manyToMany',
       'plugin::users-permissions.user'
     >;
-    loosers: Attribute.Relation<
+    losers: Attribute.Relation<
       'api::match.match',
       'manyToMany',
       'plugin::users-permissions.user'
