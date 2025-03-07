@@ -67,7 +67,16 @@ module.exports = {
         middlewares: [],
         auth: false,
       },
-    }
+    }, 
+
+    {
+      method: 'GET',
+      path: '/reservations/future/:userId',
+      handler: 'custom-reservation.getFutureReservations',
+      config: {
+        auth: false, // Adjust if you want to add auth later
+      },
+    },
     
 
 

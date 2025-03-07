@@ -4,7 +4,8 @@
 const qs = require('qs');
 // @ts-ignore
 // @ts-ignore
-const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore, parse,  startOfDay, isToday } = require('date-fns');
+const { parseISO, addMinutes, subMinutes, format, differenceInMinutes, isBefore, parse,  startOfDay, isToday, addHours, isAfter } = require('date-fns');
+const { es } = require('date-fns/locale');
 const { toZonedTime  } = require('date-fns-tz');
 /**
  * reservation controller
@@ -158,6 +159,11 @@ const getVenueRentals = async (venueId) => {
     throw error;
   }
 }
+
+
+const formatCurrency = (amount) => {
+  return `$${amount.toLocaleString('es-AR')}`;
+};
 
 
 module.exports = createCoreController('api::reservation.reservation', ({ strapi }) => ({
@@ -757,6 +763,74 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       strapi.log.error('Error fetching track availability:', error);
       ctx.throw(500, 'Error fetching track availability.');
     }
-  }
+  }, 
+
+  async getFutureReservations(ctx) {
+    const { userId } = ctx.params; // userId sent in the request body
+    if (!userId) {
+      return ctx.badRequest('Missing userId');
+    }
+
+    try {
+      const now = new Date();
+      const nowInZone = toZonedTime(now, TIMEZONE);
+
+      const reservations = await strapi.entityService.findMany('api::reservation.reservation', {
+        filters: {
+          owner: { id: { $eq: userId } },
+        },
+        populate: {
+          court: true,
+          products: true,
+        },
+        sort: ['date:asc', 'start_time:asc'],
+      });
+
+      const futureReservations = reservations
+        .filter((reservation) => {
+          const { date, start_time, end_time } = reservation;
+          const startDateTime = parseISO(`${date}T${start_time}`);
+          const zonedStartTime = toZonedTime(startDateTime, TIMEZONE);
+
+          // Calculate end time (assuming it's stored in the same format as start_time)
+          const endDateTime = parseISO(`${date}T${end_time}`);
+          const zonedEndTime = toZonedTime(endDateTime, TIMEZONE);
+
+          // Check if the reservation ends at least 2 hours into the future
+          const endPlusTwoHours = addHours(zonedEndTime, 2);
+
+          return isAfter(endPlusTwoHours, nowInZone);
+        })
+        .map((reservation) => {
+          const { date, start_time, end_time, court, products } = reservation;
+
+          const startDateTime = parseISO(`${date}T${start_time}`);
+          const endDateTime = parseISO(`${date}T${end_time}`);
+
+          // Format date and time
+          const formattedStartTime = format(startDateTime, 'HH:mm');
+          const formattedEndTime = format(endDateTime, 'HH:mm');
+          const formattedDate = format(startDateTime, "EEEE d 'de' MMMM", { locale: es });
+          
+          const productPrice = products?.[0]?.price ?? 0;
+          const formattedPrice = formatCurrency(productPrice);
+
+
+          // Build response object
+          return {
+            start_time: formattedStartTime,
+            end_time: formattedEndTime,
+            date: formattedDate,
+            court_name: court?.name ?? 'Sin nombre',
+            product_price: formattedPrice,
+          };
+        });
+
+      return ctx.send(futureReservations);
+    } catch (error) {
+      strapi.log.error('Error fetching future reservations:', error);
+      return ctx.internalServerError('Failed to fetch future reservations');
+    }
+  },
   
 }));
