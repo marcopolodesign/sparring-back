@@ -1,7 +1,8 @@
 module.exports = {
     async getTransactionDetails(ctx) {
       const { date, venueId } = ctx.query;
-      
+      console.log('date', date);
+      console.log('venueId', venueId);
       try {
         // Fetch the reservations and populate the needed relations
         const reservations = await strapi.entityService.findMany('api::reservation.reservation', {
