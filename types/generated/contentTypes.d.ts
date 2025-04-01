@@ -895,6 +895,21 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'manyToMany',
       'api::match.match'
     >;
+    played_with_by: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    played_with: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    visited_clubs: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::club.club'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

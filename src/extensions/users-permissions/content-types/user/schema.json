@@ -213,6 +213,23 @@
       "relation": "manyToMany",
       "target": "api::match.match",
       "mappedBy": "losers"
+    },
+    "played_with_by": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "played_with"
+    },
+    "played_with": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "played_with_by"
+    },
+    "visited_clubs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::club.club"
     }
   }
 }
