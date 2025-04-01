@@ -46,6 +46,7 @@ module.exports = {
 
           return ctx.send({ message });
       }
+
       if (step === 'get_price') {
         // Buscar el venue si no lo tenemos
         if (!venue) {
@@ -63,14 +64,18 @@ module.exports = {
         const rentals = await strapi
           .service('api::product.custom-product')
           .getVenueRentals(venue.id);
+
+          console.log('📦 Rentals:', rentals.map(r => r.name));
+          console.log(rentals, 'rentals')
       
-        console.log('📦 Rentals:', rentals.map(r => r.name));
-        const expectedName = `Pádel ${duration_minutes} minutos`;
+          const expectedName = `Pádel ${duration_minutes} minutos`;
+
+          let selectedProduct = rentals.find(
+            (p) => p.name?.trim().toLowerCase() === expectedName.toLowerCase()
+          );
       
-        let selectedProduct = rentals.find(
-          (p) => p.name?.trim().toLowerCase() === expectedName.toLowerCase()
-        );
-      
+        console.log('selectedProduct', selectedProduct);
+
         // Fallback automático a Pádel 90 minutos
         if (!selectedProduct) {
           selectedProduct = rentals.find(
@@ -78,15 +83,12 @@ module.exports = {
           );
           console.log('🔁 Falling back to Pádel 90 minutos:', selectedProduct);
         }
-      
+
         if (!selectedProduct) {
           return ctx.send({
             message: `No encontré un producto disponible para reservar.`,
           });
         }
-      
-        matchedProduct = selectedProduct; // ✅ GUARDARLO ACÁ
-      
         const price = selectedProduct.customPrice || selectedProduct.defaultPrice;
       
         return ctx.send({
@@ -116,8 +118,8 @@ module.exports = {
         }
       
         // Si product no está seteado, buscarlo también
-        if (!matchedProduct && duration_minutes) {
-          const tag = `padel-${duration_minutes}`;
+        if (!matchedProduct && activity && duration_minutes) {
+          const tag = `${activity}-${duration_minutes}`;
           const products = await strapi.entityService.findMany('api::product.product', {
             filters: { sku: { $eq: tag } },
           });

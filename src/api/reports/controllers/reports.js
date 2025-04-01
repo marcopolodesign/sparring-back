@@ -32,6 +32,9 @@ module.exports = {
             $gte: start,
             $lte: end,
           },
+          status: {
+            $eq: 'confirmed', // Only include confirmed reservations
+          }
         },
    
           populate: {
@@ -96,6 +99,9 @@ module.exports = {
             $gte: new Date(start).toISOString(),
             $lte: new Date(end).toISOString(),
           },
+          status: {
+            $eq: 'confirmed', // Only include confirmed reservations
+          }
         },
         populate: {
           transactions: {
