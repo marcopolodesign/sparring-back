@@ -157,9 +157,17 @@ module.exports = {
               },
             },
           });
+
+
+          const uniqueTransactions = Object.values(
+            reservationTransactions.reduce((acc, txn) => {
+              acc[txn.id] = txn;
+              return acc;
+            }, {})
+          );
     
           // Format the response
-          const formattedTransactions = reservationTransactions.map((transaction) => {
+          const formattedTransactions = uniqueTransactions.map((transaction) => {
             // Extract product data
             const products = transaction.products || [];
             let productName = 'Unknown';
@@ -207,6 +215,8 @@ module.exports = {
               estado: transaction.status ? transaction.status.toUpperCase() : 'N/A',
             };
           });
+
+          
     
           // Send the response
           ctx.send(formattedTransactions);
