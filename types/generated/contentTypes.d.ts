@@ -927,6 +927,72 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
   };
 }
 
+export interface ApiAbonoAbono extends Schema.CollectionType {
+  collectionName: 'abonos';
+  info: {
+    singularName: 'abono';
+    pluralName: 'abonos';
+    displayName: 'Abono';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    user: Attribute.Relation<
+      'api::abono.abono',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    coach: Attribute.Relation<
+      'api::abono.abono',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    court: Attribute.Relation<
+      'api::abono.abono',
+      'manyToOne',
+      'api::track.track'
+    >;
+    venue: Attribute.Relation<
+      'api::abono.abono',
+      'manyToOne',
+      'api::court.court'
+    >;
+    day_of_week: Attribute.Enumeration<
+      [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday'
+      ]
+    >;
+    start_time: Attribute.Time;
+    duration: Attribute.Integer & Attribute.DefaultTo<60>;
+    start_date: Attribute.Date;
+    weeks_ahead: Attribute.Integer & Attribute.DefaultTo<6>;
+    status: Attribute.Enumeration<['active', 'paused', 'cancelled']> &
+      Attribute.DefaultTo<'active'>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::abono.abono',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::abono.abono',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiClientCustomPriceClientCustomPrice
   extends Schema.CollectionType {
   collectionName: 'client_custom_prices';
@@ -1429,6 +1495,11 @@ export interface ApiTrackTrack extends Schema.CollectionType {
       'oneToMany',
       'api::reservation.reservation'
     >;
+    abonos: Attribute.Relation<
+      'api::track.track',
+      'oneToMany',
+      'api::abono.abono'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1565,6 +1636,7 @@ declare module '@strapi/types' {
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
+      'api::abono.abono': ApiAbonoAbono;
       'api::client-custom-price.client-custom-price': ApiClientCustomPriceClientCustomPrice;
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;

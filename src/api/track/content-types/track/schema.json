@@ -26,6 +26,12 @@
       "relation": "oneToMany",
       "target": "api::reservation.reservation",
       "mappedBy": "court"
+    },
+    "abonos": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::abono.abono",
+      "mappedBy": "court"
     }
   }
 }

@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "abonos",
+  "info": {
+    "singularName": "abono",
+    "pluralName": "abonos",
+    "displayName": "Abono",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "coach": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "court": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::track.track",
+      "inversedBy": "abonos"
+    },
+    "venue": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::court.court"
+    },
+    "day_of_week": {
+      "type": "enumeration",
+      "enum": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ]
+    },
+    "start_time": {
+      "type": "time"
+    },
+    "duration": {
+      "type": "integer",
+      "default": 60
+    },
+    "start_date": {
+      "type": "date"
+    },
+    "weeks_ahead": {
+      "type": "integer",
+      "default": 6
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "active",
+        "paused",
+        "cancelled"
+      ],
+      "default": "active"
+    }
+  }
+}
