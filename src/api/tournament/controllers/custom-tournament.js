@@ -14,6 +14,7 @@ module.exports = {
                 filters: {
                     start_date: { $gte: today.toISOString().split('T')[0] },
                     participants: { id: { $in: [userId] } },
+                    admins: { id: { $in: [userId] } },
                 },
                 populate: '*',
             });
