@@ -1,4 +1,3 @@
-
 module.exports = {
     async findTournamentByUserId(ctx) {
         const { userId } = ctx.params;
@@ -14,12 +13,14 @@ module.exports = {
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(today.getDate() + 1);
+
+            console.log(today, tomorrow, 'today, tomorrow');
             
             const tournaments = await strapi.entityService.findMany('api::tournament.tournament', {
               filters: {
                 start_date: {
-                  $gte: today.toISOString().split('T')[0],
-                  $lte: tomorrow.toISOString().split('T')[0], // Use $lt instead of $lte
+                  $gte: tomorrow.toISOString().split('T')[0],
+                  // $lte: new Date(today.setDate(today.getDate() + 1)).toISOString().split('T')[0], // Adjust $lte to be start_date + 1 day
                 },
                 $or: [
                   { participants: { id: { $in: [userId] } } },
