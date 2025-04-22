@@ -1459,6 +1459,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
       'oneToMany',
       'plugin::users-permissions.user'
     >;
+    price: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
