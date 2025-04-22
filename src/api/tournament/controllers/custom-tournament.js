@@ -19,7 +19,7 @@ module.exports = {
               filters: {
                 start_date: {
                   $gte: today.toISOString().split('T')[0],
-                  $lt: tomorrow.toISOString().split('T')[0], // Use $lt instead of $lte
+                  $lte: tomorrow.toISOString().split('T')[0], // Use $lt instead of $lte
                 },
                 $or: [
                   { participants: { id: { $in: [userId] } } },
