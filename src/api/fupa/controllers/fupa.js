@@ -2012,7 +2012,7 @@ async getTournamentLeaderboard(ctx) {
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
-              profilePicture: member.profilePicture?.formats?.small?.url || null,
+              profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url|| null,
             })),
           },
           points: couple.points || 0, // Fetch points, default to 0 if not available
