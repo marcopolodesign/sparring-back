@@ -864,7 +864,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
             id: member.id,
             firstName: member.firstName,
             lastName: member.lastName,
-            profilePicture: member.profilePicture?.formats?.small?.url || null,
+            profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
           })),
         },
         matchesWon: couple.matchesWon,
