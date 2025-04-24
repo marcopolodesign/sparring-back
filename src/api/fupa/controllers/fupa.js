@@ -546,49 +546,75 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
 
           if (matchedMember) {
-            // Find the member in the couple who does not match the provided memberId
-            const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
+        // Find the member in the couple who does not match the provided memberId
+        const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
 
-            // If a match is found, return the group, its matches, and the other member of the matched couple
-            ctx.send({
-              group: {
-                id: group.id,
-                name: group.name,
-              },
-              matches: group.matches.map(match => ({
-                id: match.id,
-                description: match.description,
-                couples: match.couples.map(couple => ({
-                  id: couple.id,
-                  sets: couple.sets,
-                  points: couple.points,
-                  members: couple.members.map(member => ({
-                    id: member.id,
-                    firstName: member.firstName,
-                    lastName: member.lastName,
-                    email: member.email,
-                    profilePicture: member.profilePicture?.formats?.small?.url || null,
-                  })),
-                })),
-              })),
-              matchedCouple: {
-                id: couple.id,
-                points: couple.points,
-                otherMember: {
-                  id: otherMember.id,
-                  firstName: otherMember.firstName,
-                  lastName: otherMember.lastName,
-                  email: otherMember.email,
-                },
-              },
-            });
-            return;
+        // If a match is found, return the group, its matches, and the other member of the matched couple
+        ctx.send({
+          group: {
+            id: group.id,
+            name: group.name,
+          },
+          matches: group.matches.map(match => ({
+            id: match.id,
+            description: match.description,
+            couples: match.couples.map(couple => ({
+          id: couple.id,
+          sets: couple.sets,
+          points: couple.points,
+          members: couple.members.map(member => ({
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email,
+            profilePicture: member.profilePicture?.formats?.small?.url || null,
+          })),
+            })),
+          })),
+          matchedCouple: {
+            id: couple.id,
+            points: couple.points,
+            otherMember: {
+          id: otherMember.id,
+          firstName: otherMember.firstName,
+          lastName: otherMember.lastName,
+          email: otherMember.email,
+            },
+          },
+        });
+        return;
           }
         }
       }
 
+      // If no matchedMember is found, return the first group available
+      const firstGroup = tournament.groups[0];
+      ctx.send({
+        group: {
+          id: firstGroup.id,
+          name: firstGroup.name,
+        },
+        matches: firstGroup.matches.map(match => ({
+          id: match.id,
+          description: match.description,
+          couples: match.couples.map(couple => ({
+        id: couple.id,
+        sets: couple.sets,
+        points: couple.points,
+        members: couple.members.map(member => ({
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          email: member.email,
+          profilePicture: member.profilePicture?.formats?.small?.url || null,
+        })),
+          })),
+        })),
+        matchedCouple: null, // No matched couple
+      });
+
       // If no match was found, return a message
-      ctx.send({ message: 'No match found for the provided member ID.' });
+      // ctx.send({ message: 'No match found for the provided member ID.' });
 
     } catch (error) {
       console.error('Error finding group by member ID:', error);
