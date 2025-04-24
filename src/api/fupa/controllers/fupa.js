@@ -801,12 +801,11 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         }
         if (matchedGroup) break;
       }
-  
       if (!matchedGroup) {
-        ctx.send({ message: 'No match found for the provided member ID.' });
-        return;
+        // If no matched group is found, assign the first group available
+        matchedGroup = tournament.groups[0];
       }
-  
+      
       // Initialize an empty object to track couple wins
       const coupleWins = {};
   
