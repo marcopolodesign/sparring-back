@@ -12,15 +12,15 @@ module.exports = {
      
           const today = new Date();
           const threeDaysFromNow = new Date();
-          threeDaysFromNow.setDate(today.getDate() + 3);
+          threeDaysFromNow.setDate(today.getDate() + 1);
           
           const todayISO = new Date(today.setUTCHours(0, 0, 0, 0)).toISOString().split('T')[0];
-          const threeDaysISO = new Date(threeDaysFromNow.setUTCHours(0, 0, 0, 0)).toISOString().split('T')[0];
+          const onedayISO = new Date(threeDaysFromNow.setUTCHours(0, 0, 0, 0)).toISOString().split('T')[0];
           
           const tournaments = await strapi.entityService.findMany('api::tournament.tournament', {
             filters: {
               // start_date: { $gte: todayISO },  // Optional, but makes logic more clear
-              end_date: { $gte: threeDaysISO },
+              end_date: { $gte: onedayISO },
               $or: [
                 { participants: { id: { $in: [userId] } } },
                 { admins: { id: { $in: [userId] } } },
