@@ -1,15 +1,9 @@
 'use strict';
 
-module.exports = {
-  routes: [
-    {
-      method: 'POST',
-      path: '/abonos',
-      handler: 'abono.create',
-      config: {
-        policies: [],
-        middlewares: [],
-      },
-    },
-  ],
-};
+/**
+ * club router
+ */
+
+const { createCoreRouter } = require('@strapi/strapi').factories;
+
+module.exports = createCoreRouter('api::abono.abono');

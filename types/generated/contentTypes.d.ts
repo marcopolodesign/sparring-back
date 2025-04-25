@@ -976,6 +976,10 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
     weeks_ahead: Attribute.Integer & Attribute.DefaultTo<6>;
     status: Attribute.Enumeration<['active', 'paused', 'cancelled']> &
       Attribute.DefaultTo<'active'>;
+    renovation_date: Attribute.Date;
+    payment_method: Attribute.Enumeration<
+      ['efectivo', 'transferencia', 'credito']
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

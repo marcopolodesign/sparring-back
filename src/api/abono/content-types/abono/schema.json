@@ -66,6 +66,17 @@
         "cancelled"
       ],
       "default": "active"
+    },
+    "renovation_date": {
+      "type": "date"
+    },
+    "payment_method": {
+      "type": "enumeration",
+      "enum": [
+        "efectivo",
+        "transferencia",
+        "credito"
+      ]
     }
   }
 }

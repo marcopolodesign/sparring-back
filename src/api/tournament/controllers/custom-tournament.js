@@ -12,7 +12,7 @@ module.exports = {
      
             const today = new Date();
             const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
+            tomorrow.setDate(today.getDate() + 3);
 
             console.log(today, tomorrow, 'today, tomorrow');
             
