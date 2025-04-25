@@ -10,31 +10,24 @@ module.exports = {
 
         try {
      
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 3);
-
-            console.log(today, tomorrow, 'today, tomorrow');
-            
-            const tournaments = await strapi.entityService.findMany('api::tournament.tournament', {
-              filters: {
-                // start_date: {
-                //   $gte: tomorrow.toISOString().split('T')[0],
-                //   // $lte: new Date(today.setDate(today.getDate() + 1)).toISOString().split('T')[0], // Adjust $lte to be start_date + 1 day
-                // },
-
-                end_date: {
-                  $gte: tomorrow.toISOString().split('T')[0],
-                  // $lte: new Date(today.setDate(today.getDate() + 1)).toISOString().split('T')[0], // Adjust $lte to be end_date + 1 day
-                },
-                $or: [
-                  { participants: { id: { $in: [userId] } } },
-                  { admins: { id: { $in: [userId] } } },
-                ],
-              },
-              populate: '*',
-            });
-              
+          const today = new Date();
+          const threeDaysFromNow = new Date();
+          threeDaysFromNow.setDate(today.getDate() + 3);
+          
+          const todayISO = new Date(today.setUTCHours(0, 0, 0, 0)).toISOString().split('T')[0];
+          const threeDaysISO = new Date(threeDaysFromNow.setUTCHours(0, 0, 0, 0)).toISOString().split('T')[0];
+          
+          const tournaments = await strapi.entityService.findMany('api::tournament.tournament', {
+            filters: {
+              // start_date: { $gte: todayISO },  // Optional, but makes logic more clear
+              end_date: { $gte: threeDaysISO },
+              $or: [
+                { participants: { id: { $in: [userId] } } },
+                { admins: { id: { $in: [userId] } } },
+              ],
+            },
+            populate: '*',
+          });
         
 
 
