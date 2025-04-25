@@ -77,6 +77,9 @@
         "transferencia",
         "credito"
       ]
+    },
+    "force": {
+      "type": "boolean"
     }
   }
 }

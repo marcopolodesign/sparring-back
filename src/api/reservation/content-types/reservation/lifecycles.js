@@ -3,7 +3,13 @@ module.exports = {
     async afterCreate(event) {
         const { result, params } = event;
 
-        console.log(params, 'PARAMETROS DE LA RESERVA');
+
+        if (Array.isArray(params.data.products)) {
+            params.data.products.forEach(async (productId) => {
+            const product = await strapi.entityService.findOne('api::product.product', productId);
+            console.log(product?.sku, 'PRODUCT SKU');
+        });
+        }
 
         try {
             // Obtener el ID del producto asociado a la reserva

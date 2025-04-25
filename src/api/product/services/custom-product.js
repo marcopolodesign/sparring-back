@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = () => ({
+module.exports = {
   async getVenueRentals(venueId) {
     try {
       // 1. Buscar productos asociados al venue con tipo 'alquiler'
@@ -58,4 +58,25 @@ module.exports = () => ({
       throw error;
     }
   },
-});
+
+  async findProductByDurationAndType(duration, type, payment_method, timestamp) {
+    console.log(`Searching for product ${type}-${payment_method}-${duration}`);
+    let products = await strapi.entityService.findMany('api::product.product', {
+      filters: {
+      sku: { $eq: `${type}-${payment_method}-${duration}` },
+      },
+      limit: 1,
+    });
+
+    if (!products || products.length === 0) {
+      products = await strapi.entityService.findMany('api::product.product', {
+      filters: {
+        sku: { $eq: 'padel-90' },
+      },
+      limit: 1,
+      });
+    }
+
+    return products[0] || null;
+  },
+}

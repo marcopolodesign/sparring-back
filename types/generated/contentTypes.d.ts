@@ -910,6 +910,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::club.club'
     >;
+    is_guest: Attribute.Boolean;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -980,6 +981,7 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
     payment_method: Attribute.Enumeration<
       ['efectivo', 'transferencia', 'credito']
     >;
+    force: Attribute.Boolean;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1579,6 +1581,11 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
       'api::transaction.transaction',
       'oneToOne',
       'api::court.court'
+    >;
+    abono: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToOne',
+      'api::abono.abono'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;

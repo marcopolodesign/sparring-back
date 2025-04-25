@@ -230,6 +230,9 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::club.club"
+    },
+    "is_guest": {
+      "type": "boolean"
     }
   }
 }

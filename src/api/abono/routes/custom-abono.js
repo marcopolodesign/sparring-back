@@ -11,5 +11,15 @@ module.exports = {
         middlewares: [],
       },
     },
+
+    {
+      method: 'POST',
+      path: '/custom-abono/:abonoId/cancel',
+      handler: 'custom-abono.cancel',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };
