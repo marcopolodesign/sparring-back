@@ -232,7 +232,8 @@
       "target": "api::club.club"
     },
     "is_guest": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     }
   }
 }

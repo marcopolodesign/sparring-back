@@ -59,7 +59,7 @@ module.exports = {
     }
   },
 
-  async findProductByDurationAndType(duration, type, payment_method, timestamp) {
+  async findProductByDurationAndType(duration, type, payment_method, timestamp, trackAmount) {
     console.log(`Searching for product ${type}-${payment_method}-${duration}`);
     let products = await strapi.entityService.findMany('api::product.product', {
       filters: {
@@ -69,9 +69,10 @@ module.exports = {
     });
 
     if (!products || products.length === 0) {
+      const defaultSku = type === 'abono' ? 'abono-90' : 'padel-90';
       products = await strapi.entityService.findMany('api::product.product', {
       filters: {
-        sku: { $eq: 'padel-90' },
+        sku: { $eq: defaultSku },
       },
       limit: 1,
       });

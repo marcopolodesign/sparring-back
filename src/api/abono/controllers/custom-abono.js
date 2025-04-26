@@ -147,7 +147,9 @@ module.exports = {
           products: [product.id],
           seller: 52,
           amount: product.price * successfulDates.length,
-          status: 'Pending',
+          status: 'Completed',
+          payment_method: payment_method,
+          notes: `Abono ${abono.id} - ${product.sku}`,
           source: 'mostrador',
           date: new Date().toISOString()
         }

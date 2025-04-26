@@ -910,7 +910,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::club.club'
     >;
-    is_guest: Attribute.Boolean;
+    is_guest: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1512,6 +1512,12 @@ export interface ApiTrackTrack extends Schema.CollectionType {
       'oneToMany',
       'api::abono.abono'
     >;
+    precio_cancha: Attribute.Relation<
+      'api::track.track',
+      'oneToOne',
+      'api::client-custom-price.client-custom-price'
+    >;
+    amount_players: Attribute.Enumeration<['single', 'doble']>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1554,7 +1560,7 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
     >;
     amount: Attribute.Decimal;
     payment_method: Attribute.Enumeration<
-      ['cash', 'credit_card', 'bank_transfer', 'gateway-mp', 'gateway-stripe']
+      ['efectivo', 'tarjeta', 'transferencia', 'gateway-mp', 'gateway-stripe']
     >;
     date: Attribute.DateTime;
     status: Attribute.Enumeration<
