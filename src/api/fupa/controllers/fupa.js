@@ -495,7 +495,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     const { tournamentId, memberId } = ctx.params;
 
     try {
-      // Fetch the tournament by ID and populate groups, couples, members, and matches
+      // Fetch tournament with full needed population
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           groups: {
@@ -505,10 +505,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                   members: {
                     populate: {
                       profilePicture: {
-                        populate: '*',  // Ensure all fields under profilePicture are populated
+                        populate: '*',
                       },
                     },
-                    fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
+                    fields: ['id', 'firstName', 'lastName', 'email'], // Include email now
                   },
                 },
               },
@@ -519,12 +519,13 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       members: {
                         populate: {
                           profilePicture: {
-                            populate: '*',  // Ensure all fields under profilePicture are populated
+                            populate: '*',
                           },
                         },
-                        fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
+                        fields: ['id', 'firstName', 'lastName', 'email'], // Include email now
                       },
-                      sets: true, // Populate sets within each couple
+                      sets: true,
+                      score: true, // 🛠 Include score properly
                     },
                   },
                 },
@@ -539,55 +540,55 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return;
       }
 
-      // Iterate over each group to find the matching member ID
+      // Iterate over each group to find the member
       for (const group of tournament.groups) {
         for (const couple of group.couples) {
-          // Check if the member ID is in the couple's members
           const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
 
           if (matchedMember) {
-        // Find the member in the couple who does not match the provided memberId
-        const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
+            const otherMember = couple.members.find(member => member.id !== parseInt(memberId, 10));
 
-        // If a match is found, return the group, its matches, and the other member of the matched couple
-        ctx.send({
-          group: {
-            id: group.id,
-            name: group.name,
-          },
-          matches: group.matches.map(match => ({
-            id: match.id,
-            description: match.description,
-            couples: match.couples.map(couple => ({
-          id: couple.id,
-          sets: couple.sets,
-          points: couple.points,
-          members: couple.members.map(member => ({
-            id: member.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            email: member.email,
-            profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url|| null,
-          })),
-            })),
-          })),
-          matchedCouple: {
-            id: couple.id,
-            points: couple.points,
-            otherMember: {
-          id: otherMember.id,
-          firstName: otherMember.firstName,
-          lastName: otherMember.lastName,
-          email: otherMember.email,
-            },
-          },
-        });
-        return;
+            ctx.send({
+              group: {
+                id: group.id,
+                name: group.name,
+              },
+              matches: group.matches.map(match => ({
+                id: match.id,
+                description: match.description,
+                couples: match.couples.map(couple => ({
+                  id: couple.id,
+                  sets: couple.sets,
+                  score: couple.score ?? [0, 0, 0], // 🛠 fallback to [0, 0, 0] if missing
+                  points: couple.points,
+                  members: couple.members.map(member => ({
+                    id: member.id,
+                    firstName: member.firstName,
+                    lastName: member.lastName,
+                    email: member.email,
+                    profilePicture: member.profilePicture?.formats?.small?.url ||
+                                     member.profilePicture?.formats?.thumbnail?.url ||
+                                     null,
+                  })),
+                })),
+              })),
+              matchedCouple: {
+                id: couple.id,
+                points: couple.points,
+                otherMember: otherMember ? {
+                  id: otherMember.id,
+                  firstName: otherMember.firstName,
+                  lastName: otherMember.lastName,
+                  email: otherMember.email,
+                } : null,
+              },
+            });
+            return;
           }
         }
       }
 
-      // If no matchedMember is found, return the first group available
+      // If no match found, fallback to first group
       const firstGroup = tournament.groups[0];
       ctx.send({
         group: {
@@ -598,23 +599,23 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           id: match.id,
           description: match.description,
           couples: match.couples.map(couple => ({
-        id: couple.id,
-        sets: couple.sets,
-        points: couple.points,
-        members: couple.members.map(member => ({
-          id: member.id,
-          firstName: member.firstName,
-          lastName: member.lastName,
-          email: member.email,
-          profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url|| null,
-        })),
+            id: couple.id,
+            sets: couple.sets,
+            score: couple.score ?? [0, 0, 0], // 🛠 fallback to [0, 0, 0] if missing
+            points: couple.points,
+            members: couple.members.map(member => ({
+              id: member.id,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              email: member.email,
+              profilePicture: member.profilePicture?.formats?.small?.url ||
+                               member.profilePicture?.formats?.thumbnail?.url ||
+                               null,
+            })),
           })),
         })),
-        matchedCouple: null, // No matched couple
+        matchedCouple: null,
       });
-
-      // If no match was found, return a message
-      // ctx.send({ message: 'No match found for the provided member ID.' });
 
     } catch (error) {
       console.error('Error finding group by member ID:', error);
@@ -646,6 +647,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                         fields: ['id', 'firstName', 'lastName'],
                       },
                       sets: true, // Populate sets within each couple
+                      score: true,
                     },
                   },
                 },
@@ -864,7 +866,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           coupleWins[coupleKey].matchesWon += 1;
         }
       }
-      
+
       // Format the response to include necessary member fields
       const formattedResponse = Object.values(coupleWins).map(couple => ({
         couple: {
