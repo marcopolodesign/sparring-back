@@ -1466,6 +1466,7 @@ export interface ApiTournamentTournament extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     price: Attribute.String;
+    minGamesWon: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

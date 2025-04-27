@@ -155,6 +155,9 @@
     },
     "price": {
       "type": "string"
+    },
+    "minGamesWon": {
+      "type": "integer"
     }
   }
 }
