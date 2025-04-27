@@ -15,5 +15,14 @@ module.exports = {
         auth: false,  // Change to true if authentication is required
       },
     },
+     {
+      method: 'POST',
+      path: '/custom-tournament/shift-match-dates',
+      handler: 'custom-tournament.shiftMatchDates',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
 
 ]};
