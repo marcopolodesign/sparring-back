@@ -823,40 +823,48 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         });
       });
   
-      // Calculate which couple won each match
       for (const match of matchedGroup.matches) {
-        let matchWinner = null;
-  
-        // Iterate over each couple in the match
-        const coupleResults = {};
-  
-        match.couples.forEach(couple => {
-          let setsWon = 0;
-  
-          // Iterate through each set and check if the couple has won by reaching 6 games
-          couple.sets.forEach(set => {
-            if (set.gamesWon >= 6) {
-              setsWon += 1; // Count the set as won if the couple reached 6 games
-            }
-          });
-  
-          const coupleKey = couple.members.map(member => member.id).sort().join('-');
-  
-          coupleResults[coupleKey] = {
-            setsWon,
-            details: couple,
-          };
-        });
-  
-        // Determine the match winner (the couple that wins at least 1 set)
-        const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= 1);
-  
+        if (match.couples.length < 2) continue; // Guard against incomplete matches
+      
+        const coupleKeys = match.couples.map(couple => couple.members.map(member => member.id).sort().join('-'));
+      
+        const coupleResults = {
+          [coupleKeys[0]]: { setsWon: 0, details: match.couples[0] },
+          [coupleKeys[1]]: { setsWon: 0, details: match.couples[1] },
+        };
+      
+        // Now compare set by set
+        const setsCouple1 = match.couples[0].sets || [];
+        const setsCouple2 = match.couples[1].sets || [];
+      
+        const totalSets = Math.min(setsCouple1.length, setsCouple2.length);
+      
+        for (let i = 0; i < totalSets; i++) {
+          const set1 = setsCouple1[i];
+          const set2 = setsCouple2[i];
+      
+          if (!set1 || !set2) continue; // Defensive guard
+      
+          if (set1.gamesWon > set2.gamesWon) {
+            coupleResults[coupleKeys[0]].setsWon += 1;
+          } else if (set2.gamesWon > set1.gamesWon) {
+            coupleResults[coupleKeys[1]].setsWon += 1;
+          }
+          // If it's tied, no one wins the set (rare, unless bugged)
+        }
+      
+        // Decide how many sets are needed to win
+        const setsNeededToWin = totalSets === 1 ? 1 : 2;
+      
+        // Find winner
+        const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= setsNeededToWin);
+      
         if (winningCouple) {
           const coupleKey = winningCouple.details.members.map(member => member.id).sort().join('-');
-          coupleWins[coupleKey].matchesWon += 1; // Increment the match win count for the winning couple
+          coupleWins[coupleKey].matchesWon += 1;
         }
       }
-  
+      
       // Format the response to include necessary member fields
       const formattedResponse = Object.values(coupleWins).map(couple => ({
         couple: {
