@@ -408,12 +408,11 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
   
-  
   async findMatchesWithCouples(ctx) {
     const { id } = ctx.params;
 
     try {
-      // Fetch the tournament by ID, and populate groups, matches, couples, members, and profile pictures
+      // Fetch the tournament by ID, populate groups, matches, couples, members, and profile pictures
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', id, {
         populate: {
           groups: {
@@ -426,26 +425,27 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                         populate: {
                           profilePicture: {
                             populate: {
-                              formats: true
-                            }
-                          }
+                              formats: true,
+                            },
+                          },
                         },
-                        fields: ['id', 'firstName', 'lastName'], // Select specific fields to populate
+                        fields: ['id', 'firstName', 'lastName'],
                       },
                       sets: {
                         populate: {
                           games: {
-                            fields: ['gamesWon'], // Populate games if needed
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                            fields: ['gamesWon'], // optional deeper populate
+                          },
+                        },
+                      },
+                    },
+                    fields: ['score', 'points'], // 🛠 Add fields to get `score` (and points if you want)
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!tournament) {
@@ -461,15 +461,18 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
           date: match.Date,
           couples: match.couples.map(couple => ({
             id: couple.id,
+            score: couple.score ?? [0, 0, 0], // 🛠 Add score here (fallback if missing)
             members: couple.members.map(member => ({
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
-              profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url  || null,
+              profilePicture: member.profilePicture?.formats?.small?.url ||
+                               member.profilePicture?.formats?.thumbnail?.url ||
+        null,
+            })),
+            sets: couple.sets,
           })),
-            sets: couple.sets
-          }))
-        }))
+        })),
       }));
 
       ctx.body = groupMatches;
@@ -775,6 +778,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                         fields: ['id', 'firstName', 'lastName'],
                       },
                       sets: true, // Populate sets within each couple
+                      score: true, // Populate score if needed
                     },
                   },
                 },
