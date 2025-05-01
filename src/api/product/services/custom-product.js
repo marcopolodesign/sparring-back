@@ -59,25 +59,41 @@ module.exports = {
     }
   },
 
-  async findProductByDurationAndType(duration, type, payment_method, timestamp, trackAmount) {
-    console.log(`Searching for product ${type}-${payment_method}-${duration}`);
+  async findProductByDurationAndType(duration, type, payment_method, startTime, venue) {
+    console.log(`Searching for product ${type}-${payment_method}-${duration} with start time ${startTime}`);
+  
+    // const startHour = parseInt(startTime.slice(0, 2), 10);
+  
+    // const rushStartAm = parseInt((venue?.rush_start_am || '00:00:00').slice(0, 2), 10);
+    // const rushEndAm = parseInt((venue?.rush_end_am || '00:00:00').slice(0, 2), 10);
+  
+    // const rushStartPm = parseInt((venue?.rush_start_pm || '00:00:00').slice(0, 2), 10);
+    // const rushEndPm = parseInt((venue?.rush_end_pm || '00:00:00').slice(0, 2), 10);
+  
+    // const isRushHour = 
+    //   (startHour >= rushStartAm && startHour < rushEndAm) || 
+    //   (startHour >= rushStartPm && startHour < rushEndPm);
+  
+    let baseSku = `${type}-${payment_method}-${duration}`;
+    // if (isRushHour) {
+    //   baseSku += '-rush';
+    // }
+  
+    console.log('Trying SKU:', baseSku);
+  
     let products = await strapi.entityService.findMany('api::product.product', {
-      filters: {
-      sku: { $eq: `${type}-${payment_method}-${duration}` },
-      },
+      filters: { sku: { $eq: baseSku } },
       limit: 1,
     });
-
+  
     if (!products || products.length === 0) {
-      const defaultSku = type === 'abono' ? 'abono-90' : 'padel-90';
+      const defaultSku = type === 'abono' ? 'abono-90' : 'alquiler-90';
       products = await strapi.entityService.findMany('api::product.product', {
-      filters: {
-        sku: { $eq: defaultSku },
-      },
-      limit: 1,
+        filters: { sku: { $eq: defaultSku } },
+        limit: 1,
       });
     }
-
+  
     return products[0] || null;
-  },
+  }
 }

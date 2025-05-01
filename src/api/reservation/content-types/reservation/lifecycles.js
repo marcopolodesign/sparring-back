@@ -29,7 +29,7 @@ module.exports = {
                 },
             });
 
-            console.log(product, 'PRODUCTO');
+            // console.log(product, 'PRODUCTO');
 
             if (!product) {
                 throw new Error(`No se pudo encontrar el producto con ID: ${productId}`);
@@ -41,7 +41,7 @@ module.exports = {
                 populate: ['venue'],
             });
 
-            console.log(court, 'COURT');
+            // console.log(court, 'COURT');
 
             if (!court || !court.venue) {
                 throw new Error('No se pudo encontrar la sede (venue) asociada a la cancha de la reserva.');
@@ -58,7 +58,7 @@ module.exports = {
                 (price) => price.venue?.id === venueId && price.custom_ammount
             );
 
-            console.log(customPrice, 'CUSTOM PRICE');
+            // console.log(customPrice, 'CUSTOM PRICE');
 
             if (customPrice) {
                 amount = customPrice.custom_ammount;

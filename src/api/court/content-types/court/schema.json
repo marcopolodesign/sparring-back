@@ -104,6 +104,18 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::zone.zone"
+    },
+    "rush_start_am": {
+      "type": "time"
+    },
+    "rush_end_am": {
+      "type": "time"
+    },
+    "rush_start_pm": {
+      "type": "time"
+    },
+    "rush_end_pm": {
+      "type": "time"
     }
   }
 }

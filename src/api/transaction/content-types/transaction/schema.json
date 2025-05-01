@@ -34,7 +34,8 @@
         "tarjeta",
         "transferencia",
         "gateway-mp",
-        "gateway-stripe"
+        "gateway-stripe",
+        "dolar"
       ]
     },
     "date": {
@@ -49,9 +50,6 @@
         "Refunded",
         "Cancelled"
       ]
-    },
-    "original_transaction": {
-      "type": "string"
     },
     "discounts": {
       "type": "decimal"
@@ -92,6 +90,11 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::abono.abono"
+    },
+    "originals": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction"
     }
   }
 }

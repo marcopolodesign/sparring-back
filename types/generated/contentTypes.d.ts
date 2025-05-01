@@ -979,7 +979,7 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
       Attribute.DefaultTo<'active'>;
     renovation_date: Attribute.Date;
     payment_method: Attribute.Enumeration<
-      ['efectivo', 'transferencia', 'credito']
+      ['efectivo', 'transferencia', 'credito', 'dolar']
     >;
     force: Attribute.Boolean;
     createdAt: Attribute.DateTime;
@@ -1114,6 +1114,10 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     >;
     is_premium: Attribute.Boolean;
     zone: Attribute.Relation<'api::court.court', 'oneToOne', 'api::zone.zone'>;
+    rush_start_am: Attribute.Time;
+    rush_end_am: Attribute.Time;
+    rush_start_pm: Attribute.Time;
+    rush_end_pm: Attribute.Time;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1355,7 +1359,7 @@ export interface ApiReservationReservation extends Schema.CollectionType {
     start_time: Attribute.Time;
     end_time: Attribute.Time;
     status: Attribute.Enumeration<
-      ['pending_payment', 'confirmed', 'cancelled']
+      ['pending_payment', 'upfront_payment', 'confirmed', 'cancelled']
     >;
     duration: Attribute.Integer;
     court: Attribute.Relation<
@@ -1561,13 +1565,19 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
     >;
     amount: Attribute.Decimal;
     payment_method: Attribute.Enumeration<
-      ['efectivo', 'tarjeta', 'transferencia', 'gateway-mp', 'gateway-stripe']
+      [
+        'efectivo',
+        'tarjeta',
+        'transferencia',
+        'gateway-mp',
+        'gateway-stripe',
+        'dolar'
+      ]
     >;
     date: Attribute.DateTime;
     status: Attribute.Enumeration<
       ['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled']
     >;
-    original_transaction: Attribute.String;
     discounts: Attribute.Decimal;
     source: Attribute.Enumeration<
       ['app', 'front-web', 'sparring-club', 'mostrador', 'whatsapp']
@@ -1593,6 +1603,11 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
       'api::transaction.transaction',
       'oneToOne',
       'api::abono.abono'
+    >;
+    originals: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToMany',
+      'api::transaction.transaction'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;

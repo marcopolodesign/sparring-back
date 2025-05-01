@@ -77,6 +77,16 @@ module.exports = {
         auth: false, // Adjust if you want to add auth later
       },
     },
+
+    {
+      method: 'GET',
+      path: '/reservations/venue-availability/:venueId',
+      handler: 'custom-reservation.getVenueAvailability',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
     
 
 
