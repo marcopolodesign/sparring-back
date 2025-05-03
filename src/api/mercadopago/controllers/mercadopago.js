@@ -65,7 +65,7 @@ module.exports = {
       //   });
       // }
 
-      // ctx.send({ received: true });
+      ctx.send({ received: true });
     } catch (error) {
       ctx.throw(500, error.message);
     }

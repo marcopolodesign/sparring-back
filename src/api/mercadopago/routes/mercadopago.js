@@ -12,6 +12,17 @@ module.exports = {
     },
 
     {
+      method: 'GET',
+      path: '/mercadopago/webhook',
+      handler: 'mercadopago.webhook',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     },
+
+     {
       method: 'POST',
       path: '/mercadopago/webhook',
       handler: 'mercadopago.webhook',
