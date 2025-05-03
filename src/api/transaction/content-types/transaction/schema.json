@@ -95,6 +95,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::transaction.transaction"
+    },
+    "logs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::log-entry.log-entry",
+      "mappedBy": "transaction"
     }
   }
 }

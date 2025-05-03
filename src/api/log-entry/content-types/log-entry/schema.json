@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "log_entries",
+  "info": {
+    "singularName": "log-entry",
+    "pluralName": "log-entries",
+    "displayName": "LogEntry"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "action": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "datetime"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "reservation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reservation.reservation",
+      "inversedBy": "logs"
+    },
+    "transaction": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction.transaction",
+      "inversedBy": "logs"
+    }
+  }
+}

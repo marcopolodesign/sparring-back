@@ -187,9 +187,21 @@ module.exports = {
     });
 
     for (const res of futureReservations) {
+      // Delete associated transactions
+      const transactions = await strapi.entityService.findMany('api::transaction.transaction', {
+        filters: {
+          reservation: { id: res.id },
+        },
+      });
+
+      for (const tx of transactions) {
+        await strapi.entityService.delete('api::transaction.transaction', tx.id);
+      }
+
+      // Delete the reservation
       await strapi.entityService.delete('api::reservation.reservation', res.id);
     }
 
-    return { message: `Abono ${abonoId} cancelled, ${futureReservations.length} future reservations deleted.` };
+    return { message: `Abono ${abonoId} cancelled, ${futureReservations.length} future reservations and their transactions deleted.` };
   },
 };

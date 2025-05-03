@@ -21,10 +21,10 @@ module.exports = {
       const targetDate = date || now.toISOString().split('T')[0]; // Use local date
 
       const processedReservations = [];
-      console.log('Target date for reservations:', targetDate);
-      console.log('Track IDs to process:', trackIds);
-      console.log('Current local date and time:', now);
-      console.log('Current local date and time + 20 minutes:', nowPlus20Minutes);
+      // console.log('Target date for reservations:', targetDate);
+      // console.log('Track IDs to process:', trackIds);
+      // console.log('Current local date and time:', now);
+      // console.log('Current local date and time + 20 minutes:', nowPlus20Minutes);
 
       // Fetch reservations for the specified date
       const reservations = await strapi.entityService.findMany('api::reservation.reservation', {
@@ -38,7 +38,7 @@ module.exports = {
         },
       });
 
-      console.log('Fetched reservations:', reservations); // Debugging log
+      // console.log('Fetched reservations:', reservations); // Debugging log
 
       // Process reservations to find the closest start_time for each track
       const trackClosestReservations = {};
@@ -54,8 +54,8 @@ module.exports = {
         const startTime = new Date(startTimeUTC.getTime() - startTimeUTC.getTimezoneOffset() * 60000);
         const endTime = new Date(endTimeUTC.getTime() - endTimeUTC.getTimezoneOffset() * 60000);
 
-        console.log('Start time (local):', startTime); // Debugging log
-        console.log('End time (local):', endTime); // Debugging log
+        // console.log('Start time (local):', startTime); // Debugging log
+        // console.log('End time (local):', endTime); // Debugging log
 
         // Check if the reservation is active within the range
         if (startTime <= nowPlus20Minutes && endTime >= now) {

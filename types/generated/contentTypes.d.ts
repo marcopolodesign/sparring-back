@@ -911,6 +911,11 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'api::club.club'
     >;
     is_guest: Attribute.Boolean & Attribute.DefaultTo<false>;
+    log_entries: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::log-entry.log-entry'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1172,6 +1177,52 @@ export interface ApiGeneralZoneGeneralZone extends Schema.CollectionType {
   };
 }
 
+export interface ApiLogEntryLogEntry extends Schema.CollectionType {
+  collectionName: 'log_entries';
+  info: {
+    singularName: 'log-entry';
+    pluralName: 'log-entries';
+    displayName: 'LogEntry';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    action: Attribute.String;
+    description: Attribute.String;
+    timestamp: Attribute.DateTime;
+    user: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    reservation: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'manyToOne',
+      'api::reservation.reservation'
+    >;
+    transaction: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'manyToOne',
+      'api::transaction.transaction'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiMatchMatch extends Schema.CollectionType {
   collectionName: 'matches';
   info: {
@@ -1395,6 +1446,12 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'oneToOne',
       'api::court.court'
     >;
+    logs: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToMany',
+      'api::log-entry.log-entry'
+    >;
+    notes: Attribute.Text;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1609,6 +1666,11 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
       'oneToMany',
       'api::transaction.transaction'
     >;
+    logs: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToMany',
+      'api::log-entry.log-entry'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1680,6 +1742,7 @@ declare module '@strapi/types' {
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
       'api::general-zone.general-zone': ApiGeneralZoneGeneralZone;
+      'api::log-entry.log-entry': ApiLogEntryLogEntry;
       'api::match.match': ApiMatchMatch;
       'api::player-level.player-level': ApiPlayerLevelPlayerLevel;
       'api::product.product': ApiProductProduct;

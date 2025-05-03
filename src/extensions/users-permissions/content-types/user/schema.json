@@ -234,6 +234,12 @@
     "is_guest": {
       "type": "boolean",
       "default": false
+    },
+    "log_entries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::log-entry.log-entry",
+      "mappedBy": "user"
     }
   }
 }

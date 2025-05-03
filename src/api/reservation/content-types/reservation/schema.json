@@ -80,6 +80,15 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::court.court"
+    },
+    "logs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::log-entry.log-entry",
+      "mappedBy": "reservation"
+    },
+    "notes": {
+      "type": "text"
     }
   }
 }
