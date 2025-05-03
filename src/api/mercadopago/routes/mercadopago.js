@@ -12,7 +12,7 @@ module.exports = {
     },
 
     {
-      method: 'GET',
+      method: 'POST',
       path: '/mercadopago/webhook',
       handler: 'mercadopago.webhook',
       config: {
