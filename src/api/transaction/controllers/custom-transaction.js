@@ -59,6 +59,7 @@ module.exports = {
 
                 return {
                     id: Number(transaction.id), // 🔐 Ensure number
+                    clienteId: transaction.client?.id,
                     cliente: transaction.client?.firstName
                         ? `${transaction.client.firstName} ${transaction.client.lastName}`.trim()
                         : transaction.client?.email || 'Desconocido',

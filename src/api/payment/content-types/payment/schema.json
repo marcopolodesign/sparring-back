@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payments",
+  "info": {
+    "singularName": "payment",
+    "pluralName": "payments",
+    "displayName": "Payment"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "payer": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "transaction": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transaction.transaction",
+      "inversedBy": "payments"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "in_process",
+        "approved",
+        "authorized",
+        "in_mediation",
+        "rejected",
+        "cancelled",
+        "refunded",
+        "charged_back"
+      ]
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "payer_email": {
+      "type": "string"
+    },
+    "reservation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reservation.reservation",
+      "inversedBy": "payments"
+    }
+  }
+}

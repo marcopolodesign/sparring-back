@@ -1312,6 +1312,68 @@ export interface ApiMatchMatch extends Schema.CollectionType {
   };
 }
 
+export interface ApiPaymentPayment extends Schema.CollectionType {
+  collectionName: 'payments';
+  info: {
+    singularName: 'payment';
+    pluralName: 'payments';
+    displayName: 'Payment';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    payer: Attribute.Relation<
+      'api::payment.payment',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    transaction: Attribute.Relation<
+      'api::payment.payment',
+      'manyToOne',
+      'api::transaction.transaction'
+    >;
+    status: Attribute.Enumeration<
+      [
+        'pending',
+        'in_process',
+        'approved',
+        'authorized',
+        'in_mediation',
+        'rejected',
+        'cancelled',
+        'refunded',
+        'charged_back'
+      ]
+    >;
+    payment_method: Attribute.String;
+    amount: Attribute.Decimal;
+    currency: Attribute.String;
+    external_id: Attribute.String;
+    payer_email: Attribute.String;
+    reservation: Attribute.Relation<
+      'api::payment.payment',
+      'manyToOne',
+      'api::reservation.reservation'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::payment.payment',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::payment.payment',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiPlayerLevelPlayerLevel extends Schema.CollectionType {
   collectionName: 'player_levels';
   info: {
@@ -1452,6 +1514,11 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'api::log-entry.log-entry'
     >;
     notes: Attribute.Text;
+    payments: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToMany',
+      'api::payment.payment'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1628,12 +1695,21 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
         'transferencia',
         'gateway-mp',
         'gateway-stripe',
-        'dolar'
+        'dolar',
+        'multiple'
       ]
     >;
     date: Attribute.DateTime;
     status: Attribute.Enumeration<
-      ['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled']
+      [
+        'Pending',
+        'Completed',
+        'Failed',
+        'Refunded',
+        'Cancelled',
+        'Paid',
+        'PartiallyPaid'
+      ]
     >;
     discounts: Attribute.Decimal;
     source: Attribute.Enumeration<
@@ -1671,6 +1747,13 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
       'oneToMany',
       'api::log-entry.log-entry'
     >;
+    payments: Attribute.Relation<
+      'api::transaction.transaction',
+      'oneToMany',
+      'api::payment.payment'
+    >;
+    is_fully_paid: Attribute.Boolean & Attribute.DefaultTo<false>;
+    amount_paid: Attribute.Decimal;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1744,6 +1827,7 @@ declare module '@strapi/types' {
       'api::general-zone.general-zone': ApiGeneralZoneGeneralZone;
       'api::log-entry.log-entry': ApiLogEntryLogEntry;
       'api::match.match': ApiMatchMatch;
+      'api::payment.payment': ApiPaymentPayment;
       'api::player-level.player-level': ApiPlayerLevelPlayerLevel;
       'api::product.product': ApiProductProduct;
       'api::reservation.reservation': ApiReservationReservation;

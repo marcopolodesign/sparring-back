@@ -35,7 +35,8 @@
         "transferencia",
         "gateway-mp",
         "gateway-stripe",
-        "dolar"
+        "dolar",
+        "multiple"
       ]
     },
     "date": {
@@ -48,7 +49,9 @@
         "Completed",
         "Failed",
         "Refunded",
-        "Cancelled"
+        "Cancelled",
+        "Paid",
+        "PartiallyPaid"
       ]
     },
     "discounts": {
@@ -101,6 +104,19 @@
       "relation": "oneToMany",
       "target": "api::log-entry.log-entry",
       "mappedBy": "transaction"
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "transaction"
+    },
+    "is_fully_paid": {
+      "type": "boolean",
+      "default": false
+    },
+    "amount_paid": {
+      "type": "decimal"
     }
   }
 }

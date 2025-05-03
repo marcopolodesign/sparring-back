@@ -89,6 +89,12 @@
     },
     "notes": {
       "type": "text"
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "reservation"
     }
   }
 }
