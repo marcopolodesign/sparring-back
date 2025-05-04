@@ -33,5 +33,15 @@ module.exports = {
       },
      },
 
+     {
+      method: 'GET',
+      path: '/mercadopago/backmp',
+      handler: 'mercadopago.backmp',
+      config: {
+        policies: [],
+        middlewares: [],
+        auth: false,
+      },
+     },
   ],
 };

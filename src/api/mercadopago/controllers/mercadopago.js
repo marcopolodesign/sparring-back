@@ -22,9 +22,9 @@ module.exports = {
           items: ctx.request.body.items, // Populate items from ctx.request.body
           purpose: ctx.request.body.purpose, // Populate purpose from ctx.request.body
           back_urls: {
-            success: "https://www.tu-sitio/success",
-            failure: "http://www.tu-sitio/failure",
-            pending: "http://www.tu-sitio/pending"
+            success: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp",
+            failure: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/hp-payments/backmp",
+            pending: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/hp-payments/backmp"
           },
           metadata: ctx.request.body.metadata, // Populate metadata from ctx.request.body
           auto_return: "approved",
@@ -127,6 +127,17 @@ module.exports = {
     } catch (error) {
       console.error("Error in webhook:", error);
       ctx.throw(500, error.message);
+    }
+  },
+
+  async backmp(ctx) {
+    if (ctx.query.paymentId !== "null") {
+      const payment = await new Payment(client).get({ id: ctx.query.paymentId });
+      console.log("Payment details fetched:", payment);     
+       ctx.redirect(
+        `https://ugo.com.ar?payment_id=${ctx.query.payment_id}
+        &status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+      );
     }
   },
 };

@@ -151,15 +151,18 @@ module.exports = {
     async afterUpdate(event) {
         const { result, params } = event;
 
+        console.log(event, 'EVENTO afterUpdate lifecycle reservation');
+
         const when = formatSpanishDate(new Date());
         try {
             // Obtener el ID del producto asociado a la reserva
-            const productId = params.data.products[0];
 
-            if (!productId) {
-                throw new Error('No se encontró un producto asociado a la reserva.');
+            if (!Array.isArray(params.data.products) || params.data.products.length === 0) {
+                strapi.log.info(`No products found for reservation #${result.id}. Skipping transaction update.`);
+                
+                return; // Exit early without throwing an error
             }
-
+            const productId = params.data.products[0];
             // Obtener el producto desde la base de datos, incluyendo el custom_price y venues
             const product = await strapi.entityService.findOne('api::product.product', productId, {
                 populate: {
