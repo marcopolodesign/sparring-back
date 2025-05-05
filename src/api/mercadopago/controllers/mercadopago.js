@@ -3,8 +3,9 @@ const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 // Configura tus credenciales de acceso
 const client = new MercadoPagoConfig({
   accessToken: 
-  'APP_USR-2821647204953835-050222-f89cb3070828b637eec973ac9a34935a-2417659485',
-  // 'TEST-6544869231828138-112018-0c1a68f0042f127d3b6e69c6bed72455-18820842',
+  'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
+  // 'APP_USR-2821647204953835-050222-f89cb3070828b637eec973ac9a34935a-2417659485', -- test token prod
+  // 'TEST-6544869231828138-112018-0c1a68f0042f127d3b6e69c6bed72455-18820842', -- test token mateo
 });
 
 module.exports = {
