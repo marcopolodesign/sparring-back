@@ -131,12 +131,12 @@ module.exports = {
   },
 
   async backmp(ctx) {
-    if (ctx.query.paymentId !== "null") {
-      const payment = await new Payment(client).get({ id: ctx.query.paymentId });
+    console.log("BackMP called with query:", ctx.query);
+    if (ctx.query.payment_id !== "null") {
+      const payment = await new Payment(client).get({ id: ctx.query.payment_id });
       console.log("Payment details fetched:", payment);     
        ctx.redirect(
-        `https://sparring.com.ar?payment_id=${ctx.query.payment_id}
-        &status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+        `https://club.sparring.com.ar/${payment.metadata?.venueName || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
       );
     }
   },

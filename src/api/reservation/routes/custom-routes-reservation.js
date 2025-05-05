@@ -88,6 +88,14 @@ module.exports = {
       },
     },
     
+    {
+      method: 'POST',
+      path: '/reservation/reserve',
+      handler: 'custom-reservation.createReserve',
+      config: {
+        auth: false
+      },
+    },
 
 
   ],

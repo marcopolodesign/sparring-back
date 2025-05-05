@@ -166,6 +166,27 @@ const formatCurrency = (amount) => {
 };
 
 
+const DAYS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MONTHS = [
+  'enero','febrero','marzo','abril','mayo',
+  'junio','julio','agosto','septiembre','octubre',
+  'noviembre','diciembre'
+];
+
+
+function formatSpanishDate(date) {
+  const weekday = DAYS[date.getDay()];
+  const day = date.getDate();
+  // sólo el día 1º ponemos "1ro"
+  const dayStr = (day === 1 ? '1ro' : day);
+  const month = MONTHS[date.getMonth()];
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${weekday} ${dayStr} de ${month} ${hh}:${mm}`;
+}
+
+
+
 module.exports = createCoreController('api::reservation.reservation', ({ strapi }) => ({
   async createTransaction(ctx) {
     // Llamar al método base para crear la reserva
@@ -190,7 +211,7 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       return { data, meta };
     } catch (error) {
       strapi.log.error('Error creando la venta asociada a la reserva:', error);
-      throw new Error('Error creando la venta asociada a la reserva.');
+      throw new Error('Error creando la venta asociada a la reserva. en custom-transaction');
     }
   },
 
@@ -994,5 +1015,154 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       ctx.badRequest('Something went wrong.');
     }
   },
+
+  async createReserve(ctx) {
+    try {
+        const {
+            date,
+            start_time,
+            end_time,
+            owner,
+            court,
+            seller,
+            type,
+            products,
+            coach,
+            venue,
+            duration,
+        // @ts-ignore
+        } = ctx.request.body.data;
+
+        // Validate required fields
+        if (!date || !start_time || !end_time || !owner || !court || !seller || !products || products.length === 0) {
+            return ctx.badRequest('Missing required fields.');
+        }
+
+        // Ensure date, start_time, and end_time are in valid ISO format
+        const parsedStartTime = parseISO(`${date}T${start_time}`);
+        const parsedEndTime = parseISO(`${date}T${end_time}`);
+
+        const reservationData = {
+            date,
+            start_time,
+            end_time, // Include seconds and milliseconds
+            status: 'upfront_payment',
+            duration,
+            owner,
+            court,
+            seller,
+            type,
+            products,
+            coach,
+            venue,
+            publishedAt: new Date().toISOString(), // Ensure the reservation is published
+        };
+
+        const reservation = await strapi.entityService.create('api::reservation.reservation', {
+            // @ts-ignore
+            data: reservationData,
+        });
+
+        const reservationId = reservation.id;
+
+        // Log the reservation creation
+        const when = formatSpanishDate(new Date());
+        await strapi.entityService.create('api::log-entry.log-entry', {
+            data: {
+                action: 'reservation.created',
+                description: `Reserva #${reservationId} creada por el usuario ${seller} para el cliente ${owner} el ${when}`,
+                timestamp: new Date(),
+                user: owner,
+                reservation: reservationId,
+            },
+        });
+
+        // Check if a transaction already exists for this reservation
+        const existingTransaction = await strapi.entityService.findMany('api::transaction.transaction', {
+          filters: {
+            reservation: {
+              id: { $eq: reservationId }
+            }
+          }})
+          ;
+
+        if (existingTransaction && existingTransaction.length > 0) {
+            strapi.log.info(`Transaction already exists for reservation #${reservationId}. Skipping transaction creation.`);
+            return ctx.send({ reservationId, transactionId: existingTransaction[0].id });
+        }
+
+        // Fetch product and court details
+        const productId = products[0];
+        const product = await strapi.entityService.findOne('api::product.product', productId, {
+            populate: {
+                custom_price: { populate: ['venue'] },
+                venues: true,
+            },
+        });
+
+        if (!product) {
+            throw new Error(`No se pudo encontrar el producto con ID: ${productId}`);
+        }
+
+        const courtDetails = await strapi.entityService.findOne('api::track.track', court, {
+            populate: ['venue'],
+        });
+
+        if (!courtDetails || !courtDetails.venue) {
+            throw new Error('No se pudo encontrar la sede (venue) asociada a la cancha de la reserva.');
+        }
+
+        const venueId = courtDetails.venue.id;
+
+        // Determine the price
+        let amount = product.price;
+        const customPrice = product.custom_price.find(
+            (price) => price.venue?.id === venueId && price.custom_ammount
+        );
+
+        if (customPrice) {
+            amount = customPrice.custom_ammount;
+        }
+
+        // Create the transaction
+        const transactionDate = `${date}T${start_time}`;
+        const transactionDetails = {
+            reservation: reservationId,
+            client: owner,
+            seller,
+            amount,
+            description: `Venta asociada a la reserva ${reservationId}`,
+            date: transactionDate,
+            status: 'Pending',
+            source: 'sparring-club',
+            products: [productId],
+            venue: venueId,
+        };
+
+        const transaction = await strapi.service('api::transaction.transaction').create({
+            data: transactionDetails,
+        });
+
+        const transactionId = transaction.id;
+
+        // Log the transaction creation
+        await strapi.entityService.create('api::log-entry.log-entry', {
+            data: {
+                action: 'transaction.created',
+                description: `Transaction #${transactionId} creada para la reserva #${reservationId}, por un total de ${amount} el ${when}`,
+                timestamp: new Date(),
+                user: owner,
+                reservation: reservationId,
+                transaction: transactionId,
+            },
+        });
+
+        // Return reservationId and transactionId
+        return ctx.send({ reservationId, transactionId });
+    } catch (error) {
+        strapi.log.error('Error in Reserve controller:', error);
+        return ctx.internalServerError('Failed to create reservation and transaction.');
+    }
+},
   
 }));

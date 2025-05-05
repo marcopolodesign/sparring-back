@@ -45,6 +45,16 @@ module.exports = {
         }
 
         try {
+            // Check if a transaction already exists for this reservation
+            const existingTransaction = await strapi.entityService.findMany('api::transaction.transaction', {
+                filters: { reservation: result.id },
+            });
+
+            if (existingTransaction && existingTransaction.length > 0) {
+                strapi.log.info(`Transaction already exists for reservation #${result.id}. Skipping transaction creation.`);
+                return; // Skip transaction creation
+            }
+
             // Obtener el ID del producto asociado a la reserva
             const productId = params.data.products[0];
 
@@ -254,7 +264,7 @@ module.exports = {
             // Registro en el log para confirmar que la transacción fue actualizada
             strapi.log.info(`Transacción actualizada exitosamente para la reserva ${result.id}`);
         } catch (error) {
-            strapi.log.error('Error actualizando la transacción asociada a la reserva:', error);
+            strapi.log.error('Error actualizando la transacción asociada a la reserva en lifecyle:', error);
         }
     },
 };

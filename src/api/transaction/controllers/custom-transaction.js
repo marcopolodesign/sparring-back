@@ -95,6 +95,7 @@ module.exports = {
 
     async getTransactionsByReservation(ctx) {
         const { reservationId } = ctx.query;
+        console.log('reservationId', reservationId);
 
         try {
             // Ensure the reservationId is provided
@@ -160,6 +161,9 @@ module.exports = {
                     metodoPago: transaction.payment_method || 'N/A',
                     descuento: transaction.discounts ? `${transaction.discounts}%` : '0%',
                     total: totalAmount ? `$${totalAmount.toLocaleString()}` : '$0',
+                    totalPagado: transaction.amount_paid
+                        ? `$${transaction.amount_paid.toLocaleString()}`
+                        : '$0',
                     fecha: new Date(transaction.date).toLocaleString('es-ES', {
                         day: '2-digit',
                         month: '2-digit',
