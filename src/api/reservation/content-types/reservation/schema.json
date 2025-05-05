@@ -32,6 +32,7 @@
       "enum": [
         "pending_payment",
         "upfront_payment",
+        "paid",
         "confirmed",
         "cancelled"
       ]

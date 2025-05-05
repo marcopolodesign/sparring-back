@@ -1,4 +1,59 @@
 module.exports = {
+    // Helper function to format transactions
+    formatTransaction(transaction) {
+        const products = transaction.products || [];
+        let productName = 'Unknown';
+        let productType = 'Unknown';
+        let productPrice = 0;
+
+        if (products.length > 0) {
+            const product = products[0];
+            productName = product.Name;
+            productType = product.type;
+
+            if (product.custom_price?.length > 0) {
+                productPrice = product.custom_price[0].custom_ammount;
+            } else {
+                productPrice = product.price;
+            }
+        }
+
+        const totalAmount = transaction.amount || productPrice;
+        const totalPaidWithDiscount = (transaction.amount_paid || 0) + (transaction.discount || 0);
+        const remainingAmount = totalAmount - totalPaidWithDiscount;
+
+        return {
+            id: Number(transaction.id),
+            clienteId: transaction.client?.id,
+            cliente: transaction.client?.firstName
+                ? `${transaction.client.firstName} ${transaction.client.lastName}`.trim()
+                : transaction.client?.email || 'Desconocido',
+            vendedorId: transaction.seller?.id,
+            vendedor: transaction.seller
+                ? `${transaction.seller.firstName} ${transaction.seller.lastName}`.trim()
+                : 'Unknown Seller',
+            tipoProducto: productType,
+            producto: productName,
+            productoId: products[0]?.id,
+            metodoPago: transaction.payment_method || 'N/A',
+            descuento: transaction.discount ? `${transaction.discount.toLocaleString()}` : '0',
+            total: totalAmount ? `$${totalAmount.toLocaleString()}` : '$0',
+            totalPagado: transaction.amount_paid
+                ? `$${transaction.amount_paid.toLocaleString()}`
+                : '$0',
+            restante: remainingAmount > 0 ? `$${remainingAmount.toLocaleString()}` : '$0',
+            fecha: new Date(transaction.date).toLocaleString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            estado: transaction.status ? transaction.status.toUpperCase() : 'N/A',
+            reserva: transaction.reservation?.id || null,
+        };
+    },
+
     async getTransactionDetails(ctx) {
         const { date, venueId } = ctx.query;
         console.log('date', date);
@@ -36,54 +91,8 @@ module.exports = {
 
             console.log('transactions', transactions);
 
-            // Format the transactions
-            const formattedTransactions = transactions.map((transaction) => {
-                const products = transaction.products || [];
-                let productName = 'Unknown';
-                let productType = 'Unknown';
-                let productPrice = 0;
-
-                if (products.length > 0) {
-                    const product = products[0];
-                    productName = product.Name;
-                    productType = product.type;
-
-                    if (product.custom_price?.length > 0) {
-                        productPrice = product.custom_price[0].custom_ammount;
-                    } else {
-                        productPrice = product.price;
-                    }
-                }
-
-                const totalAmount = transaction.amount || productPrice;
-
-                return {
-                    id: Number(transaction.id), // 🔐 Ensure number
-                    clienteId: transaction.client?.id,
-                    cliente: transaction.client?.firstName
-                        ? `${transaction.client.firstName} ${transaction.client.lastName}`.trim()
-                        : transaction.client?.email || 'Desconocido',
-                    vendedorId: transaction.seller?.id,
-                    vendedor: transaction.seller
-                        ? `${transaction.seller.firstName} ${transaction.seller.lastName}`.trim()
-                        : 'Unknown Seller',
-                    tipoProducto: productType,
-                    producto: productName,
-                    productoId: products[0]?.id,
-                    metodoPago: transaction.payment_method || 'N/A',
-                    descuento: transaction.discounts ? `${transaction.discounts}%` : '0%',
-                    total: totalAmount ? `$${totalAmount.toLocaleString()}` : '$0',
-                    fecha: new Date(transaction.date).toLocaleString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    }),
-                    estado: transaction.status ? transaction.status.toUpperCase() : 'N/A',
-                    reserva: transaction.reservation?.id || null, // Include reservation ID
-                };
-            });
+            // Use the helper function to format transactions
+            const formattedTransactions = transactions.map(this.formatTransaction);
 
             // Send the response
             ctx.send(formattedTransactions);
@@ -122,58 +131,8 @@ module.exports = {
                 },
             });
 
-            // Format the response
-            const formattedTransactions = reservationTransactions.map((transaction) => {
-                // Extract product data
-                const products = transaction.products || [];
-                let productName = 'Unknown';
-                let productType = 'Unknown';
-                let productPrice = 0;
-
-                if (products.length > 0) {
-                    const product = products[0];
-                    productName = product.Name;
-                    productType = product.type;
-
-                    // Check for custom price first
-                    if (product.custom_price.length > 0) {
-                        productPrice = product.custom_price[0].custom_ammount;
-                    } else {
-                        productPrice = product.price;
-                    }
-                }
-
-                // Calculate total using transaction amount or derived product price
-                const totalAmount = transaction.amount ? transaction.amount : productPrice;
-
-                return {
-                    id: String(transaction.id),
-                    cliente: transaction.client.firstName
-                        ? `${transaction.client.firstName} ${transaction.client.lastName}`.trim()
-                        : transaction.client.email,
-                    vendedorId: transaction.seller.id,
-                    vendedor: transaction.seller
-                        ? `${transaction.seller.firstName} ${transaction.seller.lastName}`.trim()
-                        : 'Unknown Seller',
-                    tipoProducto: productType,
-                    producto: productName,
-                    productoId: products[0]?.id,
-                    metodoPago: transaction.payment_method || 'N/A',
-                    descuento: transaction.discounts ? `${transaction.discounts}%` : '0%',
-                    total: totalAmount ? `$${totalAmount.toLocaleString()}` : '$0',
-                    totalPagado: transaction.amount_paid
-                        ? `$${transaction.amount_paid.toLocaleString()}`
-                        : '$0',
-                    fecha: new Date(transaction.date).toLocaleString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    }),
-                    estado: transaction.status ? transaction.status.toUpperCase() : 'N/A',
-                };
-            });
+            // Use the helper function to format transactions
+            const formattedTransactions = reservationTransactions.map(this.formatTransaction);
 
             // Send the response
             ctx.send(formattedTransactions);

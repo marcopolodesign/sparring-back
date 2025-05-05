@@ -4,7 +4,8 @@
   "info": {
     "singularName": "payment",
     "pluralName": "payments",
-    "displayName": "Payment"
+    "displayName": "Payment",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -56,6 +57,15 @@
       "relation": "manyToOne",
       "target": "api::reservation.reservation",
       "inversedBy": "payments"
+    },
+    "discount_percent": {
+      "type": "integer"
+    },
+    "discount_amount": {
+      "type": "decimal"
+    },
+    "net_amount": {
+      "type": "decimal"
     }
   }
 }

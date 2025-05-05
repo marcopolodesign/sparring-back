@@ -1123,6 +1123,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     rush_end_am: Attribute.Time;
     rush_start_pm: Attribute.Time;
     rush_end_pm: Attribute.Time;
+    cash_discount_percent: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1318,6 +1319,7 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
     singularName: 'payment';
     pluralName: 'payments';
     displayName: 'Payment';
+    description: '';
   };
   options: {
     draftAndPublish: true;
@@ -1356,6 +1358,9 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
       'manyToOne',
       'api::reservation.reservation'
     >;
+    discount_percent: Attribute.Integer;
+    discount_amount: Attribute.Decimal;
+    net_amount: Attribute.Decimal;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1472,7 +1477,7 @@ export interface ApiReservationReservation extends Schema.CollectionType {
     start_time: Attribute.Time;
     end_time: Attribute.Time;
     status: Attribute.Enumeration<
-      ['pending_payment', 'upfront_payment', 'confirmed', 'cancelled']
+      ['pending_payment', 'upfront_payment', 'paid', 'confirmed', 'cancelled']
     >;
     duration: Attribute.Integer;
     court: Attribute.Relation<
@@ -1711,7 +1716,6 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
         'PartiallyPaid'
       ]
     >;
-    discounts: Attribute.Decimal;
     source: Attribute.Enumeration<
       ['app', 'front-web', 'sparring-club', 'mostrador', 'whatsapp']
     >;
@@ -1754,6 +1758,7 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
     >;
     is_fully_paid: Attribute.Boolean & Attribute.DefaultTo<false>;
     amount_paid: Attribute.Decimal;
+    discount: Attribute.Decimal;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

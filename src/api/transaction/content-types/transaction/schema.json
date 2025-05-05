@@ -54,9 +54,6 @@
         "PartiallyPaid"
       ]
     },
-    "discounts": {
-      "type": "decimal"
-    },
     "source": {
       "type": "enumeration",
       "enum": [
@@ -116,6 +113,9 @@
       "default": false
     },
     "amount_paid": {
+      "type": "decimal"
+    },
+    "discount": {
       "type": "decimal"
     }
   }
