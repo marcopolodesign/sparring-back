@@ -137,7 +137,7 @@ module.exports = {
       const payment = await new Payment(client).get({ id: ctx.query.payment_id });
       console.log("Payment details fetched:", payment);     
        ctx.redirect(
-        `https://club.sparring.com.ar/${payment.metadata?.venueName || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+        `https://club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
       );
     }
   },
