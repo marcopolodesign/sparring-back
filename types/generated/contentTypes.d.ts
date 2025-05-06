@@ -1361,6 +1361,7 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
     discount_percent: Attribute.Integer;
     discount_amount: Attribute.Decimal;
     net_amount: Attribute.Decimal;
+    isPaymentGateway: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

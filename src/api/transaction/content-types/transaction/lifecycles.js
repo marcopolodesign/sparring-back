@@ -10,7 +10,7 @@ module.exports = {
             const reservationId = result.reservation?.id;
 
             if (!reservationId) {
-                strapi.log.warn(`Transaction #${transactionId} does not have an associated reservation.`);
+                strapi.log.warn(`Transaction #${transactionId} does not have an associated reservation. file: transaction/lifecycles.js`);
                 return;
             }
 

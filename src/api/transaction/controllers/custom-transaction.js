@@ -56,8 +56,6 @@ module.exports = {
 
     async getTransactionDetails(ctx) {
         const { date, venueId } = ctx.query;
-        console.log('date', date);
-        console.log('venueId', venueId);
         try {
             // Calculate the start and end of the day for the given date
             const startOfDay = new Date(date);

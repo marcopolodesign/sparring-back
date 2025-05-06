@@ -73,6 +73,10 @@ module.exports = {
                 return;
             }
 
+            console.log(`Processing Payment #${result.id} for Transaction #${transactionId} in PAYMENT LIFECYCLE`);
+            // console.log(`Payment details:`, result);
+            // console.log('full payment details:', params.data);
+            console.log('full event', event);
             // 1) Traemos la transacción
             const transaction = await strapi.entityService.findOne(
                 'api::transaction.transaction',
@@ -102,6 +106,13 @@ module.exports = {
             const isFullyPaid = (newPaid + newDiscountTotal) === totalTransactionAmount;
 
             // 5) Actualizamos la transacción
+            let updatedPaymentMethod = result.isPaymentGateway ? 'gateway-mp' : result.payment_method.toLowerCase();
+
+            // Check if the existing payment_method differs from the new one
+            if (transaction.payment_method && transaction.payment_method !== updatedPaymentMethod) {
+                updatedPaymentMethod = 'multiple';
+            }
+
             await strapi.entityService.update(
                 'api::transaction.transaction',
                 transactionId,
@@ -111,13 +122,15 @@ module.exports = {
                         discount: newDiscountTotal,
                         is_fully_paid: isFullyPaid,
                         status: isFullyPaid ? 'Paid' : 'PartiallyPaid',
+                        payment_method: updatedPaymentMethod, // Use the updated payment method
                     },
                 }
             );
 
             strapi.log.info(
                 `Txn #${transactionId} updated: amount_paid=${newPaid}, ` +
-                `discounts=${newDiscountTotal}, paid=${isFullyPaid}`
+                `discounts=${newDiscountTotal}, paid=${isFullyPaid}, ` +
+                `payment_method=${updatedPaymentMethod}`
             );
 
             // 6) Creamos tu log-entry como antes

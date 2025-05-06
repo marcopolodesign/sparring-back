@@ -66,6 +66,10 @@
     },
     "net_amount": {
       "type": "decimal"
+    },
+    "isPaymentGateway": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

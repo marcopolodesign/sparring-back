@@ -3,14 +3,14 @@ const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 // Configura tus credenciales de acceso
 const client = new MercadoPagoConfig({
   accessToken: 
-  'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
-  // 'APP_USR-2821647204953835-050222-f89cb3070828b637eec973ac9a34935a-2417659485', -- test token prod
+  // 'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
+  'APP_USR-362985557512186-050607-70bfddad69ce6a39e3d3a64f2c7d9706-2422687163', // -- test token prod
   // 'TEST-6544869231828138-112018-0c1a68f0042f127d3b6e69c6bed72455-18820842', -- test token mateo
 });
 
 module.exports = {
   async createPreference(ctx) {
-    console.log("MercadoPago initialized");
+    console.log("MercadoPago initialized", client.accessToken);
 
     console.log(ctx.request.body, "ctx.request.body");
 
@@ -18,14 +18,16 @@ module.exports = {
     const preference = new Preference(client);
 
     try {
+      // const publicUrl = process.env.PUBLIC_URL || 'https://goldfish-app-25h3o.ondigitalocean.app'; // Fallback URL if not set
+
       const response = await preference.create({
         body: {
           items: ctx.request.body.items, // Populate items from ctx.request.body
           purpose: ctx.request.body.purpose, // Populate purpose from ctx.request.body
           back_urls: {
-            success: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp",
-            failure: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/hp-payments/backmp",
-            pending: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/hp-payments/backmp"
+            success: "https://localhost:1337/api/mercadopago/backmp",
+            // failure: `${publicUrl}/api/mercadopago/backmp`,
+            // pending: `${publicUrl}/api/mercadopago/backmp`,
           },
           metadata: ctx.request.body.metadata, // Populate metadata from ctx.request.body
           auto_return: "approved",
@@ -50,6 +52,17 @@ module.exports = {
         ctx.throw(400, "Payment ID is missing in the request body");
       }
 
+      // Check if the payment has already been processed
+      const existingPayment = await strapi.entityService.findMany('api::payment.payment', {
+        filters: { external_id: paymentId.toString() }, // Ensure paymentId is treated as a string
+        limit: 1,
+      });
+
+      if (existingPayment.length > 0) {
+        console.log(`Payment ID ${paymentId} has already been processed. Skipping.`);
+        return ctx.send({ received: true });
+      }
+
       // Fetch payment details from MercadoPago
       const payment = await new Payment(client).get({ id: paymentId });
       console.log("Payment details fetched:", payment);
@@ -60,20 +73,8 @@ module.exports = {
         console.log("Strapi payer:", payment.metadata?.user_id);
         const upFront = payment.metadata?.is_upfront;
 
-        if (upFront && reservationId) {
-          // Update reservation status to 'upfront_payment'
-          await strapi.entityService.update('api::reservation.reservation', reservationId, {
-            data: {
-              status: 'upfront_payment',
-              notes: `Upfront payed: Mercado Pago Payment ID: ${paymentId}`,
-            },
-          });
-
-          console.log(`Reservation #${reservationId} updated to 'upfront_payment' for Payment ID: ${paymentId}`);
-        }
-
         // Create a new payment entry
-        await strapi.entityService.create('api::payment.payment', {
+        const newPayment = await strapi.entityService.create('api::payment.payment', {
           data: {
             payer: payment.metadata?.user_id || 1,
             transaction: transactionId || null,
@@ -82,45 +83,108 @@ module.exports = {
             payment_method: payment.payment_type_id || 'unknown',
             amount: payment.transaction_amount,
             currency: payment.currency_id || 'unknown',
-            external_id: paymentId,
+            external_id: paymentId.toString(), // Ensure external_id is stored as a string
             payer_email: payment.payer?.email || null,
             publishedAt: new Date().toISOString(), // Ensure the payment is published
+            isPaymentGateway: true,
           },
         });
 
         console.log(`Payment entry created for Payment ID: ${paymentId}`);
 
+        // Log the payment creation -- ESTE ES EL QUE CREA
+        const existingPaymentLog = await strapi.entityService.findMany('api::log-entry.log-entry', {
+          filters: {
+            action: 'payment.created',
+            transaction: transactionId || null,
+            reservation: reservationId || null,
+          },
+          limit: 1,
+        });
+
+        if (existingPaymentLog.length === 0) {
+          await strapi.entityService.create('api::log-entry.log-entry', {
+            data: {
+              action: 'payment.created',
+              description: `Payment #${newPayment.id} created for Reservation #${reservationId} and Transaction #${transactionId}, amount: ${payment.transaction_amount}`,
+              timestamp: new Date(),
+              user: payment.metadata?.user_id || null,
+              reservation: reservationId || null,
+              transaction: transactionId || null,
+            },
+          });
+          console.log(`Log entry created for payment.created: Payment #${newPayment.id}`);
+        } else {
+          console.log(`Log entry for payment.created already exists for Payment #${newPayment.id}. Skipping.`);
+        }
+
         if (transactionId) {
           // Fetch the transaction to update its details
-          const transaction = await strapi.entityService.findOne('api::transaction.transaction', transactionId);
+          const transaction = await strapi.entityService.findOne('api::transaction.transaction', transactionId, {
+            populate: { payments: true }, // Include associated payments
+          });
 
           if (transaction) {
-            const updatedAmountPaid = (transaction.amount_paid || 0) + payment.transaction_amount;
-            const isFullyPaid = updatedAmountPaid >= transaction.amount;
+            // Check if the payment is already associated with the transaction
+            const isPaymentAlreadyAssociated = transaction.payments?.some(
+              (payment) => payment.external_id === paymentId.toString()
+            );
 
-            // Update the transaction with the new payment details
-            await strapi.entityService.update('api::transaction.transaction', transactionId, {
-              data: {
-                amount_paid: updatedAmountPaid,
-                is_fully_paid: isFullyPaid,
-                status: isFullyPaid ? 'Paid' : 'PartiallyPaid',
-                payment_method: 'gateway-mp',
-              },
-            });
+            // ESTE NO LO CREA NI ACTUALIZA NADA EN LOCAL!
+            if (isPaymentAlreadyAssociated) {
+              console.log(`Payment ID ${paymentId} is already associated with Transaction #${transactionId}. Skipping update.`);
+            } else {
+              const updatedAmountPaid = (transaction.amount_paid || 0) + payment.transaction_amount;
+              const isFullyPaid = updatedAmountPaid >= transaction.amount;
 
-            console.log(`Transaction #${transactionId} updated: amount_paid=${updatedAmountPaid}, is_fully_paid=${isFullyPaid}`);
+              // Update the transaction with the new payment details
+              await strapi.entityService.update('api::transaction.transaction', transactionId, {
+                data: {
+                  amount_paid: updatedAmountPaid,
+                  is_fully_paid: isFullyPaid,
+                  status: isFullyPaid ? 'Paid' : 'PartiallyPaid',
+                  payment_method: payment.payment_type_id && 'gateway-mp' || null, // Set payment method
+                },
+              });
+
+              console.log(`Transaction #${transactionId} updated: amount_paid=${updatedAmountPaid}, is_fully_paid=${isFullyPaid}, payment_method=${payment.payment_type_id || 'gateway-mp'}`);
+            }
           } else {
             console.error(`Transaction #${transactionId} not found.`);
           }
         }
 
         if (reservationId) {
-          // Update reservation status to 'confirmed'
-          await strapi.entityService.update('api::reservation.reservation', reservationId, {
-            data: { status: 'confirmed' },
+          // Fetch the current reservation to check its status
+          const currentReservation = await strapi.entityService.findOne('api::reservation.reservation', reservationId, {
+            fields: ['status', 'notes'], // Fetch only the necessary fields
           });
 
-          console.log(`Reservation #${reservationId} status updated to 'confirmed'`);
+          // Determine the appropriate status for the reservation
+          const newStatus = upFront ? 'upfront_payment' : 'confirmed';
+          const newNotes = upFront ? `Upfront payed: Mercado Pago Payment ID: ${paymentId}` : null;
+
+          // Update the reservation only if the status or notes need to change
+          if (currentReservation.status !== newStatus || currentReservation.notes !== newNotes) {
+            const reservationUpdateData = {
+              status: newStatus,
+            };
+
+            if (newNotes) {
+              reservationUpdateData.notes = newNotes;
+            }
+
+            await strapi.entityService.update('api::reservation.reservation', reservationId, {
+              data: {
+                status: newStatus,
+                ...(newNotes && { notes: newNotes }),
+              },
+            });
+
+            console.log(`Reservation #${reservationId} updated to '${newStatus}' for Payment ID: ${paymentId}`);
+          } else {
+            console.log(`Reservation #${reservationId} already has status '${currentReservation.status}'. Skipping update.`);
+          }
         }
       }
 
@@ -135,9 +199,11 @@ module.exports = {
     console.log("BackMP called with query:", ctx.query);
     if (ctx.query.payment_id !== "null") {
       const payment = await new Payment(client).get({ id: ctx.query.payment_id });
-      console.log("Payment details fetched:", payment);     
-       ctx.redirect(
-        `https://club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+      console.log("Payment details fetched:", payment);
+
+      // const sparringClubUrl = process.env.SPARRING_CLUB_URL || 'https://club.sparring.com.ar'; // Fallback URL if not set
+      ctx.redirect(
+        `club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
       );
     }
   },

@@ -624,14 +624,14 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
 
       // 3. Map through the fetched products and attach the venue-specific custom price
       const enrichedProducts = products.map((product) => {
-        console.log(product, 'PRODUCT')
+        // console.log(product, 'PRODUCT')
         // @ts-ignore
         const customPrices = product.custom_price || [];
 
         // Filter valid custom prices:
         // Exclude prices with a null venue and keep only those where the venue name matches.
         const validCustomPrices = customPrices.filter((price) => {
-          console.log(price, 'PRICE')
+          // console.log(price, 'PRICE')
 
           const priceVenueData = price.venue || null;
           return (
@@ -1067,15 +1067,28 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
 
         // Log the reservation creation
         const when = formatSpanishDate(new Date());
-        await strapi.entityService.create('api::log-entry.log-entry', {
-            data: {
-                action: 'reservation.created',
-                description: `Reserva #${reservationId} creada por el usuario ${seller} para el cliente ${owner} el ${when}`,
-                timestamp: new Date(),
-                user: owner,
-                reservation: reservationId,
-            },
+        const existingReservationLog = await strapi.entityService.findMany('api::log-entry.log-entry', {
+          filters: {
+            action: 'reservation.created',
+            reservation: { id: { $eq: reservationId } },
+          },
+          limit: 1,
         });
+        
+        if (existingReservationLog.length === 0) {
+          await strapi.entityService.create('api::log-entry.log-entry', {
+            data: {
+              action: 'reservation.created',
+              description: `Reserva #${reservationId} creada por el usuario ${seller} para el cliente ${owner} el ${when}`,
+              timestamp: new Date(),
+              user: owner,
+              reservation: reservationId,
+            },
+          });
+          console.log(`Log entry created for reservation.created: Reservation #${reservationId}`);
+        } else {
+          console.log(`Log entry for reservation.created already exists for Reservation #${reservationId}. Skipping.`);
+        }
 
         // Check if a transaction already exists for this reservation
         const existingTransaction = await strapi.entityService.findMany('api::transaction.transaction', {
