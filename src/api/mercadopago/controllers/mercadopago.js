@@ -3,8 +3,8 @@ const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 // Configura tus credenciales de acceso
 const client = new MercadoPagoConfig({
   accessToken: 
-  // 'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
-  'APP_USR-362985557512186-050607-70bfddad69ce6a39e3d3a64f2c7d9706-2422687163', // -- test token prod
+  'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
+  // 'APP_USR-362985557512186-050607-70bfddad69ce6a39e3d3a64f2c7d9706-2422687163', // -- test token prod
   // 'TEST-6544869231828138-112018-0c1a68f0042f127d3b6e69c6bed72455-18820842', -- test token mateo
 });
 
@@ -25,7 +25,11 @@ module.exports = {
           items: ctx.request.body.items, // Populate items from ctx.request.body
           purpose: ctx.request.body.purpose, // Populate purpose from ctx.request.body
           back_urls: {
-            success: "https://localhost:1337/api/mercadopago/backmp",
+            success: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp",
+            failure: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
+            pending: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
+
+            // success: "https://localhost:1337/api/mercadopago/backmp",
             // failure: `${publicUrl}/api/mercadopago/backmp`,
             // pending: `${publicUrl}/api/mercadopago/backmp`,
           },
@@ -203,7 +207,7 @@ module.exports = {
 
       // const sparringClubUrl = process.env.SPARRING_CLUB_URL || 'https://club.sparring.com.ar'; // Fallback URL if not set
       ctx.redirect(
-        `club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+        `https://club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
       );
     }
   },
