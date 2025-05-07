@@ -1124,6 +1124,7 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     rush_start_pm: Attribute.Time;
     rush_end_pm: Attribute.Time;
     cash_discount_percent: Attribute.Integer;
+    mp_access_token: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

@@ -119,6 +119,9 @@
     },
     "cash_discount_percent": {
       "type": "integer"
+    },
+    "mp_access_token": {
+      "type": "string"
     }
   }
 }

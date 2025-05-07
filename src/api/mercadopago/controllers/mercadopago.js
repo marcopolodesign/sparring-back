@@ -1,60 +1,81 @@
 'use strict';
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
-// Configura tus credenciales de acceso
-const client = new MercadoPagoConfig({
-  accessToken: 
-  'APP_USR-6544869231828138-112018-25ed818d64688444790c43b47d73ff0e-18820842', // prod token mateo
-  // 'APP_USR-362985557512186-050607-70bfddad69ce6a39e3d3a64f2c7d9706-2422687163', // -- test token prod
-  // 'TEST-6544869231828138-112018-0c1a68f0042f127d3b6e69c6bed72455-18820842', -- test token mateo
-});
 
 module.exports = {
   async createPreference(ctx) {
-    console.log("MercadoPago initialized", client.accessToken);
-
-    console.log(ctx.request.body, "ctx.request.body");
-
-    // Crear un objeto de preferencia
-    const preference = new Preference(client);
-
     try {
-      // const publicUrl = process.env.PUBLIC_URL || 'https://goldfish-app-25h3o.ondigitalocean.app'; // Fallback URL if not set
+      const { venueId } = ctx.request.body.metadata; // Extract venueId from metadata
+      if (!venueId) {
+        ctx.throw(400, "Venue ID is required in metadata.");
+      }
+
+      // Fetch the venue to get the mp_access_token
+      const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+        fields: ['mp_access_token'],
+      });
+
+      if (!venue || !venue.mp_access_token) {
+        ctx.throw(400, "Venue does not have a valid MercadoPago access token.");
+      }
+
+      const client = new MercadoPagoConfig({
+        accessToken: venue.mp_access_token, // Use the venue's access token
+      });
+
+      console.log("MercadoPago initialized for venue:", venueId);
+
+      const preference = new Preference(client);
 
       const response = await preference.create({
         body: {
-          items: ctx.request.body.items, // Populate items from ctx.request.body
-          purpose: ctx.request.body.purpose, // Populate purpose from ctx.request.body
+          items: ctx.request.body.items,
+          purpose: ctx.request.body.purpose,
           back_urls: {
-            success: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp",
-            failure: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
-            pending: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
-
-            // success: "https://localhost:1337/api/mercadopago/backmp",
-            // failure: `${publicUrl}/api/mercadopago/backmp`,
-            // pending: `${publicUrl}/api/mercadopago/backmp`,
+            success: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
+            failure: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
+            pending: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
           },
-          metadata: ctx.request.body.metadata, // Populate metadata from ctx.request.body
+          metadata: ctx.request.body.metadata,
           auto_return: "approved",
         },
       });
+
       const preferenceId = response.id;
-      console.log("preferenceId", preferenceId);
+      console.log("Preference created:", preferenceId);
       ctx.send({ preferenceId });
     } catch (error) {
-      console.log("Error creating preference", error);
-      ctx.throw(500, "An error occurred while creating the payment preference");
+      console.error("Error creating preference:", error);
+      ctx.throw(500, "An error occurred while creating the payment preference.");
     }
   },
 
   async webhook(ctx) {
     try {
-      const paymentId = ctx.request.body?.data?.id;
-      console.log("Received payment ID:", paymentId);
-      console.log("Request body:", ctx.request.body);
-
-      if (!paymentId) {
-        ctx.throw(400, "Payment ID is missing in the request body");
+      const { venueId } = ctx.request.body.metadata; // Extract venueId from metadata
+      if (!venueId) {
+        ctx.throw(400, "Venue ID is required in metadata.");
       }
+
+      // Fetch the venue to get the mp_access_token
+      const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+        fields: ['mp_access_token'],
+      });
+
+      if (!venue || !venue.mp_access_token) {
+        ctx.throw(400, "Venue does not have a valid MercadoPago access token.");
+      }
+
+      const client = new MercadoPagoConfig({
+        accessToken: venue.mp_access_token, // Use the venue's access token
+      });
+
+      const paymentId = ctx.request.body?.data?.id;
+      if (!paymentId) {
+        ctx.throw(400, "Payment ID is missing in the request body.");
+      }
+
+      const payment = await new Payment(client).get({ id: paymentId });
+      console.log("Payment details fetched:", payment);
 
       // Check if the payment has already been processed
       const existingPayment = await strapi.entityService.findMany('api::payment.payment', {
@@ -66,10 +87,6 @@ module.exports = {
         console.log(`Payment ID ${paymentId} has already been processed. Skipping.`);
         return ctx.send({ received: true });
       }
-
-      // Fetch payment details from MercadoPago
-      const payment = await new Payment(client).get({ id: paymentId });
-      console.log("Payment details fetched:", payment);
 
       if (payment.status === 'approved') {
         const reservationId = payment.metadata?.reservation_id;
@@ -200,15 +217,37 @@ module.exports = {
   },
 
   async backmp(ctx) {
-    console.log("BackMP called with query:", ctx.query);
-    if (ctx.query.payment_id !== "null") {
-      const payment = await new Payment(client).get({ id: ctx.query.payment_id });
-      console.log("Payment details fetched:", payment);
+    try {
+      const { venueId } = ctx.query; // Extract venueId from query
+      if (!venueId) {
+        ctx.throw(400, "Venue ID is required in query.");
+      }
 
-      // const sparringClubUrl = process.env.SPARRING_CLUB_URL || 'https://club.sparring.com.ar'; // Fallback URL if not set
-      ctx.redirect(
-        `https://club.sparring.com.ar/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
-      );
+      // Fetch the venue to get the mp_access_token
+      const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+        fields: ['mp_access_token'],
+      });
+
+      if (!venue || !venue.mp_access_token) {
+        ctx.throw(400, "Venue does not have a valid MercadoPago access token.");
+      }
+
+      const client = new MercadoPagoConfig({
+        accessToken: venue.mp_access_token, // Use the venue's access token
+      });
+
+      const paymentId = ctx.query.payment_id;
+      if (paymentId !== "null") {
+        const payment = await new Payment(client).get({ id: paymentId });
+        console.log("Payment details fetched:", payment);
+
+        ctx.redirect(
+          `${process.env.SPARRING_CLUB_URL}/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+        );
+      }
+    } catch (error) {
+      console.error("Error in backmp:", error);
+      ctx.throw(500, error.message);
     }
   },
 };
