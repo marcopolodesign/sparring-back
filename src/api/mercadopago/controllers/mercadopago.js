@@ -220,7 +220,7 @@ module.exports = {
     try {
       const { venue_id } = ctx.query; // Extract venueId from query
       if (!venue_id) {
-        ctx.throw(400, "Venue ID is required in query.");
+        ctx.throw(400, "Venue ID is required in query. Not found");
       }
 
       // Fetch the venue to get the mp_access_token
