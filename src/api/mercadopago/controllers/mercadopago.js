@@ -51,13 +51,13 @@ module.exports = {
 
   async webhook(ctx) {
     try {
-      const { venueId } = ctx.request.body.metadata; // Extract venueId from metadata
-      if (!venueId) {
+      const { venue_id } = ctx.request.body.metadata; // Extract venueId from metadata
+      if (!venue_id) {
         ctx.throw(400, "Venue ID is required in metadata.");
       }
 
       // Fetch the venue to get the mp_access_token
-      const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+      const venue = await strapi.entityService.findOne('api::court.court', venue_id, {
         fields: ['mp_access_token'],
       });
 
@@ -218,13 +218,13 @@ module.exports = {
 
   async backmp(ctx) {
     try {
-      const { venueId } = ctx.query; // Extract venueId from query
-      if (!venueId) {
+      const { venue_id } = ctx.query; // Extract venueId from query
+      if (!venue_id) {
         ctx.throw(400, "Venue ID is required in query.");
       }
 
       // Fetch the venue to get the mp_access_token
-      const venue = await strapi.entityService.findOne('api::court.court', venueId, {
+      const venue = await strapi.entityService.findOne('api::court.court', venue_id, {
         fields: ['mp_access_token'],
       });
 
