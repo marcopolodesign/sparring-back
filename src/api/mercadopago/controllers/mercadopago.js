@@ -31,9 +31,9 @@ module.exports = {
           items: ctx.request.body.items,
           purpose: ctx.request.body.purpose,
           back_urls: {
-            success: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
-            failure: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
-            pending: `${process.env.PUBLIC_URL}/api/mercadopago/backmp`,
+            success: "https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp",
+            failure: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
+            pending: `https://goldfish-app-25h3o.ondigitalocean.app/api/mercadopago/backmp`,
           },
           metadata: ctx.request.body.metadata,
           auto_return: "approved",
@@ -242,7 +242,7 @@ module.exports = {
         console.log("Payment details fetched:", payment);
 
         ctx.redirect(
-          `${process.env.SPARRING_CLUB_URL}/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
+          `https://club.sparring.com.ar}/${payment.metadata?.venue_name || 'sparring'}/reserva-confirmada?payment_id=${ctx.query.payment_id}&status=${ctx.query.status}&total_amount=${payment.transaction_amount}&reservation_id=${payment.metadata?.reservation_id}&transaction_id=${payment.metadata?.transaction_id}&user_id=${payment.metadata?.user_id}`
         );
       }
     } catch (error) {
