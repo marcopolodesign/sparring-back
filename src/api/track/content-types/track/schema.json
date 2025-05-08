@@ -33,17 +33,15 @@
       "target": "api::abono.abono",
       "mappedBy": "court"
     },
-    "precio_cancha": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::client-custom-price.client-custom-price"
-    },
     "amount_players": {
       "type": "enumeration",
       "enum": [
         "single",
         "doble"
       ]
+    },
+    "type": {
+      "type": "string"
     }
   }
 }

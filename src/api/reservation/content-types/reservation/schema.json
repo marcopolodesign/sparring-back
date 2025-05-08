@@ -96,6 +96,20 @@
       "relation": "oneToMany",
       "target": "api::payment.payment",
       "mappedBy": "reservation"
+    },
+    "cancelation_reason": {
+      "type": "enumeration",
+      "enum": [
+        "no_show",
+        "incorrect_reservation",
+        "missing_players",
+        "rain",
+        "other",
+        "user_cancelled"
+      ]
+    },
+    "other_cancellation": {
+      "type": "string"
     }
   }
 }

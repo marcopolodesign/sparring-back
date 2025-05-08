@@ -170,11 +170,38 @@ module.exports = {
     const when = formatSpanishDate(new Date());
 
     try {
+      if (result.status === "cancelled") {
+        console.log('starting cancellation of transactions...')
+        const transactions = await strapi.entityService.findMany('api::transaction.transaction', {
+          filters: { reservation: result.id },
+        });
+
+        for (const transaction of transactions) {
+          await strapi.entityService.update('api::transaction.transaction', transaction.id, {
+            data: { status: "Cancelled" },
+          });
+
+          console.log(`Transacción #${transaction.id} actualizada a "Cancelled"`);
+        }
+
+        strapi.log.info(`Transacciones asociadas a la reserva #${result.id} marcadas como "Cancelled".`);
+
+        await strapi.entityService.create('api::log-entry.log-entry', {
+          data: {
+            action: 'transaction.cancelled',
+            description: `All transactions associated with Reservation #${result.id} have been marked as "Cancelled".`,
+            timestamp: new Date(),
+            user: params.data.owner,
+            reservation: result.id,
+          },
+        });
+        return;
+      }
+
       if (!Array.isArray(params.data.products) || params.data.products.length === 0) {
         strapi.log.info(`No products found for reservation #${result.id}. Skipping transaction update.`);
         return;
       }
-
       const productId = params.data.products[0];
       const product = await strapi.entityService.findOne('api::product.product', productId, {
         populate: {
@@ -222,30 +249,6 @@ module.exports = {
           amount: amount,
         },
       });
-
-      if (result.status === "cancelled") {
-        const transactions = await strapi.entityService.findMany('api::transaction.transaction', {
-          filters: { reservation: result.id },
-        });
-
-        for (const transaction of transactions) {
-          await strapi.entityService.update('api::transaction.transaction', transaction.id, {
-            data: { status: "Cancelled" },
-          });
-        }
-
-        strapi.log.info(`Transacciones asociadas a la reserva #${result.id} marcadas como "Cancelled".`);
-
-        await strapi.entityService.create('api::log-entry.log-entry', {
-          data: {
-            action: 'transaction.cancelled',
-            description: `All transactions associated with Reservation #${result.id} have been marked as "Cancelled".`,
-            timestamp: new Date(),
-            user: params.data.owner,
-            reservation: result.id,
-          },
-        });
-      }
 
       await strapi.entityService.create('api::log-entry.log-entry', {
         data: {

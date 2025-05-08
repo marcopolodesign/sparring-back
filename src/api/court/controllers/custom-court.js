@@ -48,6 +48,7 @@ module.exports = createCoreController('api::court.court', ({ strapi }) => ({
             name: trackName,
             venue: venue.id,  // Relate the track to the venue using the venue's ID
             timeslots,  // Add timeslots (component) to the track
+            publishedAt: new Date().toISOString(),  // Ensure the track is published
           },
         });
 

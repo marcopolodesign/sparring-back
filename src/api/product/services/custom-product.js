@@ -59,7 +59,7 @@ module.exports = {
     }
   },
 
-  async findProductByDurationAndType(duration, type, payment_method, startTime, venue) {
+  async findProductByDurationAndType(duration, type, payment_method, startTime, venue, court) {
     console.log(`Searching for product ${type}-${payment_method}-${duration} with start time ${startTime}`);
   
     // const startHour = parseInt(startTime.slice(0, 2), 10);
@@ -75,10 +75,9 @@ module.exports = {
     //   (startHour >= rushStartPm && startHour < rushEndPm);
   
     let baseSku = `${type}-${payment_method}-${duration}`;
-    // if (isRushHour) {
-    //   baseSku += '-rush';
-    // }
-  
+    if (court) {
+      baseSku += `-${court}`;
+    }
     console.log('Trying SKU:', baseSku);
   
     let products = await strapi.entityService.findMany('api::product.product', {
@@ -87,7 +86,7 @@ module.exports = {
     });
   
     if (!products || products.length === 0) {
-      const defaultSku = type === 'abono' ? 'abono-90' : 'alquiler-90';
+      const defaultSku = type === 'abono' ? 'abono-90' : (type === 'alquiler' ? 'alquiler-90' : 'alquiler-tranferencia-90');
       products = await strapi.entityService.findMany('api::product.product', {
         filters: { sku: { $eq: defaultSku } },
         limit: 1,

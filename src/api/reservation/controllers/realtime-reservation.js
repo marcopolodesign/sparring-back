@@ -31,6 +31,7 @@ module.exports = {
         filters: {
           date: { $eq: targetDate }, // Ensure date strictly equals targetDate
           court: { id: { $in: trackIds } }, // Use trackIds as track IDs
+          status: { $ne: 'cancelled' }, // Exclude cancelled reservations
         },
         populate: {
           court: true,

@@ -1526,6 +1526,17 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'oneToMany',
       'api::payment.payment'
     >;
+    cancelation_reason: Attribute.Enumeration<
+      [
+        'no_show',
+        'incorrect_reservation',
+        'missing_players',
+        'rain',
+        'other',
+        'user_cancelled'
+      ]
+    >;
+    other_cancellation: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1648,12 +1659,8 @@ export interface ApiTrackTrack extends Schema.CollectionType {
       'oneToMany',
       'api::abono.abono'
     >;
-    precio_cancha: Attribute.Relation<
-      'api::track.track',
-      'oneToOne',
-      'api::client-custom-price.client-custom-price'
-    >;
     amount_players: Attribute.Enumeration<['single', 'doble']>;
+    type: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
