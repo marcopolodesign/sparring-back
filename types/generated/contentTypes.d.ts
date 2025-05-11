@@ -1004,6 +1004,109 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
   };
 }
 
+export interface ApiCashMovementCashMovement extends Schema.CollectionType {
+  collectionName: 'cash_movements';
+  info: {
+    singularName: 'cash-movement';
+    pluralName: 'cash-movements';
+    displayName: 'Cash Movement';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    type: Attribute.Enumeration<['addition', 'removal']>;
+    amount: Attribute.Decimal;
+    description: Attribute.String;
+    seller: Attribute.Relation<
+      'api::cash-movement.cash-movement',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    category: Attribute.Enumeration<
+      ['alivio-caja', 'gastos-mantenimiento', 'pago-proovedores']
+    >;
+    cash_register: Attribute.Relation<
+      'api::cash-movement.cash-movement',
+      'manyToOne',
+      'api::cash-register.cash-register'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::cash-movement.cash-movement',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::cash-movement.cash-movement',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiCashRegisterCashRegister extends Schema.CollectionType {
+  collectionName: 'cash_registers';
+  info: {
+    singularName: 'cash-register';
+    pluralName: 'cash-registers';
+    displayName: 'Cash Register';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    venue: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToOne',
+      'api::court.court'
+    >;
+    seller: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    opened_at: Attribute.DateTime;
+    opening_balance: Attribute.Decimal;
+    status: Attribute.Enumeration<['open', 'closed']>;
+    closed_at: Attribute.DateTime;
+    total_incomes: Attribute.Decimal;
+    total_expenses: Attribute.Decimal;
+    difference: Attribute.Decimal & Attribute.DefaultTo<0>;
+    transactions: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToMany',
+      'api::transaction.transaction'
+    >;
+    closing_balance: Attribute.Decimal;
+    closing_notes: Attribute.String;
+    cash_movements: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToMany',
+      'api::cash-movement.cash-movement'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiClientCustomPriceClientCustomPrice
   extends Schema.CollectionType {
   collectionName: 'client_custom_prices';
@@ -1363,6 +1466,12 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
     discount_amount: Attribute.Decimal;
     net_amount: Attribute.Decimal;
     isPaymentGateway: Attribute.Boolean & Attribute.DefaultTo<false>;
+    isPaidInCash: Attribute.Boolean;
+    cash_register: Attribute.Relation<
+      'api::payment.payment',
+      'oneToOne',
+      'api::cash-register.cash-register'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1835,6 +1944,8 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'api::abono.abono': ApiAbonoAbono;
+      'api::cash-movement.cash-movement': ApiCashMovementCashMovement;
+      'api::cash-register.cash-register': ApiCashRegisterCashRegister;
       'api::client-custom-price.client-custom-price': ApiClientCustomPriceClientCustomPrice;
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;

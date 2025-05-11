@@ -237,7 +237,9 @@ module.exports = {
     try {
       const { payment_id } = ctx.query; // Extract payment_id from query
       if (!payment_id || payment_id === "null") {
-        ctx.throw(400, "Payment ID is required in query.");
+        ctx.redirect(
+          `https://club.sparring.com.ar/reserva-fallida`
+        );
       }
 
       // Fetch payment details using the helper function

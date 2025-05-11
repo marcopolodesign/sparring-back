@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cash_registers",
+  "info": {
+    "singularName": "cash-register",
+    "pluralName": "cash-registers",
+    "displayName": "Cash Register",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "venue": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::court.court"
+    },
+    "seller": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "opened_at": {
+      "type": "datetime"
+    },
+    "opening_balance": {
+      "type": "decimal"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "closed_at": {
+      "type": "datetime"
+    },
+    "total_incomes": {
+      "type": "decimal"
+    },
+    "total_expenses": {
+      "type": "decimal"
+    },
+    "difference": {
+      "type": "decimal",
+      "default": 0
+    },
+    "transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::transaction.transaction"
+    },
+    "closing_balance": {
+      "type": "decimal"
+    },
+    "closing_notes": {
+      "type": "string"
+    },
+    "cash_movements": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cash-movement.cash-movement",
+      "mappedBy": "cash_register"
+    }
+  }
+}

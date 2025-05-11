@@ -70,6 +70,14 @@
     "isPaymentGateway": {
       "type": "boolean",
       "default": false
+    },
+    "isPaidInCash": {
+      "type": "boolean"
+    },
+    "cash_register": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::cash-register.cash-register"
     }
   }
 }

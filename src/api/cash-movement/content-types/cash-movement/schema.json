@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cash_movements",
+  "info": {
+    "singularName": "cash-movement",
+    "pluralName": "cash-movements",
+    "displayName": "Cash Movement",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "addition",
+        "removal"
+      ]
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "description": {
+      "type": "string"
+    },
+    "seller": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": [
+        "alivio-caja",
+        "gastos-mantenimiento",
+        "pago-proovedores"
+      ]
+    },
+    "cash_register": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cash-register.cash-register",
+      "inversedBy": "cash_movements"
+    }
+  }
+}

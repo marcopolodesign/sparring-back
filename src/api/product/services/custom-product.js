@@ -74,7 +74,9 @@ module.exports = {
     //   (startHour >= rushStartAm && startHour < rushEndAm) || 
     //   (startHour >= rushStartPm && startHour < rushEndPm);
   
-    let baseSku = `${type}-${payment_method}-${duration}`;
+    let baseSku = payment_method 
+      ? `${type}-${payment_method}-${duration}` 
+      : `${type}-${duration}`;
     if (court) {
       baseSku += `-${court}`;
     }
