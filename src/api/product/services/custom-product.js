@@ -3,7 +3,7 @@
 module.exports = {
   async getVenueRentals(venueId) {
     try {
-      // 1. Buscar productos asociados al venue con tipo 'alquiler'
+      // Fetch products by venue ID and type 'alquiler'
       const products = await strapi.entityService.findMany('api::product.product', {
         filters: {
           venues: {
@@ -19,42 +19,59 @@ module.exports = {
           custom_price: {
             populate: ['venue'],
           },
+          custom_stock: {
+            populate: ['venue'],
+          },
           venues: true,
         },
       });
-
-      // 2. Traer los datos del venue para matchear nombre
+  
+      // 2. Fetch venue details to verify the venue name.
       const venue = await strapi.entityService.findOne('api::court.court', venueId, {
         populate: '*',
       });
       const venueName = venue.name;
-
-      // 3. Enriquecer productos con su precio custom si existe
+  
+      // 3. Map through products and attach custom prices specific to the venue.
       const enrichedProducts = products.map((product) => {
         const customPrices = product.custom_price || [];
+        // Filter custom prices where the price is set for the given venue.
         const validCustomPrices = customPrices.filter((price) => {
           return (
-            price.venue !== null &&
-            price.venue.name === venueName
+            price.venue !== null && // Ensure the price has a venue
+            price.venue.name === venueName // Must match venue name
           );
         });
-
+  
+        // Get the first valid custom price, or null if none exist.
         const venueSpecificPrice =
           validCustomPrices[0]?.custom_ammount || null;
-
+  
+        // stock logic (mirror price logic)
+        const customStocks = product.custom_stock || [];
+        const validCustomStocks = customStocks.filter((stock) => {
+          return (
+            stock.venue !== null &&
+            stock.venue.name === venueName
+          );
+        });
+        const venueSpecificStock = validCustomStocks[0]?.amount || null;
+  
         return {
           id: product.id,
-          name: product.Name,
+          name: product.Name, // Assumes product name is stored in "Name"
           type: product.type,
           defaultPrice: product.price,
           customPrice: venueSpecificPrice,
+          customStock: venueSpecificStock,
+          // Optionally, attach venue details for the product.
           venue: product.venues?.find((v) => v.id == venueId),
         };
       });
-
+  
       return enrichedProducts;
     } catch (error) {
-      strapi.log.error('Error in getVenueRentals:', error);
+      strapi.log.error('Error fetching rentals by venue ID:', error);
       throw error;
     }
   },

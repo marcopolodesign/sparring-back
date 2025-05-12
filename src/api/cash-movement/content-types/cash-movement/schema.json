@@ -35,7 +35,8 @@
       "enum": [
         "alivio-caja",
         "gastos-mantenimiento",
-        "pago-proovedores"
+        "pago-proovedores",
+        "retiro-empleados"
       ]
     },
     "cash_register": {

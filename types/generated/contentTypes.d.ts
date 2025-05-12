@@ -1025,7 +1025,12 @@ export interface ApiCashMovementCashMovement extends Schema.CollectionType {
       'plugin::users-permissions.user'
     >;
     category: Attribute.Enumeration<
-      ['alivio-caja', 'gastos-mantenimiento', 'pago-proovedores']
+      [
+        'alivio-caja',
+        'gastos-mantenimiento',
+        'pago-proovedores',
+        'retiro-empleados'
+      ]
     >;
     cash_register: Attribute.Relation<
       'api::cash-movement.cash-movement',
@@ -1090,6 +1095,11 @@ export interface ApiCashRegisterCashRegister extends Schema.CollectionType {
       'oneToMany',
       'api::cash-movement.cash-movement'
     >;
+    payments: Attribute.Relation<
+      'api::cash-register.cash-register',
+      'oneToMany',
+      'api::payment.payment'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1122,7 +1132,7 @@ export interface ApiClientCustomPriceClientCustomPrice
   attributes: {
     product: Attribute.Relation<
       'api::client-custom-price.client-custom-price',
-      'oneToOne',
+      'manyToOne',
       'api::product.product'
     >;
     custom_ammount: Attribute.Decimal;
@@ -1142,6 +1152,48 @@ export interface ApiClientCustomPriceClientCustomPrice
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'api::client-custom-price.client-custom-price',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiClientCustomStockClientCustomStock
+  extends Schema.CollectionType {
+  collectionName: 'client_custom_stocks';
+  info: {
+    singularName: 'client-custom-stock';
+    pluralName: 'client-custom-stocks';
+    displayName: 'Client Custom Stock';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    product: Attribute.Relation<
+      'api::client-custom-stock.client-custom-stock',
+      'manyToOne',
+      'api::product.product'
+    >;
+    amount: Attribute.Integer;
+    venue: Attribute.Relation<
+      'api::client-custom-stock.client-custom-stock',
+      'manyToOne',
+      'api::court.court'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::client-custom-stock.client-custom-stock',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::client-custom-stock.client-custom-stock',
       'oneToOne',
       'admin::user'
     > &
@@ -1228,6 +1280,11 @@ export interface ApiCourtCourt extends Schema.CollectionType {
     rush_end_pm: Attribute.Time;
     cash_discount_percent: Attribute.Integer;
     mp_access_token: Attribute.String;
+    custom_stocks: Attribute.Relation<
+      'api::court.court',
+      'oneToMany',
+      'api::client-custom-stock.client-custom-stock'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1469,7 +1526,7 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
     isPaidInCash: Attribute.Boolean;
     cash_register: Attribute.Relation<
       'api::payment.payment',
-      'oneToOne',
+      'manyToOne',
       'api::cash-register.cash-register'
     >;
     createdAt: Attribute.DateTime;
@@ -1539,15 +1596,20 @@ export interface ApiProductProduct extends Schema.CollectionType {
     type: Attribute.Enumeration<['alquiler', 'producto']>;
     price: Attribute.Decimal;
     sku: Attribute.String;
-    custom_price: Attribute.Relation<
-      'api::product.product',
-      'oneToMany',
-      'api::client-custom-price.client-custom-price'
-    >;
     venues: Attribute.Relation<
       'api::product.product',
       'oneToMany',
       'api::court.court'
+    >;
+    custom_stock: Attribute.Relation<
+      'api::product.product',
+      'oneToMany',
+      'api::client-custom-stock.client-custom-stock'
+    >;
+    client_custom_prices: Attribute.Relation<
+      'api::product.product',
+      'oneToMany',
+      'api::client-custom-price.client-custom-price'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1947,6 +2009,7 @@ declare module '@strapi/types' {
       'api::cash-movement.cash-movement': ApiCashMovementCashMovement;
       'api::cash-register.cash-register': ApiCashRegisterCashRegister;
       'api::client-custom-price.client-custom-price': ApiClientCustomPriceClientCustomPrice;
+      'api::client-custom-stock.client-custom-stock': ApiClientCustomStockClientCustomStock;
       'api::club.club': ApiClubClub;
       'api::court.court': ApiCourtCourt;
       'api::general-zone.general-zone': ApiGeneralZoneGeneralZone;

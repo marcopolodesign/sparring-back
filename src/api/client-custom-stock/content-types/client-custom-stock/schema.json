@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "client_custom_prices",
+  "collectionName": "client_custom_stocks",
   "info": {
-    "singularName": "client-custom-price",
-    "pluralName": "client-custom-prices",
-    "displayName": "Client Custom Price",
+    "singularName": "client-custom-stock",
+    "pluralName": "client-custom-stocks",
+    "displayName": "Client Custom Stock",
     "description": ""
   },
   "options": {
@@ -16,16 +16,16 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::product.product",
-      "inversedBy": "client_custom_prices"
+      "inversedBy": "custom_stock"
     },
-    "custom_ammount": {
-      "type": "decimal"
+    "amount": {
+      "type": "integer"
     },
     "venue": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::court.court",
-      "inversedBy": "custom_prices"
+      "inversedBy": "custom_stocks"
     }
   }
 }

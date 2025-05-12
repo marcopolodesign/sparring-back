@@ -64,6 +64,12 @@
       "relation": "oneToMany",
       "target": "api::cash-movement.cash-movement",
       "mappedBy": "cash_register"
+    },
+    "payments": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::payment.payment",
+      "mappedBy": "cash_register"
     }
   }
 }

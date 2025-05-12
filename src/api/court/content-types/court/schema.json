@@ -122,6 +122,12 @@
     },
     "mp_access_token": {
       "type": "string"
+    },
+    "custom_stocks": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::client-custom-stock.client-custom-stock",
+      "mappedBy": "venue"
     }
   }
 }

@@ -28,15 +28,22 @@
     "sku": {
       "type": "string"
     },
-    "custom_price": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::client-custom-price.client-custom-price"
-    },
     "venues": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::court.court"
+    },
+    "custom_stock": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::client-custom-stock.client-custom-stock",
+      "mappedBy": "product"
+    },
+    "client_custom_prices": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::client-custom-price.client-custom-price",
+      "mappedBy": "product"
     }
   }
 }

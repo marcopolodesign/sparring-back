@@ -117,6 +117,9 @@ const getVenueRentals = async (venueId) => {
         custom_price: {
           populate: ['venue'],
         },
+        custom_stock: {
+          populate: ['venue'],
+        },
         venues: true,
       },
     });
@@ -142,12 +145,23 @@ const getVenueRentals = async (venueId) => {
       const venueSpecificPrice =
         validCustomPrices[0]?.custom_ammount || null;
 
+      // stock logic (mirror price logic)
+      const customStocks = product.custom_stock || [];
+      const validCustomStocks = customStocks.filter((stock) => {
+        return (
+          stock.venue !== null &&
+          stock.venue.name === venueName
+        );
+      });
+      const venueSpecificStock = validCustomStocks[0]?.amount || null;
+
       return {
         id: product.id,
         name: product.Name, // Assumes product name is stored in "Name"
         type: product.type,
         defaultPrice: product.price,
         customPrice: venueSpecificPrice,
+        customStock: venueSpecificStock,
         // Optionally, attach venue details for the product.
         venue: product.venues?.find((v) => v.id == venueId),
       };

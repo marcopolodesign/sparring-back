@@ -13,7 +13,7 @@ module.exports = {
     }
 
     // Fetch payments made in 'efectivo'
-    const payments = /** @type {Array<{ createdAt: string, id: number, seller: string, payer?: { firstName?: string, lastName?: string }, transaction?: { product?: { name?: string } }, net_amount: number }>} */ (
+    const payments = /** @type {Array<{ createdAt: string, id: number, seller: string, payer?: { firstName?: string, lastName?: string }, transaction?: { products?: { Name?: string } }, net_amount: number }>} */ (
       await strapi.entityService.findMany('api::payment.payment', {
         filters: {
           $or: [
@@ -26,11 +26,11 @@ module.exports = {
             },
           },
         },
-        populate: ['payer', 'transaction.product',],
+        populate: ['payer', 'transaction.products',],
       })
     );
 
-    console.log(payments, 'payments')
+    console.log(payments[0].transaction?.products[0], 'payments')
 
     // Fetch associated cash movements
     const cashMovements = await strapi.entityService.findMany('api::cash-movement.cash-movement', {
@@ -57,7 +57,7 @@ module.exports = {
         Tipo: 'Pago',
         Vendedor: payment.seller || '',
         Cliente: `${payment.payer?.firstName || ''} ${payment.payer?.lastName || ''}`.trim(),
-        Descripción: payment.transaction?.product?.name || '',
+        Descripción: payment.transaction?.products[0]?.Name || '',
         Total: payment.net_amount,
       })),
       ...cashMovements.map(movement => ({

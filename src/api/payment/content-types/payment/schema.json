@@ -76,8 +76,9 @@
     },
     "cash_register": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::cash-register.cash-register"
+      "relation": "manyToOne",
+      "target": "api::cash-register.cash-register",
+      "inversedBy": "payments"
     }
   }
 }

@@ -4,13 +4,26 @@ module.exports = {
     async beforeCreate(event) {
         const { data } = event.params;
 
-        // 1) Si no vino transaction, no hacemos nada
+        // 1) Check if a transaction is provided
         if (!data.transaction) {
-            strapi.log.warn(`Payment sin transaction: saltando beforeCreate`);
+            strapi.log.warn(`Payment without transaction: skipping beforeCreate`);
             return;
         }
 
-        // 2) Traemos la transacción + reserva + venue
+        // 2) Attempt to find an open cash register
+        const openCashRegister = await strapi.entityService.findMany('api::cash-register.cash-register', {
+            filters: { status: 'open' },
+            limit: 1,
+        });
+
+        if (openCashRegister.length === 0) {
+            strapi.log.warn(`No open cash register found: payment will not be associated with a cash register.`);
+        } else {
+            // 3) Associate the payment with the open cash register
+            data.cash_register = openCashRegister[0].id;
+        }
+
+        // 4) Traemos la transacción + reserva + venue
         const txn = await strapi.entityService.findOne(
             'api::transaction.transaction',
             data.transaction,
@@ -38,13 +51,13 @@ module.exports = {
             return;
         }
 
-        // 3) Leemos el porcentaje de descuento del venue
+        // 5) Leemos el porcentaje de descuento del venue
         const pct = Number(venue.cash_discount_percent) || 0;
 
-        // 4) Montos base
+        // 6) Montos base
         const raw = Number(data.amount) || 0; // lo que ingresó el usuario
 
-        // 5) Si es efectivo y hay pct > 0, aplicamos descuento dinámico
+        // 7) Si es efectivo y hay pct > 0, aplicamos descuento dinámico
         if (
             data.payment_method?.toLowerCase() === 'efectivo' &&
             pct > 0
@@ -56,7 +69,7 @@ module.exports = {
             data.discount_amount = discountAmt;
             data.net_amount = netAmount; // lo que realmente entró en caja
         } else {
-            // 6) Cualquier otro caso, sin descuento
+            // 8) Cualquier otro caso, sin descuento
             data.discount_percent = 0;
             data.discount_amount = 0;
             data.net_amount = raw;
