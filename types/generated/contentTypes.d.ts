@@ -1130,16 +1130,16 @@ export interface ApiClientCustomPriceClientCustomPrice
     draftAndPublish: true;
   };
   attributes: {
-    product: Attribute.Relation<
-      'api::client-custom-price.client-custom-price',
-      'manyToOne',
-      'api::product.product'
-    >;
     custom_ammount: Attribute.Decimal;
     venue: Attribute.Relation<
       'api::client-custom-price.client-custom-price',
       'manyToOne',
       'api::court.court'
+    >;
+    product: Attribute.Relation<
+      'api::client-custom-price.client-custom-price',
+      'manyToOne',
+      'api::product.product'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1606,7 +1606,7 @@ export interface ApiProductProduct extends Schema.CollectionType {
       'oneToMany',
       'api::client-custom-stock.client-custom-stock'
     >;
-    client_custom_prices: Attribute.Relation<
+    custom_price: Attribute.Relation<
       'api::product.product',
       'oneToMany',
       'api::client-custom-price.client-custom-price'

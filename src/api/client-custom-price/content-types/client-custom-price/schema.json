@@ -12,12 +12,6 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "product": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::product.product",
-      "inversedBy": "client_custom_prices"
-    },
     "custom_ammount": {
       "type": "decimal"
     },
@@ -26,6 +20,12 @@
       "relation": "manyToOne",
       "target": "api::court.court",
       "inversedBy": "custom_prices"
+    },
+    "product": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product",
+      "inversedBy": "custom_price"
     }
   }
 }

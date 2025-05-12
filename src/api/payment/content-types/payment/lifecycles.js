@@ -79,6 +79,47 @@ module.exports = {
     async afterCreate(event) {
         const { result, params } = event;
 
+        console.log('afterCreate payment', result);
+        console.log('afterCreate payment params', params);
+        console.log('afterCreate payment event', event);
+
+        const { result: payment } = event;
+        try {
+            if (payment.transaction) {
+                // load transaction with products and reservation.venue
+                const txn = await strapi.entityService.findOne(
+                    'api::transaction.transaction',
+                    payment.transaction,
+                    {
+                        populate: {
+                            products: { populate: ['custom_stock'] },
+                            reservation: { populate: ['venue'] },
+                        },
+                    }
+                );
+                const venueId = txn.reservation?.venue?.id;
+                for (const prod of txn.products) {
+                    console.log('prod', prod);
+                    console.log('prod type', prod.type);
+                    if (prod.type === 'producto') {
+                        const stockRec = (prod.custom_stock || [])
+                            .find(s => s.venue?.id === venueId);
+                            console.log('stockRec', stockRec);
+                        if (stockRec) {
+                            await strapi.entityService.update(
+                                'api::client-custom-stock.client-custom-stock',
+                                stockRec.id,
+                                { data: { amount: stockRec.amount - 1 } }
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            strapi.log.error('Error adjusting stock after payment create:', err);
+        }
+
+
         try {
             const transactionId = params.data.transaction;
             if (!transactionId) {
@@ -167,6 +208,45 @@ module.exports = {
 
         } catch (error) {
             strapi.log.error(`Error processing Payment #${result.id}:`, error);
+        }
+
+        // ——————————————
+        // Decrement stock for "producto" items on new payment
+
+    },
+
+    async afterUpdate(event) {
+        const { result: payment, params } = event;
+        // on refund restore stock
+        if (params.data.status === 'refunded' && payment.transaction) {
+            try {
+                const txn = await strapi.entityService.findOne(
+                    'api::transaction.transaction',
+                    payment.transaction,
+                    {
+                        populate: {
+                            products: { populate: ['custom_stock'] },
+                            reservation: { populate: ['venue'] },
+                        },
+                    }
+                );
+                const venueId = txn.reservation?.venue?.id;
+                for (const prod of txn.products) {
+                    if (prod.type === 'producto') {
+                        const stockRec = (prod.custom_stock || [])
+                            .find(s => s.venue?.id === venueId);
+                        if (stockRec) {
+                            await strapi.entityService.update(
+                                'api::client-custom-stock.client-custom-stock',
+                                stockRec.id,
+                                { data: { amount: stockRec.amount + 1 } }
+                            );
+                        }
+                    }
+                }
+            } catch (err) {
+                strapi.log.error('Error restoring stock after refund:', err);
+            }
         }
     },
 };

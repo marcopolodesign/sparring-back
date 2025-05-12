@@ -39,7 +39,7 @@
       "target": "api::client-custom-stock.client-custom-stock",
       "mappedBy": "product"
     },
-    "client_custom_prices": {
+    "custom_price": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::client-custom-price.client-custom-price",
