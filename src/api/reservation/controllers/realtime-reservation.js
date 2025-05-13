@@ -19,8 +19,8 @@ module.exports = {
 
     try {
       // 1. “now” in local TZ and +20 minutes
-      const now       = new Date();
-      const nowPlus20 = addMinutes(now, 20);
+      const now = toZonedTime(new Date(), TIME_ZONE);
+      const nowPlus20 = toZonedTime(addMinutes(new Date(), 20), TIME_ZONE);
 
       // 2. Build yyyy-MM-dd for filtering
       const today      = format(now, 'yyyy-MM-dd');
