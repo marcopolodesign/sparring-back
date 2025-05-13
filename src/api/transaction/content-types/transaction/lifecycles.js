@@ -26,27 +26,10 @@ module.exports = {
 
             // Update reservation status based on transaction status
             if (transactionStatus === 'Paid') {
-                // Confirm the reservation if not already confirmed
-                if (reservation.status !== 'confirmed') {
-                    await strapi.entityService.update('api::reservation.reservation', reservationId, {
-                        data: { status: 'confirmed' },
-                    });
-                    strapi.log.info(`Reservation #${reservationId} marked as 'confirmed' due to transaction #${transactionId} being 'Paid'.`);
-                }
-
-                // Check if all transactions for the reservation are paid
-                const allTransactions = await strapi.entityService.findMany('api::transaction.transaction', {
-                    filters: { reservation: reservationId },
-                    fields: ['status'],
+                await strapi.entityService.update('api::reservation.reservation', reservationId, {
+                    data: { status: 'paid' },
                 });
-
-                const allPaid = allTransactions.every(txn => txn.status === 'Paid');
-                if (allPaid) {
-                    await strapi.entityService.update('api::reservation.reservation', reservationId, {
-                        data: { status: 'paid' },
-                    });
-                    strapi.log.info(`Reservation #${reservationId} marked as 'paid' as all associated transactions are 'Paid'.`);
-                }
+                strapi.log.info(`Reservation #${reservationId} marked as "paid" due to transaction #${transactionId} being "Paid".`);
             } else if (transactionStatus === 'PartiallyPaid' && reservation.status !== 'upfront_payment') {
                 await strapi.entityService.update('api::reservation.reservation', reservationId, {
                     data: { status: 'confirmed' },

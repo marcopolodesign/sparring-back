@@ -33,7 +33,7 @@ module.exports = createCoreController('api::transaction.transaction', ({ strapi 
 
         if (reservationId) {
           // ✅ Determine what to do based on new status
-          if (['Cancelled', 'Refunded'].includes(status)) {
+          if (['Cancelled'].includes(status)) {
             await strapi.entityService.update('api::reservation.reservation', reservationId, {
               data: { status: 'cancelled' },
             });

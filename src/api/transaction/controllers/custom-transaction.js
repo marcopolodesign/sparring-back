@@ -1,3 +1,6 @@
+const { parseISO, startOfDay, endOfDay } = require('date-fns');
+
+
 module.exports = {
     // Helper function to format transactions
     formatTransaction(transaction) {
@@ -58,17 +61,18 @@ module.exports = {
         const { date, venueId } = ctx.query;
         try {
             // Calculate the start and end of the day for the given date
-            const startOfDay = new Date(date);
-            startOfDay.setUTCHours(0, 0, 0, 0);
-            const endOfDay = new Date(date);
-            endOfDay.setUTCHours(23, 59, 59, 999);
+            const parsedDate = parseISO(date);
+            const startOfDayLocal = startOfDay(parsedDate);
+            console.log('startOfDay', startOfDayLocal);
+            const endOfDayLocal = endOfDay(parsedDate);
+            console.log('endOfDay', endOfDayLocal);
 
             // Fetch the transactions directly associated with the venue and date range
             const transactions = await strapi.entityService.findMany('api::transaction.transaction', {
                 filters: {
                     date: {
-                        $gte: startOfDay.toISOString(), // Match from the start of the day
-                        $lte: endOfDay.toISOString(),  // Match until the end of the day
+                        $gte: startOfDayLocal.toISOString(),
+                        $lte: endOfDayLocal.toISOString(),
                     },
                     venue: {
                         id: parseInt(venueId, 10), // Ensure venueId is parsed as an integer
@@ -87,7 +91,7 @@ module.exports = {
                 },
             });
 
-            console.log('transactions', transactions);
+            // console.log('transactions', transactions);
 
             // Use the helper function to format transactions
             const formattedTransactions = transactions.map(this.formatTransaction);

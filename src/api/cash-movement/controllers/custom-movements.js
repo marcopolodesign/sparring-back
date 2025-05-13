@@ -30,7 +30,7 @@ module.exports = {
       })
     );
 
-    console.log(payments[0].transaction?.products[0], 'payments')
+    // console.log(payments[0].transaction?.products[0], 'payments')
 
     // Fetch associated cash movements
     const cashMovements = await strapi.entityService.findMany('api::cash-movement.cash-movement', {

@@ -3,122 +3,123 @@
 module.exports = {
     async beforeCreate(event) {
         const { data } = event.params;
-
-        // 1) Check if a transaction is provided
+    
+        console.log('Payment beforeCreate event:', event);
+    
+        // 1) Ensure a transaction is provided
         if (!data.transaction) {
-            strapi.log.warn(`Payment without transaction: skipping beforeCreate`);
-            return;
+          strapi.log.warn(`Payment without transaction: skipping beforeCreate`);
+          return;
         }
-
-        // 2) Attempt to find an open cash register
-        const openCashRegister = await strapi.entityService.findMany('api::cash-register.cash-register', {
-            filters: { status: 'open' },
-            limit: 1,
-        });
-
-        if (openCashRegister.length === 0) {
-            strapi.log.warn(`No open cash register found: payment will not be associated with a cash register.`);
-        } else {
-            // 3) Associate the payment with the open cash register
-            data.cash_register = openCashRegister[0].id;
-        }
-
-        // 4) Traemos la transacción + reserva + venue
+    
+        // 2) Load the transaction + reservation + venue
         const txn = await strapi.entityService.findOne(
-            'api::transaction.transaction',
-            data.transaction,
-            {
-                populate: {
-                    reservation: {
-                        populate: ['venue']
-                    }
-                }
+          'api::transaction.transaction',
+          data.transaction,
+          {
+            populate: {
+              reservation: {
+                populate: ['venue']
+              }
             }
+          }
         );
 
-        if (!txn || !txn.reservation) {
-            strapi.log.warn(
-                `beforeCreate Payment: transacción/reserva no encontrada (${data.transaction})`
-            );
-            return;
+
+        console.log('Transaction details:', txn);
+
+        if (!txn?.reservation?.venue) {
+          strapi.log.warn(
+            `beforeCreate Payment: transaction or venue not found (${data.transaction})`
+          );
+          return;
         }
+        const venueId = txn.reservation.venue.id;
+        console.log('Venue ID payment lifecycle:', venueId);
+    
+        // 3) Find an open cash register for that venue
+        const openCashRegister = await strapi.db
+        .query('api::cash-register.cash-register')
+        .findOne({
+          where: {
+            status: 'open',
+            venue: venueId,
+          },
+        });
 
-        const venue = txn.reservation.venue;
-        if (!venue) {
-            strapi.log.warn(
-                `beforeCreate Payment: venue no asociada a reserva ${txn.reservation.id}`
-            );
-            return;
-        }
-
-        // 5) Leemos el porcentaje de descuento del venue
-        const pct = Number(venue.cash_discount_percent) || 0;
-
-        // 6) Montos base
-        const raw = Number(data.amount) || 0; // lo que ingresó el usuario
-
-        // 7) Si es efectivo y hay pct > 0, aplicamos descuento dinámico
-        if (
-            data.payment_method?.toLowerCase() === 'efectivo' &&
-            pct > 0
-        ) {
-            const discountAmt = raw * pct / 100; // ej: 25 000 * 0.10 = 2 500
-            const netAmount = raw - discountAmt; // ej: 25 000 - 2 500 = 22 500
-
-            data.discount_percent = pct;
-            data.discount_amount = discountAmt;
-            data.net_amount = netAmount; // lo que realmente entró en caja
+        console.log('Open cash register payment beforecreate lifecycle:', openCashRegister);
+        if (!openCashRegister) {
+          strapi.log.warn(
+            `No open cash register found for venue ${venueId}: payment will not be associated`
+          );
         } else {
-            // 8) Cualquier otro caso, sin descuento
-            data.discount_percent = 0;
-            data.discount_amount = 0;
-            data.net_amount = raw;
+          data.cash_register = openCashRegister.id;
         }
-    },
+    
+        // 4) Read the venue’s cash discount percent
+        const pct = Number(txn.reservation.venue.cash_discount_percent) || 0;
+    
+        // 5) Base amounts
+        const raw = Number(data.amount) || 0; // what the user entered
+    
+        // 6) If payment in cash and discount > 0, apply it
+        if (
+          data.payment_method?.toLowerCase() === 'efectivo' &&
+          pct > 0
+        ) {
+          const discountAmt = (raw * pct) / 100;
+          const netAmount = raw - discountAmt;
+    
+          data.discount_percent = pct;
+          data.discount_amount = discountAmt;
+          data.net_amount = netAmount;
+        } else {
+          // 7) No discount
+          data.discount_percent = 0;
+          data.discount_amount = 0;
+          data.net_amount = raw;
+        }
+      },
 
     async afterCreate(event) {
         const { result, params } = event;
 
-        console.log('afterCreate payment', result);
-        console.log('afterCreate payment params', params);
-        console.log('afterCreate payment event', event);
 
-        const { result: payment } = event;
-        try {
-            if (payment.transaction) {
-                // load transaction with products and reservation.venue
+         // ——————————————
+        // Decrement stock for "producto" on approved payments
+        const transactionId = params.data.transaction;
+        console.log(`Transaction ID: ${transactionId}`);
+        if (transactionId && result.status === 'approved') {
+            console.log(`Decrementing stock for transaction ID: ${transactionId}`);
+            try {
                 const txn = await strapi.entityService.findOne(
                     'api::transaction.transaction',
-                    payment.transaction,
+                    transactionId,
                     {
                         populate: {
-                            products: { populate: ['custom_stock'] },
+                            products: { populate: { custom_stock: { populate: ['venue'] } } },
                             reservation: { populate: ['venue'] },
                         },
                     }
                 );
+                console.log(`Transaction details:`, txn);
                 const venueId = txn.reservation?.venue?.id;
-                for (const prod of txn.products) {
-                    console.log('prod', prod);
-                    console.log('prod type', prod.type);
+                for (const prod of txn.products || []) {
+                    console.log(`Product details:`, prod);
                     if (prod.type === 'producto') {
-                        const stockRec = (prod.custom_stock || [])
-                            .find(s => s.venue?.id === venueId);
-                            console.log('stockRec', stockRec);
+                        const stockRec = (prod.custom_stock || []).find(s => s.venue?.id === venueId);
                         if (stockRec) {
-                            await strapi.entityService.update(
-                                'api::client-custom-stock.client-custom-stock',
-                                stockRec.id,
-                                { data: { amount: stockRec.amount - 1 } }
-                            );
+                            await strapi.db.query('api::client-custom-stock.client-custom-stock').update({
+                                where: { id: stockRec.id },
+                                data: { amount: stockRec.amount - 1 },
+                            });
                         }
                     }
                 }
+            } catch (err) {
+                strapi.log.error('Error adjusting stock after payment create:', err);
             }
-        } catch (err) {
-            strapi.log.error('Error adjusting stock after payment create:', err);
         }
-
 
         try {
             const transactionId = params.data.transaction;
@@ -210,32 +211,41 @@ module.exports = {
             strapi.log.error(`Error processing Payment #${result.id}:`, error);
         }
 
-        // ——————————————
-        // Decrement stock for "producto" items on new payment
-
+       
     },
 
     async afterUpdate(event) {
         const { result: payment, params } = event;
         // on refund restore stock
-        if (params.data.status === 'refunded' && payment.transaction) {
+        console.log('afterUpdate payment', payment);
+        console.log('afterUpdate params', params);
+        console.log('afterUpdate payment status', event);
+        if (params.data.status === 'refunded') {
             try {
+                // re-load payment to get the transaction relation
+                const paid = await strapi.entityService.findOne(
+                    'api::payment.payment',
+                    payment.id,
+                    { populate: ['transaction'] }
+                );
+                const transactionId = paid.transaction?.id;
+                if (!transactionId) return;
                 const txn = await strapi.entityService.findOne(
                     'api::transaction.transaction',
-                    payment.transaction,
+                    transactionId,
                     {
                         populate: {
-                            products: { populate: ['custom_stock'] },
+                            products: { populate: { custom_stock: { populate: ['venue'] } } },
                             reservation: { populate: ['venue'] },
                         },
                     }
                 );
                 const venueId = txn.reservation?.venue?.id;
-                for (const prod of txn.products) {
+                for (const prod of txn.products || []) {
                     if (prod.type === 'producto') {
-                        const stockRec = (prod.custom_stock || [])
-                            .find(s => s.venue?.id === venueId);
+                        const stockRec = (prod.custom_stock || []).find(s => s.venue?.id === venueId);
                         if (stockRec) {
+                            // restore one unit via entityService
                             await strapi.entityService.update(
                                 'api::client-custom-stock.client-custom-stock',
                                 stockRec.id,
