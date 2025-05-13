@@ -1,6 +1,9 @@
 'use strict';
 
-const { format, addMinutes, parseISO } = require('date-fns');
+const { toZonedTime, format } = require('date-fns-tz');
+const { addMinutes, parseISO } = require('date-fns');
+
+const TIME_ZONE = process.env.TZ || 'America/Argentina/Buenos_Aires';
 
 module.exports = {
   async fetchRealtimeReservations(ctx) {
@@ -111,6 +114,76 @@ module.exports = {
     } catch (err) {
       console.error('Error fetching real-time reservations:', err);
       return ctx.internalServerError('An error occurred while fetching reservations');
+    }
+  },
+
+  async fetchMostRecentReservationByUser(ctx) {
+    const { userId } = ctx.params;
+    if (!userId) return ctx.badRequest('User ID is required');
+
+    try {
+      // 1. Fetch the latest reservation
+      const [resv] = await strapi.entityService.findMany(
+        'api::reservation.reservation',
+        {
+          filters: { owner: { id: userId } },
+          sort: { date: 'desc', start_time: 'desc' },
+          limit: 1,
+          populate: {
+            court: true,
+            owner: { fields: ['firstName', 'lastName'] },
+          },
+        }
+      );
+
+      if (!resv) return ctx.notFound('No reservations found');
+
+      // 2. Load its transactions & compute total
+      const txns = await strapi.entityService.findMany(
+        'api::transaction.transaction',
+        {
+          filters: { reservation: { id: resv.id } },
+          populate: {
+            products: {
+              populate: { custom_price: { fields: ['custom_ammount'] } },
+              fields: ['Name', 'type', 'price'],
+            },
+          },
+        }
+      );
+
+      let total = 0;
+      const products = txns.flatMap((txn) =>
+        (txn.products || []).map((p) => {
+          const price = p.custom_price?.[0]?.custom_ammount ?? p.price;
+          total += price;
+          return {
+            id: p.id,
+            name: p.Name,
+            type: p.type,
+            price,
+            transactionStatus: txn.status,
+          };
+        })
+      );
+
+      // 3. Return structured response
+      ctx.send({
+        reservation: {
+          id: resv.id,
+          type: resv.type,
+          ownerName: `${resv.owner?.firstName} ${resv.owner?.lastName}`,
+          date: resv.date,
+          startTime: resv.start_time,
+          endTime: resv.end_time,
+          court: { id: resv.court.id, name: resv.court.name },
+        },
+        products,
+        total,
+      });
+    } catch (err) {
+      console.error(err);
+      ctx.internalServerError('An error occurred while fetching the reservation');
     }
   },
 };
