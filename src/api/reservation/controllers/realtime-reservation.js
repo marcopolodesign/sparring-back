@@ -1,219 +1,192 @@
 'use strict';
-const { format, addMinutes, parseISO } = require('date-fns');
+
+const { toZonedTime, format } = require('date-fns-tz');
+const { addMinutes, parseISO } = require('date-fns');
+
+const TIME_ZONE = process.env.TZ || 'America/Argentina/Buenos_Aires';
 
 module.exports = {
   async fetchRealtimeReservations(ctx) {
-    console.log('Raw request params:', ctx.params); // Debugging log
-
     let { trackIds } = ctx.params;
-    const { date } = ctx.query; // Use query for optional date
+    const { date } = ctx.query;
 
-    // Ensure trackIds is an array
-    if (trackIds) {
-      trackIds = trackIds.split(','); // Split comma-separated values into an array
-    } else {
+    if (!trackIds) {
       return ctx.badRequest('At least one Track ID is required');
     }
+    trackIds = trackIds.split(',');
 
     try {
-      const now = new Date();
-      const nowPlus20Minutes = addMinutes(now, 20);
+      // 1. Get “now” in your timezone
+      const nowUtc = new Date();
+      const now = toZonedTime(nowUtc, TIME_ZONE);
+      const nowPlus20 = addMinutes(now, 20);
 
-      const targetDate = date || now.toISOString().split('T')[0]; // Use local date
+      // 2. Build targetDate (yyyy-MM-dd) for your filter
+      const today = format(now, 'yyyy-MM-dd', { timeZone: TIME_ZONE });
+      const targetDate = date || today;
 
-      const processedReservations = [];
-      // console.log('Target date for reservations:', targetDate);
-      // console.log('Track IDs to process:', trackIds);
-      // console.log('Current local date and time:', now);
-      // console.log('Current local date and time + 20 minutes:', nowPlus20Minutes);
+      // 3. Fetch all non-cancelled reservations for that date / tracks
+      const reservations = await strapi.entityService.findMany(
+        'api::reservation.reservation',
+        {
+          filters: {
+            date: { $eq: targetDate },
+            court: { id: { $in: trackIds } },
+            status: { $ne: 'cancelled' },
+          },
+          populate: {
+            court: true,
+            owner: { fields: ['firstName', 'lastName'] },
+          },
+        }
+      );
 
-      // Fetch reservations for the specified date
-      const reservations = await strapi.entityService.findMany('api::reservation.reservation', {
-        filters: {
-          date: { $eq: targetDate }, // Ensure date strictly equals targetDate
-          court: { id: { $in: trackIds } }, // Use trackIds as track IDs
-          status: { $ne: 'cancelled' }, // Exclude cancelled reservations
-        },
-        populate: {
-          court: true,
-          owner: { fields: ['firstName', 'lastName'] }, // Populate only firstName and lastName of owner
-        },
-      });
+      // 4. Find the next upcoming reservation per track
+      const closestByTrack = {};
+      for (const r of reservations) {
+        // parseISO yields a Date in local TZ; wrap it to enforce your zone
+        const startLocal = toZonedTime(
+          parseISO(`${r.date}T${r.start_time}`),
+          TIME_ZONE
+        );
+        const endLocal = toZonedTime(
+          parseISO(`${r.date}T${r.end_time}`),
+          TIME_ZONE
+        );
 
-      // console.log('Fetched reservations:', reservations); // Debugging log
-
-      // Process reservations to find the closest start_time for each track
-      const trackClosestReservations = {};
-
-      for (const reservation of reservations) {
-        const trackId = reservation.court.id;
-
-          // Parse ISO strings as local Date objects
-          const startTime = parseISO(
-            `${reservation.date}T${reservation.start_time}`
-          );
-          const endTime = parseISO(
-            `${reservation.date}T${reservation.end_time}`
-          );
-
-        // console.log('Start time (local):', startTime); // Debugging log
-        // console.log('End time (local):', endTime); // Debugging log
-
-        // Check if the reservation is active within the range
-        if (startTime <= nowPlus20Minutes && endTime >= now) {
-          // Update the closest reservation for the track
+        if (startLocal <= nowPlus20 && endLocal >= now) {
+          const tId = r.court.id;
           if (
-            !trackClosestReservations[trackId] ||
-            startTime < new Date(trackClosestReservations[trackId].start_time)
+            !closestByTrack[tId] ||
+            startLocal < toZonedTime(
+              parseISO(`${closestByTrack[tId].date}T${closestByTrack[tId].start_time}`),
+              TIME_ZONE
+            )
           ) {
-            trackClosestReservations[trackId] = reservation;
+            closestByTrack[tId] = r;
           }
         }
       }
 
-      // Add the closest reservation for each track to the processed results
-      for (const trackId of Object.keys(trackClosestReservations)) {
-        const closestReservation = trackClosestReservations[trackId];
-
-        // Fetch associated products for the closest reservation
-        const reservationTransactions = await strapi.entityService.findMany('api::transaction.transaction', {
-          filters: {
-            reservation: {
-              id: closestReservation.id,
-            },
-          },
-          populate: {
-            products: {
-              populate: {
-                custom_price: { fields: ['custom_ammount'] },
+      // 5. Build response with products & totals
+      const processed = [];
+      for (const [trackId, resv] of Object.entries(closestByTrack)) {
+        const txns = await strapi.entityService.findMany(
+          'api::transaction.transaction',
+          {
+            filters: { reservation: { id: resv.id } },
+            populate: {
+              products: {
+                populate: { custom_price: { fields: ['custom_ammount'] } },
+                fields: ['Name', 'type', 'price'],
               },
-              fields: ['Name', 'type', 'price'],
             },
-          },
-        });
+          }
+        );
 
-        // Format the products and calculate the total
         let total = 0;
-        const formattedProducts = reservationTransactions.flatMap((transaction) => {
-          const products = transaction.products || [];
-          return products.map((product) => {
-            const price = product.custom_price?.[0]?.custom_ammount || product.price;
-            total += price; // Add to total
+        const products = txns.flatMap((txn) =>
+          (txn.products || []).map((p) => {
+            const price = p.custom_price?.[0]?.custom_ammount ?? p.price;
+            total += price;
             return {
-              id: product.id,
-              name: product.Name,
-              type: product.type,
+              id: p.id,
+              name: p.Name,
+              type: p.type,
               price,
-              transactionStatus: transaction.status, // Include transaction status
+              transactionStatus: txn.status,
             };
-          });
-        });
+          })
+        );
 
-        processedReservations.push({
+        processed.push({
           trackId,
-          trackName: closestReservation.court.name, // Include track name
+          trackName: resv.court.name,
           closestReservation: {
-            id: closestReservation.id,
-            type: closestReservation.type, // Include reservation type
-            ownerName: `${closestReservation.owner?.firstName} ${closestReservation.owner?.lastName}`, // Include owner name
-            startTime: closestReservation.start_time,
-            endTime: closestReservation.end_time,
-            products: formattedProducts, // Include associated products
-            total, // Include total
+            id: resv.id,
+            type: resv.type,
+            ownerName: `${resv.owner?.firstName} ${resv.owner?.lastName}`,
+            startTime: resv.start_time,
+            endTime: resv.end_time,
+            products,
+            total,
           },
         });
       }
 
-      ctx.send(processedReservations);
-    } catch (error) {
-      console.error('Error fetching real-time reservations:', error);
+      ctx.send(processed);
+    } catch (err) {
+      console.error(err);
       ctx.internalServerError('An error occurred while fetching reservations');
     }
   },
 
   async fetchMostRecentReservationByUser(ctx) {
     const { userId } = ctx.params;
-
-    // Ensure userId is provided
-    if (!userId) {
-      return ctx.badRequest('User ID is required');
-    }
+    if (!userId) return ctx.badRequest('User ID is required');
 
     try {
-      // Fetch the most recent reservation for the user
-      const reservations = await strapi.entityService.findMany('api::reservation.reservation', {
-        filters: {
-          owner: { id: userId }, // Filter by userId
-        },
-        sort: { date: 'desc', start_time: 'desc' }, // Sort by date and start_time in descending order
-        limit: 1, // Fetch only the most recent reservation
-        populate: {
-          court: true,
-          owner: { fields: ['firstName', 'lastName'] }, // Populate only firstName and lastName of owner
-        },
-      });
-
-      if (reservations.length === 0) {
-        return ctx.notFound('No reservations found for the given user');
-      }
-
-      const mostRecentReservation = reservations[0];
-
-      // Fetch associated products for the most recent reservation
-      const reservationTransactions = await strapi.entityService.findMany('api::transaction.transaction', {
-        filters: {
-          reservation: {
-            id: mostRecentReservation.id,
+      // 1. Fetch the latest reservation
+      const [resv] = await strapi.entityService.findMany(
+        'api::reservation.reservation',
+        {
+          filters: { owner: { id: userId } },
+          sort: { date: 'desc', start_time: 'desc' },
+          limit: 1,
+          populate: {
+            court: true,
+            owner: { fields: ['firstName', 'lastName'] },
           },
-        },
-        populate: {
-          products: {
-            populate: {
-              custom_price: { fields: ['custom_ammount'] },
+        }
+      );
+
+      if (!resv) return ctx.notFound('No reservations found');
+
+      // 2. Load its transactions & compute total
+      const txns = await strapi.entityService.findMany(
+        'api::transaction.transaction',
+        {
+          filters: { reservation: { id: resv.id } },
+          populate: {
+            products: {
+              populate: { custom_price: { fields: ['custom_ammount'] } },
+              fields: ['Name', 'type', 'price'],
             },
-            fields: ['Name', 'type', 'price'],
           },
-        },
-      });
+        }
+      );
 
-      // Format the products and calculate the total
       let total = 0;
-      const formattedProducts = reservationTransactions.flatMap((transaction) => {
-        const products = transaction.products || [];
-        return products.map((product) => {
-          const price = product.custom_price?.[0]?.custom_ammount || product.price;
-          total += price; // Add to total
+      const products = txns.flatMap((txn) =>
+        (txn.products || []).map((p) => {
+          const price = p.custom_price?.[0]?.custom_ammount ?? p.price;
+          total += price;
           return {
-            id: product.id,
-            name: product.Name,
-            type: product.type,
+            id: p.id,
+            name: p.Name,
+            type: p.type,
             price,
-            transactionStatus: transaction.status, // Include transaction status
+            transactionStatus: txn.status,
           };
-        });
-      });
+        })
+      );
 
-      // Prepare the response
-      const response = {
+      // 3. Return structured response
+      ctx.send({
         reservation: {
-          id: mostRecentReservation.id,
-          type: mostRecentReservation.type, // Include reservation type
-          ownerName: `${mostRecentReservation.owner?.firstName} ${mostRecentReservation.owner?.lastName}`, // Include owner name
-          date: mostRecentReservation.date,
-          startTime: mostRecentReservation.start_time,
-          endTime: mostRecentReservation.end_time,
-          court: {
-            id: mostRecentReservation.court.id,
-            name: mostRecentReservation.court.name, // Include track name
-          },
+          id: resv.id,
+          type: resv.type,
+          ownerName: `${resv.owner?.firstName} ${resv.owner?.lastName}`,
+          date: resv.date,
+          startTime: resv.start_time,
+          endTime: resv.end_time,
+          court: { id: resv.court.id, name: resv.court.name },
         },
-        products: formattedProducts,
-        total, // Include total
-      };
-
-      ctx.send(response);
-    } catch (error) {
-      console.error('Error fetching the most recent reservation by user:', error);
+        products,
+        total,
+      });
+    } catch (err) {
+      console.error(err);
       ctx.internalServerError('An error occurred while fetching the reservation');
     }
   },
