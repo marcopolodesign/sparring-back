@@ -1,4 +1,5 @@
 'use strict';
+const { format, addMinutes, parseISO } = require('date-fns');
 
 module.exports = {
   async fetchRealtimeReservations(ctx) {
@@ -15,9 +16,9 @@ module.exports = {
     }
 
     try {
-      const nowUTC = new Date();
-      const now = new Date(nowUTC.getTime() - nowUTC.getTimezoneOffset() * 60000); // Adjust to local timezone
-      const nowPlus20Minutes = new Date(now.getTime() + 20 * 60000); // Add 20 minutes to local time
+      const now = new Date();
+      const nowPlus20Minutes = addMinutes(now, 20);
+
       const targetDate = date || now.toISOString().split('T')[0]; // Use local date
 
       const processedReservations = [];
@@ -47,13 +48,13 @@ module.exports = {
       for (const reservation of reservations) {
         const trackId = reservation.court.id;
 
-        // Combine date with start_time and end_time to create full DateTime objects
-        const startTimeUTC = new Date(`${reservation.date}T${reservation.start_time}`);
-        const endTimeUTC = new Date(`${reservation.date}T${reservation.end_time}`);
-
-        // Convert to local timezone
-        const startTime = new Date(startTimeUTC.getTime() - startTimeUTC.getTimezoneOffset() * 60000);
-        const endTime = new Date(endTimeUTC.getTime() - endTimeUTC.getTimezoneOffset() * 60000);
+          // Parse ISO strings as local Date objects
+          const startTime = parseISO(
+            `${reservation.date}T${reservation.start_time}`
+          );
+          const endTime = parseISO(
+            `${reservation.date}T${reservation.end_time}`
+          );
 
         // console.log('Start time (local):', startTime); // Debugging log
         // console.log('End time (local):', endTime); // Debugging log
