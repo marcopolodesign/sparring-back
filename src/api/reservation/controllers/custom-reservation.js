@@ -876,15 +876,14 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
   },
 
   async getVenueAvailability(ctx) {
-
-    const {venueId} = ctx.params
+    const { venueId } = ctx.params;
     try {
-      const now = new Date();
+      const now = toZonedTime(new Date(), TIMEZONE); // Adjust now to the specified timezone
       const currentDate = formatToTimezone(now, 'yyyy-MM-dd'); // Current date in timezone
       const currentTimeMinutes = roundToNextHalfHour(now.getHours() * 60 + now.getMinutes()); // Current time rounded to the next half-hour
 
-      const startTime = subMinutes(now, 90); // 90 minutes before current time
-      const endTime = addMinutes(now, 240); // 4 hours after current time
+      const startTime = toZonedTime(subMinutes(now, 90), TIMEZONE); // 90 minutes before current time
+      const endTime = toZonedTime(addMinutes(now, 240), TIMEZONE); // 4 hours after current time
 
       // Fetch all tracks in the system filtered by venueId
       const allTracks = await strapi.entityService.findMany('api::track.track', {

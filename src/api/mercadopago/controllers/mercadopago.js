@@ -144,7 +144,7 @@ module.exports = {
           await strapi.entityService.create('api::log-entry.log-entry', {
             data: {
               action: 'payment.created',
-              description: `Payment #${newPayment.id} created for Reservation #${reservationId} and Transaction #${transactionId}, amount: ${payment.transaction_amount}`,
+              description: `Pago #${newPayment.id} creado automáticamente por Mercado Pago para la reserva #${reservationId} y transacción #${transactionId}, monto: ${payment.transaction_amount}`,
               timestamp: new Date(),
               user: payment.metadata?.user_id || null,
               reservation: reservationId || null,

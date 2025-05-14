@@ -20,6 +20,7 @@ module.exports = {
   async afterCreate(event) {
     const { result, params } = event;
     const when = formatSpanishDate(new Date());
+    console.log(event, 'EVENTO afterCreate lifecycle reservation');
 
     // Check if a log entry for reservation.created already exists
     const existingReservationLog = await strapi.entityService.findMany('api::log-entry.log-entry', {
@@ -115,7 +116,7 @@ module.exports = {
         amount: amount,
         description: `Venta asociada a la reserva ${result.id}`,
         date: transactionDate,
-        status: 'Pending',
+        status: params.data.type === 'abono' ? 'Paid' : 'Pending', // Set status based on reservation type
         source: 'sparring-club',
         products: [productId],
         venue: venueId,

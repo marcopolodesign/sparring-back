@@ -32,7 +32,8 @@ module.exports = {
       start_date,
       weeks_ahead,
       payment_method,
-      force   // 🆕 Allow frontend to override conflict warning
+      force,    // 🆕 Allow frontend to override conflict warning
+      sellerId
     } = ctx.request.body;
 
     console.log('Force:', force);
@@ -127,7 +128,7 @@ module.exports = {
           venue,
           coach,
           owner: user,
-          seller: 52,
+          seller: sellerId || 98,
           products: product ? [product.id] : [],
           // abono: abono.id,
           publishedAt: new Date().toISOString()
@@ -147,7 +148,7 @@ module.exports = {
           products: [product.id],
           seller: 52,
           amount: product.price * successfulDates.length,
-          status: 'Completed',
+          status: 'Paid',
           payment_method: payment_method,
           notes: `Abono ${abono.id} - ${product.sku}`,
           source: 'mostrador',

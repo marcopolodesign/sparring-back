@@ -197,7 +197,7 @@ module.exports = {
                 data: {
                     action: 'payment.created',
                     description:
-                        `Payment #${result.id}: neto ARS ${amountToAdd}, ` +
+                        `Pago #${result.id}: neto ARS ${amountToAdd}, ` +
                         `descuento ARS ${disc}, aplicado a Txn #${transactionId} el ${when}. ` +
                         `Status: ${isFullyPaid ? 'Paid' : 'PartiallyPaid'}`,
                     timestamp: new Date(),
