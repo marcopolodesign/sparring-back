@@ -128,7 +128,7 @@ module.exports = {
           venue,
           coach,
           owner: user,
-          seller: sellerId || 98,
+          seller: sellerId || 74,
           products: product ? [product.id] : [],
           // abono: abono.id,
           publishedAt: new Date().toISOString()
@@ -146,7 +146,7 @@ module.exports = {
           abono: abono.id,
           client: user,
           products: [product.id],
-          seller: 52,
+          seller: 74,
           amount: product.price * successfulDates.length,
           status: 'Paid',
           payment_method: payment_method,
