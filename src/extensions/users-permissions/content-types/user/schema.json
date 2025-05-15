@@ -216,13 +216,13 @@
       "type": "relation",
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",
-      "mappedBy": "played_with"
+      "inversedBy": "played_with"
     },
     "played_with": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",
-      "mappedBy": "played_with_by"
+      "inversedBy": "played_with_by"
     },
     "visited_clubs": {
       "type": "relation",
