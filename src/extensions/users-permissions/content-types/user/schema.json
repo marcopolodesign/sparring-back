@@ -91,14 +91,12 @@
     "friends_added": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "friends_received"
+      "target": "plugin::users-permissions.user"
     },
     "friends_received": {
       "type": "relation",
       "relation": "manyToMany",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "friends_added"
+      "target": "plugin::users-permissions.user"
     },
     "coach": {
       "type": "boolean"
