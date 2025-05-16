@@ -88,6 +88,17 @@ module.exports = {
       },
     },
     
+
+    {
+      method: 'GET',
+      path: '/reservations/venue-daily-availability/:venueId',
+      handler: 'custom-reservation.getDailyVenueAvailability',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+
     {
       method: 'POST',
       path: '/reservation/reserve',

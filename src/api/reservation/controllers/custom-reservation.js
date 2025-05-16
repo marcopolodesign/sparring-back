@@ -1029,6 +1029,161 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
     }
   },
 
+
+  async getDailyVenueAvailability(ctx) {
+    const { venueId } = ctx.params;
+    try {
+      const now = toZonedTime(new Date(), TIMEZONE); // Adjust now to the specified timezone
+      const currentDate = formatToTimezone(now, 'yyyy-MM-dd'); // Current date in timezone
+      const currentTimeMinutes = roundToNextHalfHour(now.getHours() * 60 + now.getMinutes()); // Current time rounded to the next half-hour
+
+      const startTime = toZonedTime(now, TIMEZONE); // Current time
+      const endTime = toZonedTime(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59), TIMEZONE); // Midnight
+
+      // Fetch all tracks in the system filtered by venueId
+      const allTracks = await strapi.entityService.findMany('api::track.track', {
+        fields: ['id', 'name'],
+        filters: {
+          venue: {
+            id: {
+              $eq: venueId,
+            },
+          },
+        },
+        populate: { venue: true },
+      });
+
+      // @ts-ignore
+      const trackIds = allTracks.map((track) => track.id);
+
+      // Build reservedSlotsMap for each track
+      const reservedSlotsMap = {};
+      for (const trackId of trackIds) {
+        reservedSlotsMap[trackId] = new Set();
+      }
+
+      // Fetch reservations for the current date and all tracks
+      const allReservations = await strapi.entityService.findMany('api::reservation.reservation', {
+        filters: {
+          date: currentDate,
+          court: {
+            id: {
+              $in: trackIds,
+            },
+          },
+        },
+        populate: {
+          court: true,
+        },
+      });
+
+      // Convert each reservation into half-hour increments
+      for (const reservation of allReservations) {
+        if (!reservation.start_time || !reservation.end_time || !reservation.court) continue;
+
+        const trackId = reservation.court.id;
+
+        const startTimeString = reservation.start_time.toString();
+        const endTimeString = reservation.end_time.toString();
+        const [startHour, startMinute] = startTimeString.split(':').map(Number);
+        const [endHour, endMinute] = endTimeString.split(':').map(Number);
+
+        let startMins = startHour * 60 + startMinute;
+        const endMins = endHour * 60 + endMinute;
+
+        while (startMins < endMins) {
+          reservedSlotsMap[trackId].add(startMins);
+          startMins += 30;
+        }
+      }
+
+      // Build list of half-hour increments within [startTime, endTime]
+      const timeslots = [];
+      for (let mins = 8 * 60; mins <= 23 * 60; mins += 30) {
+        timeslots.push(mins);
+      }
+
+      const startMinsRange = startTime.getHours() * 60 + startTime.getMinutes();
+      const endMinsRange = endTime.getHours() * 60 + endTime.getMinutes();
+
+      // Build results for each track
+      const results = [];
+      for (const track of allTracks) {
+        const increments = [];
+        for (const slot of timeslots) {
+          if (slot < startMinsRange || slot > endMinsRange) {
+            continue;
+          }
+          // @ts-ignore
+          const isReserved = reservedSlotsMap[track.id].has(slot);
+          if (!isReserved) {
+            const hh = String(Math.floor(slot / 60)).padStart(2, '0');
+            const mm = String(slot % 60).padStart(2, '0');
+            increments.push(`${hh}:${mm}`);
+          }
+        }
+
+        results.push({
+          // @ts-ignore
+          id: track.id,
+          // @ts-ignore
+          name: track.name,
+          // @ts-ignore
+          availability: increments,
+          // @ts-ignore
+          venue: track.venue
+          // @ts-ignore
+            ? { id: track.venue.id, name: track.venue.name }
+            : null,
+        });
+      }
+
+      // Group results by venue
+      const venueMap = new Map();
+      for (const trackResult of results) {
+        // @ts-ignore
+        const { venue } = trackResult;
+        if (!venue) continue;
+
+        const venueId = venue.id;
+        if (!venueMap.has(venueId)) {
+          venueMap.set(venueId, {
+            venueName: venue.name,
+            venueId: venueId,
+            trackResults: [],
+          });
+        }
+        venueMap.get(venueId).trackResults.push(trackResult);
+      }
+
+      // Compute venue availability
+      function unionOfTimes(arrayOfTimeArrays) {
+        const combined = arrayOfTimeArrays.flat();
+        const set = new Set(combined);
+        return [...set].sort();
+      }
+
+      const finalVenues = [];
+      for (const [venueId, venueInfo] of venueMap.entries()) {
+        const { venueName, trackResults } = venueInfo;
+        const allAvailabilityArrays = trackResults.map((tr) => tr.availability);
+        const venueAvailability = unionOfTimes(allAvailabilityArrays);
+
+        finalVenues.push({
+          venue: venueName,
+          venueAvailability,
+          venueId,
+          results: trackResults,
+        });
+      }
+
+      ctx.send(finalVenues);
+    } catch (err) {
+      console.error('Error in getVenueAvailability:', err);
+      ctx.badRequest('Something went wrong.');
+    }
+  },
+
   async createReserve(ctx) {
     try {
         const {
