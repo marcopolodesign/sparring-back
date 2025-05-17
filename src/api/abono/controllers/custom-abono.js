@@ -19,6 +19,102 @@ const dayToNumber = {
   saturday: 6,
 };
 
+// Helper to calculate baseDate and renovationDate
+function calculateDates(start_date, day_of_week, weeks_ahead, action) {
+
+  const startDate = parseISO(start_date);
+  const targetDay = dayToNumber[day_of_week];
+
+  const baseDate = getDay(startDate) === targetDay
+    ? startDate
+    : nextDay(startDate, targetDay);
+
+  // ✅ Adjust renovationDate to be weeks_ahead - 1
+  const renovationDate = addWeeks(baseDate, weeks_ahead - 1);
+  return { baseDate, renovationDate };
+}
+
+// Helper to check for conflicts
+async function checkConflicts(baseDate, weeks_ahead, start_time, duration, court) {
+  const conflictsList = [];
+  const successfulDates = [];
+  const now = new Date();
+
+  for (let i = 0; i < weeks_ahead; i++) {
+    const date = addWeeks(baseDate, i);
+    const startDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${start_time}`);
+    const endDateTime = addMinutes(startDateTime, duration);
+
+    // ✅ Skip reservations for today if the start time has already passed
+    if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd') && startDateTime <= now) {
+      strapi.log.info(`⏩ Skipping reservation for ${format(date, 'yyyy-MM-dd')} at ${start_time} because it overlaps with the current time.`);
+      continue;
+    }
+
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const startStr = format(startDateTime, 'HH:mm:ss');
+    const endStr = format(endDateTime, 'HH:mm:ss');
+
+    const conflicts = await strapi.entityService.findMany('api::reservation.reservation', {
+      filters: {
+        date: { $eq: dateStr },
+        court: { id: court },
+        start_time: { $lt: endStr },
+        end_time: { $gt: startStr }
+      },
+      publicationState: 'live'
+    });
+
+    if (conflicts.length > 0) {
+      strapi.log.warn(`⛔ Conflict found: ${dateStr} ${startStr}`);
+      conflictsList.push({ date: dateStr, start_time: startStr });
+      continue;
+    }
+
+    successfulDates.push({ dateStr, startStr, endStr });
+  }
+
+  return { conflictsList, successfulDates };
+}
+
+// Helper to create reservations
+async function createReservations(successfulDates, abonoId, user, court, venue, coach, sellerId, duration, product) {
+  for (const { dateStr, startStr, endStr } of successfulDates) {
+    await strapi.entityService.create('api::reservation.reservation', {
+      data: {
+        type: 'abono',
+        date: dateStr,
+        start_time: startStr,
+        end_time: endStr,
+        duration,
+        status: 'confirmed',
+        court,
+        venue,
+        coach,
+        owner: user,
+        seller: sellerId || 74,
+        products: product ? [product.id] : [],
+        abono: abonoId,
+        publishedAt: new Date().toISOString()
+      },
+    });
+  }
+}
+
+// Helper to create a log entry
+async function createLogEntry(action, abonoId, sellerId) {
+  const description = `Abono ${action} el día ${format(new Date(), 'yyyy-MM-dd')} por usuario ${sellerId}`;
+  await strapi.entityService.create('api::log-entry.log-entry', {
+    data: {
+      action: `abono.${action}`,
+      description,
+      timestamp: new Date(),
+      user: sellerId,
+      abono: abonoId
+    }
+  });
+}
+
 module.exports = {
   async create(ctx) {
     const {
@@ -32,23 +128,14 @@ module.exports = {
       start_date,
       weeks_ahead,
       payment_method,
-      force,    // 🆕 Allow frontend to override conflict warning
+      force,
       sellerId
     } = ctx.request.body;
 
     console.log('Force:', force);
 
-    const startDate = parseISO(start_date);
-    const targetDay = dayToNumber[day_of_week];
+    const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'create');
 
-    // Use next occurrence of the target weekday
-    const baseDate = getDay(startDate) === targetDay
-      ? startDate
-      : nextDay(startDate, targetDay);
-
-      const renovationDate = addWeeks(baseDate, weeks_ahead);
-
-    // Create the Abono first
     const abono = await strapi.entityService.create('api::abono.abono', {
       data: {
         user,
@@ -66,41 +153,8 @@ module.exports = {
       }
     });
 
-    // 🆕 Setup for processing reservations
-    const conflictsList = [];
-    const successfulDates = [];
+    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, court);
 
-    for (let i = 0; i < weeks_ahead; i++) {
-      const date = addWeeks(baseDate, i);
-      const startDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${start_time}`);
-      const endDateTime = addMinutes(startDateTime, duration);
-
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const startStr = format(startDateTime, 'HH:mm:ss');
-      const endStr = format(endDateTime, 'HH:mm:ss');
-
-      // ✅ Check for reservation conflicts
-      const conflicts = await strapi.entityService.findMany('api::reservation.reservation', {
-        filters: {
-          date: { $eq: dateStr },
-          court: { id: court },
-          start_time: { $lt: endStr },
-          end_time: { $gt: startStr }
-        },
-        publicationState: 'live'
-      });
-
-      if (conflicts.length > 0) {
-        strapi.log.warn(`⛔ Conflict found: ${dateStr} ${startStr}`);
-        conflictsList.push({ date: dateStr, start_time: startStr });
-        continue;
-      }
-
-      // Store conflict-free slot
-      successfulDates.push({ dateStr, startStr, endStr });
-    }
-
-    // 🛑 If conflicts exist and not forced, return early
     if (conflictsList.length > 0 && !force) {
       return ctx.badRequest('Conflicting reservations found', {
         conflicts: conflictsList,
@@ -108,64 +162,27 @@ module.exports = {
       });
     }
 
-    // ✅ Fetch product now (after confirming we can proceed)
     const productService = strapi.service('api::product.custom-product');
     const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
 
-    console.log(product.sku, 'PRODUCT');
+    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product);
 
-    // ✅ Create each conflict-free reservation
-    for (const { dateStr, startStr, endStr } of successfulDates) {
-      await strapi.entityService.create('api::reservation.reservation', {
-        data: {
-          type: 'abono',
-          date: dateStr,
-          start_time: startStr,
-          end_time: endStr,
-          duration,
-          status: 'confirmed',
-          court,
-          venue,
-          coach,
-          owner: user,
-          seller: sellerId || 74,
-          products: product ? [product.id] : [],
-          // abono: abono.id,
-          publishedAt: new Date().toISOString()
-        },
-      });
-    }
+    // ✅ Create a log entry for the create action
+    await createLogEntry('creado', abono.id, sellerId);
 
-    // log the successful reservations
-    console.log(`✅ ${successfulDates.length} reservations created for Abono ID: ${abono.id}, Product: ${product ? product.sku : 'None'}`);
+    strapi.log.info(`✅ ${successfulDates.length} reservations created for Abono ID: ${abono.id}, Product: ${product ? product.sku : 'None'}`);
 
-    // ✅ Create a single transaction for the entire Abono
-    if (product) {
-      await strapi.entityService.create('api::transaction.transaction', {
-        data: {
-          abono: abono.id,
-          client: user,
-          products: [product.id],
-          seller: 74,
-          amount: product.price * successfulDates.length,
-          status: 'Paid',
-          payment_method: payment_method,
-          notes: `Abono ${abono.id} - ${product.sku}`,
-          source: 'mostrador',
-          date: new Date().toISOString()
-        }
-      });
-    }
-
-    // ✅ Return success and info
     return {
       abono,
       message: `${successfulDates.length} reservations created. ${conflictsList.length} skipped.`,
       conflicts: conflictsList.length > 0 ? conflictsList : undefined
     };
-  }, 
+  },
+
   async cancel(ctx) {
     const abonoId = ctx.params.abonoId;
+    const sellerId = ctx.params.sellerId;
+
 
     const abono = await strapi.entityService.findOne('api::abono.abono', abonoId);
     if (!abono) return ctx.notFound('Abono not found');
@@ -203,6 +220,77 @@ module.exports = {
       await strapi.entityService.delete('api::reservation.reservation', res.id);
     }
 
+    // ✅ Create a log entry for the cancel action
+    await createLogEntry('cancelado', abonoId, sellerId);
+
     return { message: `Abono ${abonoId} cancelled, ${futureReservations.length} future reservations and their transactions deleted.` };
   },
+
+  async update(ctx) {
+    console.log(ctx.request.body);
+
+    const {
+      coach,
+      court,
+      day_of_week,
+      duration,
+      force,
+      payment_method,
+      sellerId,
+      start_date,
+      start_time,
+      venue,
+      weeks_ahead, 
+      abonoId, 
+      user
+    } = ctx.request.body.data;
+
+
+    // ✅ Handle court as either a number or an object
+    const courtId = typeof court === 'object' && court !== null ? court.id : court;
+
+    // ✅ Pass 'update' action to calculateDates
+    const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'update');
+
+    const abono = await strapi.entityService.update('api::abono.abono', abonoId, {
+      data: {
+        user,
+        coach,
+        court: courtId,
+        venue,
+        day_of_week,
+        start_time,
+        duration,
+        start_date,
+        weeks_ahead,
+        payment_method,
+        renovation_date: format(renovationDate, 'yyyy-MM-dd')
+      }
+    });
+
+    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, courtId);
+
+    if (conflictsList.length > 0 && !force) {
+      return ctx.badRequest('Conflicting reservations found', {
+        conflicts: conflictsList,
+        abonoId: abonoId
+      });
+    }
+
+    const productService = strapi.service('api::product.custom-product');
+    const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
+
+    await createReservations(successfulDates, abono.id, user, courtId, venue, coach, sellerId, duration, product);
+
+    // ✅ Create a log entry for the update action
+    await createLogEntry('renovado', abono.id, sellerId);
+
+    strapi.log.info(`✅ ${successfulDates.length} reservations updated for Abono ID: ${abono.id}, Product: ${product ? product.sku : 'None'}`);
+
+    return {
+      abono,
+      message: `${successfulDates.length} reservations updated. ${conflictsList.length} skipped.`,
+      conflicts: conflictsList.length > 0 ? conflictsList : undefined
+    };
+  }
 };

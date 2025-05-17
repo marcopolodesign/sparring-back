@@ -110,6 +110,11 @@
     },
     "other_cancellation": {
       "type": "string"
+    },
+    "abono": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::abono.abono"
     }
   }
 }

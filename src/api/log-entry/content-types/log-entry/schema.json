@@ -4,7 +4,8 @@
   "info": {
     "singularName": "log-entry",
     "pluralName": "log-entries",
-    "displayName": "LogEntry"
+    "displayName": "LogEntry",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
@@ -35,6 +36,12 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::transaction.transaction",
+      "inversedBy": "logs"
+    },
+    "abono": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::abono.abono",
       "inversedBy": "logs"
     }
   }

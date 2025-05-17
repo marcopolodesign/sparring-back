@@ -14,8 +14,18 @@ module.exports = {
 
     {
       method: 'POST',
-      path: '/custom-abono/:abonoId/cancel',
+      path: '/custom-abono/:abonoId/cancel/:sellerId?',
       handler: 'custom-abono.cancel',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+
+    {
+      method: 'POST',
+      path: '/custom-abono/:abonoId/renew',
+      handler: 'custom-abono.update',
       config: {
         policies: [],
         middlewares: [],

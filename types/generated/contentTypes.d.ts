@@ -987,6 +987,16 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
       ['efectivo', 'transferencia', 'credito', 'dolar']
     >;
     force: Attribute.Boolean;
+    log_entries: Attribute.Relation<
+      'api::abono.abono',
+      'oneToMany',
+      'api::log-entry.log-entry'
+    >;
+    logs: Attribute.Relation<
+      'api::abono.abono',
+      'oneToMany',
+      'api::log-entry.log-entry'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1345,6 +1355,7 @@ export interface ApiLogEntryLogEntry extends Schema.CollectionType {
     singularName: 'log-entry';
     pluralName: 'log-entries';
     displayName: 'LogEntry';
+    description: '';
   };
   options: {
     draftAndPublish: false;
@@ -1367,6 +1378,11 @@ export interface ApiLogEntryLogEntry extends Schema.CollectionType {
       'api::log-entry.log-entry',
       'manyToOne',
       'api::transaction.transaction'
+    >;
+    abono: Attribute.Relation<
+      'api::log-entry.log-entry',
+      'manyToOne',
+      'api::abono.abono'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1708,6 +1724,11 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       ]
     >;
     other_cancellation: Attribute.String;
+    abono: Attribute.Relation<
+      'api::reservation.reservation',
+      'oneToOne',
+      'api::abono.abono'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

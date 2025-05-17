@@ -81,6 +81,17 @@
     },
     "force": {
       "type": "boolean"
+    },
+    "log_entries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::log-entry.log-entry"
+    },
+    "logs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::log-entry.log-entry",
+      "mappedBy": "abono"
     }
   }
 }
