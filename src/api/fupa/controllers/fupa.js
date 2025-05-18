@@ -799,11 +799,11 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'Failed to fetch tournament results.');
     }
   },
-  async getGroupResults(ctx) {
-    const { tournamentId, memberId } = ctx.params;
+  async getTournamentGroupsResults(ctx) {
+    const { tournamentId } = ctx.params;
   
     try {
-      // Fetch the tournament by ID and populate groups, couples, members, and matches
+      // Fetch the tournament and populate necessary fields
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           groups: {
@@ -813,9 +813,7 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                   members: {
                     populate: {
                       profilePicture: {
-                        populate: {
-                          formats: true,
-                        },
+                        populate: { formats: true },
                       },
                     },
                     fields: ['id', 'firstName', 'lastName'],
@@ -829,15 +827,12 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                       members: {
                         populate: {
                           profilePicture: {
-                            populate: {
-                              formats: true,
-                            },
+                            populate: { formats: true },
                           },
                         },
                         fields: ['id', 'firstName', 'lastName'],
                       },
-                      sets: true, // Populate sets within each couple
-                      score: true, // Populate score if needed
+                      sets: true, // Populate sets
                     },
                   },
                 },
@@ -852,112 +847,132 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         return;
       }
   
-      let matchedGroup = null;
+      const groupResults = tournament.groups.map(group => {
+        const coupleStats = {};
   
-      // Find the group where the member is participating
-      for (const group of tournament.groups) {
-        for (const couple of group.couples) {
-          const matchedMember = couple.members.find(member => member.id === parseInt(memberId, 10));
+        // Initialize stats for all couples in the group
+        group.matches.forEach(match => {
+          match.couples.forEach(couple => {
+            const coupleKey = couple.members.map(member => member.id).sort().join('-');
   
-          if (matchedMember) {
-            matchedGroup = group;
-            break;
-          }
-        }
-        if (matchedGroup) break;
-      }
-      if (!matchedGroup) {
-        // If no matched group is found, assign the first group available
-        matchedGroup = tournament.groups[0];
-      }
-      
-      // Initialize an empty object to track couple wins
-      const coupleWins = {};
-  
-      // Initialize all couples in the group with 0 matches won
-      matchedGroup.matches.forEach(match => {
-        match.couples.forEach(couple => {
-          const coupleKey = couple.members.map(member => member.id).sort().join('-');
-  
-          if (!coupleWins[coupleKey]) {
-            coupleWins[coupleKey] = {
-              members: couple.members,
-              matchesWon: 0,
-            };
-          }
+            if (!coupleStats[coupleKey]) {
+              coupleStats[coupleKey] = {
+                members: couple.members,
+                matchesWon: 0,
+                gamesWon: 0,
+                gamesLost: 0,
+                setsWon: 0,
+                setsLost: 0,
+              };
+            }
+          });
         });
-      });
   
-      for (const match of matchedGroup.matches) {
-        if (match.couples.length < 2) continue; // Guard against incomplete matches
-      
-        const coupleKeys = match.couples.map(couple => couple.members.map(member => member.id).sort().join('-'));
-      
-        const coupleResults = {
-          [coupleKeys[0]]: { setsWon: 0, details: match.couples[0] },
-          [coupleKeys[1]]: { setsWon: 0, details: match.couples[1] },
-        };
-      
-        // Now compare set by set
-        const setsCouple1 = match.couples[0].sets || [];
-        const setsCouple2 = match.couples[1].sets || [];
-      
-        const totalSets = Math.min(setsCouple1.length, setsCouple2.length);
-      
-        for (let i = 0; i < totalSets; i++) {
-          const set1 = setsCouple1[i];
-          const set2 = setsCouple2[i];
-      
-          if (!set1 || !set2) continue; // Defensive guard
-      
-          if (set1.gamesWon > set2.gamesWon) {
-            coupleResults[coupleKeys[0]].setsWon += 1;
-          } else if (set2.gamesWon > set1.gamesWon) {
-            coupleResults[coupleKeys[1]].setsWon += 1;
+        // Process each match to calculate stats
+        for (const match of group.matches) {
+          if (match.couples.length < 2) continue;
+  
+          const coupleKeys = match.couples.map(couple => couple.members.map(member => member.id).sort().join('-'));
+  
+          const coupleResults = {
+            [coupleKeys[0]]: { setsWon: 0, gamesWon: 0, gamesLost: 0, details: match.couples[0] },
+            [coupleKeys[1]]: { setsWon: 0, gamesWon: 0, gamesLost: 0, details: match.couples[1] },
+          };
+  
+          const setsCouple1 = match.couples[0].sets || [];
+          const setsCouple2 = match.couples[1].sets || [];
+  
+          const totalSets = Math.min(setsCouple1.length, setsCouple2.length);
+  
+          for (let i = 0; i < totalSets; i++) {
+            const set1 = setsCouple1[i];
+            const set2 = setsCouple2[i];
+  
+            if (!set1 || !set2) continue;
+  
+            // Track games won and lost
+            coupleResults[coupleKeys[0]].gamesWon += set1.gamesWon;
+            coupleResults[coupleKeys[0]].gamesLost += set2.gamesWon;
+  
+            coupleResults[coupleKeys[1]].gamesWon += set2.gamesWon;
+            coupleResults[coupleKeys[1]].gamesLost += set1.gamesWon;
+  
+            // Track sets won and lost
+            if (set1.gamesWon > set2.gamesWon) {
+              coupleResults[coupleKeys[0]].setsWon += 1;
+              coupleResults[coupleKeys[1]].setsLost += 1;
+            } else if (set2.gamesWon > set1.gamesWon) {
+              coupleResults[coupleKeys[1]].setsWon += 1;
+              coupleResults[coupleKeys[0]].setsLost += 1;
+            }
           }
-          // If it's tied, no one wins the set (rare, unless bugged)
-        }
-      
-        // Decide how many sets are needed to win
-        const setsNeededToWin = totalSets === 1 ? 1 : 2;
-      
-        // Find winner
-        const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= setsNeededToWin);
-      
-        if (winningCouple) {
-          const coupleKey = winningCouple.details.members.map(member => member.id).sort().join('-');
-          coupleWins[coupleKey].matchesWon += 1;
-        }
-      }
-
-      // Format the response to include necessary member fields
-      const formattedResponse = Object.values(coupleWins).map(couple => ({
-        couple: {
-          members: couple.members.map(member => ({
-            id: member.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
-          })),
-        },
-        matchesWon: couple.matchesWon,
-      })).sort((a, b) => b.matchesWon - a.matchesWon);  // Sort by matches won in descending order
   
-      // Send the final result back in the response
-      ctx.send({
-        group: {
-          id: matchedGroup.id,
-          name: matchedGroup.name,
-        },
-        results: formattedResponse,
+          // Decide how many sets are needed to win
+          const setsNeededToWin = totalSets === 1 ? 1 : 2;
+  
+          // Find winner
+          const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= setsNeededToWin);
+  
+          if (winningCouple) {
+            const coupleKey = winningCouple.details.members.map(member => member.id).sort().join('-');
+            coupleStats[coupleKey].matchesWon += 1;
+          }
+  
+          // Update stats for both couples
+          Object.keys(coupleResults).forEach(coupleKey => {
+            coupleStats[coupleKey].gamesWon += coupleResults[coupleKey].gamesWon;
+            coupleStats[coupleKey].gamesLost += coupleResults[coupleKey].gamesLost;
+            coupleStats[coupleKey].setsWon += coupleResults[coupleKey].setsWon;
+            coupleStats[coupleKey].setsLost += coupleResults[coupleKey].setsLost;
+          });
+        }
+  
+        // Format the group results
+        const formattedCouples = Object.values(coupleStats).map(couple => ({
+          couple: {
+            members: couple.members.map(member => ({
+              id: member.id,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
+            })),
+          },
+          matchesWon: couple.matchesWon,
+          gamesWon: couple.gamesWon,
+          gamesLost: couple.gamesLost,
+          gamesDifference: couple.gamesWon - couple.gamesLost,
+          setsWon: couple.setsWon,
+          setsLost: couple.setsLost,
+          setsDifference: couple.setsWon - couple.setsLost,
+        })).sort((a, b) => {
+          // Sort by matchesWon (descending)
+          if (b.matchesWon !== a.matchesWon) {
+            return b.matchesWon - a.matchesWon;
+          }
+          // If matchesWon are tied, sort by setsWon (descending)
+          if (b.setsWon !== a.setsWon) {
+            return b.setsWon - a.setsWon;
+          }
+          // If setsWon are tied, sort by gamesWon (descending)
+          return b.gamesWon - a.gamesWon;
+        });
+  
+        return {
+          group: {
+            id: group.id,
+            name: group.name,
+          },
+          results: formattedCouples,
+        };
       });
+  
+      ctx.send(groupResults);
   
     } catch (error) {
-      console.error('Error fetching group results:', error);
-      ctx.throw(500, 'Failed to fetch group results.');
+      console.error('Error fetching tournament group results:', error);
+      ctx.throw(500, 'Failed to fetch tournament group results.');
     }
   },
-
   async checkLoginStatus(ctx) {
     try {
       // Fetch all users
