@@ -775,7 +775,22 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
         setsWon: couple.setsWon,
         setsLost: couple.setsLost,
         setsDifference: couple.setsWon - couple.setsLost, // Calculate setsDifference
-      })).sort((a, b) => b.matchesWon - a.matchesWon);
+      })).sort((a, b) => {
+        // Sort by matchesWon (descending)
+        if (b.matchesWon !== a.matchesWon) {
+          return b.matchesWon - a.matchesWon;
+        }
+        // If matchesWon are tied, sort by setsWon (descending)
+        if (b.setsWon !== a.setsWon) {
+          return b.setsWon - a.setsWon;
+        }
+
+        if (b.gamesWon !== a.gamesWon) {
+          return b.gamesWon - a.gamesWon
+        }
+        // If setsWon are tied, sort by gamesWon (descending)
+        return b.gamesDifference - a.gamesDifference;
+      });
   
       ctx.send(formattedResponse);
   
