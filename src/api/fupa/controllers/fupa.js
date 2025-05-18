@@ -626,15 +626,143 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
     }
   },
 
+  // async getTournamentResults(ctx) {
+  //   const { tournamentId } = ctx.params;
+  
+  //   try {
+  //     // Fetch all matches in the tournament, populating necessary fields
+  //     const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+  //       populate: {
+  //         groups: {
+  //           populate: {
+  //             matches: {
+  //               populate: {
+  //                 couples: {
+  //                   populate: {
+  //                     members: {
+  //                       populate: {
+  //                         profilePicture: {
+  //                           populate: {
+  //                             formats: true,
+  //                           }
+  //                         }
+  //                       },
+  //                       fields: ['id', 'firstName', 'lastName'],
+  //                     },
+  //                     sets: true, // Populate sets within each couple
+  //                     score: true,
+  //                   },
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     });
+  
+  //     if (!tournament) {
+  //       ctx.throw(404, 'Tournament not found');
+  //       return;
+  //     }
+  
+  //     const coupleWins = {};
+  
+  //     // Initialize all couples with 0 matches won
+  //     tournament.groups.forEach(group => {
+  //       group.matches.forEach(match => {
+  //         match.couples.forEach(couple => {
+  //           // Create a unique key for each couple based on member IDs
+  //           const coupleKey = couple.members.map(member => member.id).sort().join('-');
+  
+  //           if (!coupleWins[coupleKey]) {
+  //             coupleWins[coupleKey] = {
+  //               members: couple.members,
+  //               matchesWon: 0,
+  //             };
+  //           }
+  //         });
+  //       });
+  //     });
+  
+  //     // Iterate over each group and each match to calculate matches won
+  //     for (const group of tournament.groups) {
+  //       for (const match of group.matches) {
+  //         const coupleResults = {};
+  
+  //         // Iterate over each couple in the match
+  //         match.couples.forEach(couple => {
+  //           let setsWon = 0;
+  
+  //           // Determine the winner of each set for this couple
+  //           couple.sets.forEach(set => {
+  //             if (set.gamesWon >= 6) {
+  //               setsWon += 1; // Count the set as won if they have 6 or more games won
+  //             }
+  //           });
+  
+  //           const coupleKey = couple.members.map(member => member.id).sort().join('-');
+  
+  //           coupleResults[coupleKey] = {
+  //             setsWon,
+  //             details: couple,
+  //           };
+  //         });
+  
+  //         // Determine the winner of the match (first couple to win 1 set)
+  //         const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 1);
+  //         if (matchWinner) {
+  //           const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
+  //           coupleWins[coupleKey].matchesWon += 1;
+  //         }
+  //       }
+  //     }
+  
+  //     // Format the response to include only necessary member fields
+  //     const formattedResponse = Object.values(coupleWins).map(couple => {
+  //       return {
+  //         couple: {
+  //           members: couple.members.map(member => ({
+  //             id: member.id,
+  //             firstName: member.firstName,
+  //             lastName: member.lastName,
+  //             profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
+  //           })),
+  //         },
+  //         matchesWon: couple.matchesWon,
+  //       };
+  //     }).sort((a, b) => b.matchesWon - a.matchesWon); // Sort by matches won in descending order
+  
+  //     ctx.send(formattedResponse);
+  
+  //   } catch (error) {
+  //     console.error('Error fetching tournament results:', error);
+  //     ctx.throw(500, 'Failed to fetch tournament results.');
+  //   }
+  // },
+
   async getTournamentResults(ctx) {
     const { tournamentId } = ctx.params;
   
     try {
-      // Fetch all matches in the tournament, populating necessary fields
+      // Fetch the tournament by ID and populate groups, couples, members, and matches
       const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
         populate: {
           groups: {
             populate: {
+              couples: {
+                populate: {
+                  members: {
+                    populate: {
+                      profilePicture: {
+                        populate: {
+                          formats: true,
+                        },
+                      },
+                    },
+                    fields: ['id', 'firstName', 'lastName'],
+                  },
+                },
+              },
               matches: {
                 populate: {
                   couples: {
@@ -644,13 +772,13 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
                           profilePicture: {
                             populate: {
                               formats: true,
-                            }
-                          }
+                            },
+                          },
                         },
                         fields: ['id', 'firstName', 'lastName'],
                       },
                       sets: true, // Populate sets within each couple
-                      score: true,
+                      score: true, // Populate score if needed
                     },
                   },
                 },
@@ -667,11 +795,10 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   
       const coupleWins = {};
   
-      // Initialize all couples with 0 matches won
+      // Initialize all couples in the tournament with 0 matches won
       tournament.groups.forEach(group => {
         group.matches.forEach(match => {
           match.couples.forEach(couple => {
-            // Create a unique key for each couple based on member IDs
             const coupleKey = couple.members.map(member => member.id).sort().join('-');
   
             if (!coupleWins[coupleKey]) {
@@ -687,51 +814,61 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       // Iterate over each group and each match to calculate matches won
       for (const group of tournament.groups) {
         for (const match of group.matches) {
-          const coupleResults = {};
+          if (match.couples.length < 2) continue; // Guard against incomplete matches
   
-          // Iterate over each couple in the match
-          match.couples.forEach(couple => {
-            let setsWon = 0;
+          const coupleKeys = match.couples.map(couple => couple.members.map(member => member.id).sort().join('-'));
   
-            // Determine the winner of each set for this couple
-            couple.sets.forEach(set => {
-              if (set.gamesWon >= 6) {
-                setsWon += 1; // Count the set as won if they have 6 or more games won
-              }
-            });
+          const coupleResults = {
+            [coupleKeys[0]]: { setsWon: 0, details: match.couples[0] },
+            [coupleKeys[1]]: { setsWon: 0, details: match.couples[1] },
+          };
   
-            const coupleKey = couple.members.map(member => member.id).sort().join('-');
+          // Compare sets for each couple
+          const setsCouple1 = match.couples[0].sets || [];
+          const setsCouple2 = match.couples[1].sets || [];
   
-            coupleResults[coupleKey] = {
-              setsWon,
-              details: couple,
-            };
-          });
+          const totalSets = Math.min(setsCouple1.length, setsCouple2.length);
   
-          // Determine the winner of the match (first couple to win 1 set)
-          const matchWinner = Object.values(coupleResults).find(result => result.setsWon >= 1);
-          if (matchWinner) {
-            const coupleKey = matchWinner.details.members.map(member => member.id).sort().join('-');
+          for (let i = 0; i < totalSets; i++) {
+            const set1 = setsCouple1[i];
+            const set2 = setsCouple2[i];
+  
+            if (!set1 || !set2) continue; // Defensive guard
+  
+            if (set1.gamesWon > set2.gamesWon) {
+              coupleResults[coupleKeys[0]].setsWon += 1;
+            } else if (set2.gamesWon > set1.gamesWon) {
+              coupleResults[coupleKeys[1]].setsWon += 1;
+            }
+          }
+  
+          // Decide how many sets are needed to win
+          const setsNeededToWin = totalSets === 1 ? 1 : 2;
+  
+          // Find winner
+          const winningCouple = Object.values(coupleResults).find(result => result.setsWon >= setsNeededToWin);
+  
+          if (winningCouple) {
+            const coupleKey = winningCouple.details.members.map(member => member.id).sort().join('-');
             coupleWins[coupleKey].matchesWon += 1;
           }
         }
       }
   
-      // Format the response to include only necessary member fields
-      const formattedResponse = Object.values(coupleWins).map(couple => {
-        return {
-          couple: {
-            members: couple.members.map(member => ({
-              id: member.id,
-              firstName: member.firstName,
-              lastName: member.lastName,
-              profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
-            })),
-          },
-          matchesWon: couple.matchesWon,
-        };
-      }).sort((a, b) => b.matchesWon - a.matchesWon); // Sort by matches won in descending order
+      // Format the response to include necessary member fields
+      const formattedResponse = Object.values(coupleWins).map(couple => ({
+        couple: {
+          members: couple.members.map(member => ({
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url || null,
+          })),
+        },
+        matchesWon: couple.matchesWon,
+      })).sort((a, b) => b.matchesWon - a.matchesWon); // Sort by matches won in descending order
   
+      // Send the final result back in the response
       ctx.send(formattedResponse);
   
     } catch (error) {
@@ -739,7 +876,6 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
       ctx.throw(500, 'Failed to fetch tournament results.');
     }
   },
-
   async getGroupResults(ctx) {
     const { tournamentId, memberId } = ctx.params;
   
@@ -2005,72 +2141,72 @@ module.exports = createCoreController('api::tournament.tournament', ({ strapi })
   },
 
 
-async getTournamentLeaderboard(ctx) {
-  const { tournamentId } = ctx.params;
+  async getTournamentLeaderboard(ctx) {
+    const { tournamentId } = ctx.params;
 
-  try {
-    // Fetch the tournament and populate the necessary fields
-    const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
-      populate: {
-        groups: {
-          populate: {
-            couples: {
-              populate: {
-                members: {
-                  populate: {
-                    profilePicture: {
-                      populate: {
-                        formats: true,
+    try {
+      // Fetch the tournament and populate the necessary fields
+      const tournament = await strapi.entityService.findOne('api::tournament.tournament', tournamentId, {
+        populate: {
+          groups: {
+            populate: {
+              couples: {
+                populate: {
+                  members: {
+                    populate: {
+                      profilePicture: {
+                        populate: {
+                          formats: true,
+                        }
                       }
-                    }
+                    },
+                    fields: ['id', 'firstName', 'lastName'],
                   },
-                  fields: ['id', 'firstName', 'lastName'],
+                  points: true,  // Fetch the points for each couple
                 },
-                points: true,  // Fetch the points for each couple
               },
             },
           },
         },
-      },
-    });
-
-    if (!tournament) {
-      ctx.throw(404, 'Tournament not found');
-      return;
-    }
-
-    const couplesWithPoints = [];
-
-    // Iterate over each group and each couple to collect their points
-    tournament.groups.forEach(group => {
-      group.couples.forEach(couple => {
-        // Create a formatted object for each couple including their members and points
-        const coupleWithPoints = {
-          couple: {
-            members: couple.members.map(member => ({
-              id: member.id,
-              firstName: member.firstName,
-              lastName: member.lastName,
-              profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url|| null,
-            })),
-          },
-          points: couple.points || 0, // Fetch points, default to 0 if not available
-        };
-        couplesWithPoints.push(coupleWithPoints);
       });
-    });
 
-    // Sort couples by their points in descending order
-    const sortedCouplesWithPoints = couplesWithPoints.sort((a, b) => b.points - a.points);
+      if (!tournament) {
+        ctx.throw(404, 'Tournament not found');
+        return;
+      }
 
-    // Send the formatted response
-    ctx.send(sortedCouplesWithPoints);
+      const couplesWithPoints = [];
 
-  } catch (error) {
-    console.error('Error fetching tournament couples and points:', error);
-    ctx.throw(500, 'Failed to fetch tournament couples and points.');
-  }
-},
+      // Iterate over each group and each couple to collect their points
+      tournament.groups.forEach(group => {
+        group.couples.forEach(couple => {
+          // Create a formatted object for each couple including their members and points
+          const coupleWithPoints = {
+            couple: {
+              members: couple.members.map(member => ({
+                id: member.id,
+                firstName: member.firstName,
+                lastName: member.lastName,
+                profilePicture: member.profilePicture?.formats?.small?.url || member.profilePicture?.formats?.thumbnail?.url|| null,
+              })),
+            },
+            points: couple.points || 0, // Fetch points, default to 0 if not available
+          };
+          couplesWithPoints.push(coupleWithPoints);
+        });
+      });
+
+      // Sort couples by their points in descending order
+      const sortedCouplesWithPoints = couplesWithPoints.sort((a, b) => b.points - a.points);
+
+      // Send the formatted response
+      ctx.send(sortedCouplesWithPoints);
+
+    } catch (error) {
+      console.error('Error fetching tournament couples and points:', error);
+      ctx.throw(500, 'Failed to fetch tournament couples and points.');
+    }
+  },
 
 async getIndividualTournamentLeaderboard(ctx) {
   const { tournamentId } = ctx.params;
