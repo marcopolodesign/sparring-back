@@ -20,7 +20,7 @@ module.exports = {
     try {
       // 1. “now” in local TZ and +20 minutes
       const now = toZonedTime(new Date(), TIME_ZONE);
-      const nowPlus20 = toZonedTime(addMinutes(new Date(), 20), TIME_ZONE);
+      const nowPlus10 = toZonedTime(addMinutes(new Date(), 10), TIME_ZONE);
 
       // 2. Build yyyy-MM-dd for filtering
       const today      = format(now, 'yyyy-MM-dd');
@@ -28,7 +28,7 @@ module.exports = {
 
       console.log('Target date:', targetDate);
       console.log('Now:', now);
-      console.log('Now + 20min:', nowPlus20);
+      console.log('Now + 10min:', nowPlus10);
 
       // 3. Fetch non-cancelled reservations for those tracks on targetDate
       const reservations = await strapi.entityService.findMany(
@@ -41,10 +41,12 @@ module.exports = {
           },
           populate: {
             court: true,
-            owner: { fields: ['firstName', 'lastName'] },
+            owner: { fields: ['firstName', 'lastName', 'id'] },
           },
         }
       );
+
+      console.log('Fetched reservations:', reservations);
 
       // 4. Find the closest upcoming reservation per track
       const closestByTrack = {};
@@ -52,7 +54,7 @@ module.exports = {
         const startLocal = parseISO(`${r.date}T${r.start_time}`);
         const endLocal   = parseISO(`${r.date}T${r.end_time}`);
 
-        if (startLocal <= nowPlus20 && endLocal >= now) {
+        if (startLocal <= nowPlus10 && endLocal >= now) {
           const tId = r.court.id;
           const existingStart = closestByTrack[tId]
             ? parseISO(`${closestByTrack[tId].date}T${closestByTrack[tId].start_time}`)
@@ -102,6 +104,7 @@ module.exports = {
             id:        resv.id,
             type:      resv.type,
             ownerName: `${resv.owner?.firstName} ${resv.owner?.lastName}`,
+            ownerId:   resv.owner?.id,
             startTime: resv.start_time,
             endTime:   resv.end_time,
             products,
