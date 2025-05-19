@@ -25,5 +25,15 @@ module.exports = {
         middlewares: [], // Add any middlewares if needed
       },
     },
+
+    {
+      method: 'GET',
+      path: '/custom-transactions/unpaid-reservations',
+      handler: 'custom-transaction.getUnpaidReservationsByVenue',
+      config: {
+        policies: [], // Add any policies if needed
+        middlewares: [], // Add any middlewares if needed
+      },
+    },
   ],
 };

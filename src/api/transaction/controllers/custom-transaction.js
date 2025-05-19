@@ -143,4 +143,54 @@ module.exports = {
             ctx.throw(500, 'Internal Server Error');
         }
     },
+
+    async getUnpaidReservationsByVenue(ctx) {
+        const { venueId } = ctx.query;
+
+        try {
+            // Ensure the venueId is provided
+            if (!venueId) {
+                ctx.throw(400, 'Venue ID is required');
+            }
+
+            // Fetch unpaid or partially paid transactions for the venue
+            const unpaidTransactions = await strapi.entityService.findMany('api::transaction.transaction', {
+                filters: {
+                    venue: {
+                        id: parseInt(venueId, 10), // Ensure venueId is parsed as an integer
+                    },
+                    status: { $in: ['Pending', 'PartiallyPaid'] }, // Filter for unpaid or partially paid transactions
+                },
+                populate: {
+                    client: { fields: ['firstName', 'lastName', 'email'] },
+                    seller: { fields: ['firstName', 'lastName', 'id'] },
+                    products: {
+                        populate: {
+                            custom_price: { fields: ['custom_ammount'] },
+                        },
+                        fields: ['Name', 'type', 'price'],
+                    },
+                    reservation: { fields: ['id'] }, // Populate reservation
+                },
+            });
+
+            // Format transactions and calculate the total amount
+            const formattedTransactions = unpaidTransactions.map(this.formatTransaction);
+            const totalAmount = unpaidTransactions.reduce((sum, transaction) => {
+                const total = transaction.amount || 0;
+                const paid = transaction.amount_paid || 0;
+                const discount = transaction.discount || 0;
+                return sum + (total - paid - discount);
+            }, 0);
+
+            // Return the result
+            ctx.send({
+                'cuenta-corriente': totalAmount.toLocaleString('es-ES', {minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+                unpaid_transactions: formattedTransactions,
+            });
+        } catch (error) {
+            console.error('Error fetching unpaid reservations by venue:', error);
+            ctx.throw(500, 'Internal Server Error');
+        }
+    },
 };
