@@ -576,8 +576,11 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
       // 1) Fetch ALL venues with their normal Strapi attributes
       //    so we can keep amenities, location, etc.
       const allVenues = await strapi.entityService.findMany('api::court.court', {
-        populate: '*',  // or a detailed object specifying each relation
-      });
+        filters: {
+            publishedAt: { $notNull: true }, // Filter for published courts only
+        },
+        populate: '*', // or a detailed object specifying each relation
+    });
 
       // 2) Build an array in the Strapi shape: [{ id, attributes: {...} }, ...]
       const merged = allVenues.map((v) => {
