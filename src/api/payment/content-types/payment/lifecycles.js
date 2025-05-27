@@ -14,17 +14,17 @@ module.exports = {
     
         // 2) Load the transaction + reservation + venue
         const txn = await strapi.entityService.findOne(
-          'api::transaction.transaction',
-          data.transaction,
-          {
-            populate: {
-              reservation: {
-                populate: ['venue']
-              }
+            'api::transaction.transaction',
+            data.transaction,
+            {
+                populate: {
+                    products: true, // Populate products to access their type
+                    reservation: {
+                        populate: ['venue']
+                    }
+                }
             }
-          }
         );
-
 
         console.log('Transaction details:', txn);
 
@@ -58,27 +58,53 @@ module.exports = {
     
         // 4) Read the venue’s cash discount percent
         const pct = Number(txn.reservation.venue.cash_discount_percent) || 0;
-    
-        // 5) Base amounts
-        const raw = Number(data.amount) || 0; // what the user entered
-    
-        // 6) If payment in cash and discount > 0, apply it
-        if (
-          data.payment_method?.toLowerCase() === 'efectivo' &&
-          pct > 0
-        ) {
-          const discountAmt = (raw * pct) / 100;
-          const netAmount = raw - discountAmt;
-    
-          data.discount_percent = pct;
-          data.discount_amount = discountAmt;
-          data.net_amount = netAmount;
-        } else {
-          // 7) No discount
-          data.discount_percent = 0;
-          data.discount_amount = 0;
-          data.net_amount = raw;
+        const scope = txn.reservation.venue.cash_discount_scope || 'none';
+        const isCash = data.payment_method?.toLowerCase() === 'efectivo';
+
+        console.log('Cash discount percent:', pct);
+        console.log('Cash discount scope:', scope);
+        console.log('Is cash payment:', isCash);
+
+
+
+    // 5) Determine the type of product from the transaction
+    const productType = txn.products?.[0]?.type || 'unknown'; // Default to 'unknown' if no product is found
+    console.log('Product type:', productType);
+
+    // 6) Base amounts
+    const raw = Number(data.amount) || 0; // what the user entered
+
+    let eligible = false;
+
+    if (isCash && pct > 0) {
+        switch (scope) {
+            case 'both':
+                eligible = true;
+                break;
+            case 'alquiler':
+                eligible = productType === 'alquiler' 
+                break;
+            case 'producto':
+                eligible = productType === 'producto'
+                break;
+            // 'none' -> false
         }
+    }
+
+    console.log('Is eligible for discount:', eligible);
+
+    if (eligible) {
+    const discountAmt = (raw * pct) / 100;
+    const netAmount   = raw - discountAmt;
+
+    data.discount_percent = pct;
+    data.discount_amount  = discountAmt;
+    data.net_amount       = netAmount;
+    } else {
+    data.discount_percent = 0;
+    data.discount_amount  = 0;
+    data.net_amount       = raw;
+    }
       },
 
     async afterCreate(event) {

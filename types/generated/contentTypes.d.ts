@@ -984,7 +984,7 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
       Attribute.DefaultTo<'active'>;
     renovation_date: Attribute.Date;
     payment_method: Attribute.Enumeration<
-      ['efectivo', 'transferencia', 'credito', 'dolar']
+      ['efectivo', 'transferencia', 'credito', 'dolar', 'weekly']
     >;
     force: Attribute.Boolean;
     log_entries: Attribute.Relation<
@@ -997,6 +997,8 @@ export interface ApiAbonoAbono extends Schema.CollectionType {
       'oneToMany',
       'api::log-entry.log-entry'
     >;
+    type: Attribute.Enumeration<['clase', 'alquiler']>;
+    notes: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1294,6 +1296,9 @@ export interface ApiCourtCourt extends Schema.CollectionType {
       'api::court.court',
       'oneToMany',
       'api::client-custom-stock.client-custom-stock'
+    >;
+    cash_discount_scope: Attribute.Enumeration<
+      ['both', 'producto', 'alquiler', 'none']
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1675,7 +1680,7 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'api::track.track'
     >;
     type: Attribute.Enumeration<
-      ['abono', 'alquiler', 'armado', 'clase', 'torneo']
+      ['abono', 'abonoClase', 'alquiler', 'armado', 'clase', 'torneo']
     >;
     products: Attribute.Relation<
       'api::reservation.reservation',
@@ -1902,7 +1907,8 @@ export interface ApiTransactionTransaction extends Schema.CollectionType {
         'gateway-mp',
         'gateway-stripe',
         'dolar',
-        'multiple'
+        'multiple',
+        'mp'
       ]
     >;
     date: Attribute.DateTime;

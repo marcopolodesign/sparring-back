@@ -78,16 +78,16 @@ async function checkConflicts(baseDate, weeks_ahead, start_time, duration, court
 }
 
 // Helper to create reservations
-async function createReservations(successfulDates, abonoId, user, court, venue, coach, sellerId, duration, product) {
+async function createReservations(successfulDates, abonoId, user, court, venue, coach, sellerId, duration, product, student_amount, payment_method) {
   for (const { dateStr, startStr, endStr } of successfulDates) {
     await strapi.entityService.create('api::reservation.reservation', {
       data: {
-        type: 'abono',
+        type: student_amount ? 'abonoClase' : 'abono',
         date: dateStr,
         start_time: startStr,
         end_time: endStr,
         duration,
-        status: 'confirmed',
+        status: payment_method === 'weekly' ? 'pending_payment' : 'confirmed', 
         court,
         venue,
         coach,
@@ -129,12 +129,24 @@ module.exports = {
       weeks_ahead,
       payment_method,
       force,
-      sellerId
+      sellerId, 
+      notes
     } = ctx.request.body;
 
     console.log('Force:', force);
 
     const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'create');
+
+
+
+    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, court);
+
+    if (conflictsList.length > 0 && !force) {
+      return ctx.badRequest('Conflicting reservations found', {
+        conflicts: conflictsList,
+        // abonoId: abono.id
+      });
+    }
 
     const abono = await strapi.entityService.create('api::abono.abono', {
       data: {
@@ -149,23 +161,16 @@ module.exports = {
         weeks_ahead,
         status: 'active',
         payment_method,
-        renovation_date: format(renovationDate, 'yyyy-MM-dd')
+        renovation_date: format(renovationDate, 'yyyy-MM-dd'), 
+        type: 'alquiler',
+        notes
       }
     });
-
-    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, court);
-
-    if (conflictsList.length > 0 && !force) {
-      return ctx.badRequest('Conflicting reservations found', {
-        conflicts: conflictsList,
-        abonoId: abono.id
-      });
-    }
 
     const productService = strapi.service('api::product.custom-product');
     const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
 
-    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product);
+    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, payment_method);
 
     // ✅ Create a log entry for the create action
     await createLogEntry('creado', abono.id, sellerId);
@@ -252,6 +257,17 @@ module.exports = {
     // ✅ Pass 'update' action to calculateDates
     const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'update');
 
+
+    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, courtId);
+
+    if (conflictsList.length > 0 && !force) {
+      return ctx.badRequest('Conflicting reservations found', {
+        conflicts: conflictsList,
+        // abonoId: abonoId
+      });
+    }
+
+
     const abono = await strapi.entityService.update('api::abono.abono', abonoId, {
       data: {
         user,
@@ -268,15 +284,6 @@ module.exports = {
       }
     });
 
-    const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, courtId);
-
-    if (conflictsList.length > 0 && !force) {
-      return ctx.badRequest('Conflicting reservations found', {
-        conflicts: conflictsList,
-        abonoId: abonoId
-      });
-    }
-
     const productService = strapi.service('api::product.custom-product');
     const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
 
@@ -292,5 +299,148 @@ module.exports = {
       message: `${successfulDates.length} reservations updated. ${conflictsList.length} skipped.`,
       conflicts: conflictsList.length > 0 ? conflictsList : undefined
     };
-  }
+  }, 
+
+
+  async createClase(ctx) {
+    const {
+      user,
+      coach,
+      court,
+      venue,
+      start_time,
+      duration,
+      day_of_week,
+      start_date,
+      weeks_ahead,
+      payment_method,
+      force,
+      sellerId,
+      student_amount,
+      notes
+    } = ctx.request.body;
+
+    try {
+      const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'create');
+
+      const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, court);
+
+      if (conflictsList.length > 0 && !force) {
+        return ctx.badRequest('Conflicting reservations found', {
+          conflicts: conflictsList,
+          // abonoId: abono.id,
+        });
+      }
+
+
+      const abono = await strapi.entityService.create('api::abono.abono', {
+        data: {
+          user,
+          coach,
+          court,
+          venue,
+          day_of_week,
+          start_time,
+          duration,
+          start_date,
+          weeks_ahead,
+          status: 'active',
+          payment_method,
+          renovation_date: format(renovationDate, 'yyyy-MM-dd'),
+          type: 'clase', // Set type to 'clase'
+          notes
+        },
+      });
+
+  
+
+      const productService = strapi.service('api::product.custom-product');
+      const product = await productService.findProductByDurationAndType(duration, 'clase', payment_method, start_time, venue, court, student_amount);
+
+      await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, student_amount, payment_method);
+
+      await createLogEntry('creado', abono.id, sellerId);
+
+      strapi.log.info(`✅ ${successfulDates.length} reservations created for Clase ID: ${abono.id}, Product: ${product ? product.sku : 'None'}`);
+
+      return {
+        abono,
+        message: `${successfulDates.length} reservations created. ${conflictsList.length} skipped.`,
+        conflicts: conflictsList.length > 0 ? conflictsList : undefined,
+      };
+    } catch (error) {
+      strapi.log.error('Error creating Clase:', error);
+      ctx.throw(500, 'Failed to create Clase.');
+    }
+  },
+
+  async updateClase(ctx) {
+    const {
+      user,
+      coach,
+      court,
+      venue,
+      day_of_week,
+      duration,
+      start_date,
+      start_time,
+      weeks_ahead,
+      payment_method,
+      force,
+      sellerId,
+      student_amount,
+      abonoId,
+    } = ctx.request.body;
+
+    try {
+      const courtId = typeof court === 'object' && court !== null ? court.id : court;
+
+      const { baseDate, renovationDate } = calculateDates(start_date, day_of_week, weeks_ahead, 'update');
+
+      const { conflictsList, successfulDates } = await checkConflicts(baseDate, weeks_ahead, start_time, duration, courtId);
+
+      if (conflictsList.length > 0 && !force) {
+        return ctx.badRequest('Conflicting reservations found', {
+          conflicts: conflictsList,
+          // abonoId: abonoId,
+        });
+      }
+
+      const abono = await strapi.entityService.update('api::abono.abono', abonoId, {
+        data: {
+          user,
+          coach,
+          court: courtId,
+          venue,
+          day_of_week,
+          start_time,
+          duration,
+          start_date,
+          weeks_ahead,
+          payment_method,
+          renovation_date: format(renovationDate, 'yyyy-MM-dd'),
+        },
+      });
+
+     
+
+      const productService = strapi.service('api::product.custom-product');
+      const product = await productService.findProductByDurationAndType(duration, 'clase', payment_method, start_time, venue, courtId, student_amount);
+
+      await createReservations(successfulDates, abono.id, user, courtId, venue, coach, sellerId, duration, product, student_amount);
+
+      await createLogEntry('renovado', abono.id, sellerId);
+
+      strapi.log.info(`✅ ${successfulDates.length} reservations updated for Clase ID: ${abono.id}, Product: ${product ? product.sku : 'None'}`);
+
+      return {
+        abono,
+        message: `${successfulDates.length} reservations updated. ${conflictsList.length} skipped.`,
+        conflicts: conflictsList.length > 0 ? conflictsList : undefined,
+      };
+    } catch (error) {
+      strapi.log.error('Error updating Clase:', error);
+      ctx.throw(500, 'Failed to update Clase.');
+    }
+  },
 };

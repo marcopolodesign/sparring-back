@@ -116,7 +116,7 @@ module.exports = {
         amount: amount,
         description: `Venta asociada a la reserva ${result.id}`,
         date: transactionDate,
-        status: params.data.type === 'abono' ? 'Paid' : 'Pending', // Set status based on reservation type
+        status: params.data.type === 'abono' && params.data.status === 'confirmed' ? 'Paid' : 'Pending', // Set status based on reservation type
         source: 'sparring-club',
         products: [productId],
         venue: venueId,

@@ -50,6 +50,7 @@
       "type": "enumeration",
       "enum": [
         "abono",
+        "abonoClase",
         "alquiler",
         "armado",
         "clase",

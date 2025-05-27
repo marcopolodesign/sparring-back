@@ -128,6 +128,15 @@
       "relation": "oneToMany",
       "target": "api::client-custom-stock.client-custom-stock",
       "mappedBy": "venue"
+    },
+    "cash_discount_scope": {
+      "type": "enumeration",
+      "enum": [
+        "both",
+        "producto",
+        "alquiler",
+        "none"
+      ]
     }
   }
 }

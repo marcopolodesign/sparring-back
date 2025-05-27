@@ -76,7 +76,8 @@
         "efectivo",
         "transferencia",
         "credito",
-        "dolar"
+        "dolar",
+        "weekly"
       ]
     },
     "force": {
@@ -92,6 +93,16 @@
       "relation": "oneToMany",
       "target": "api::log-entry.log-entry",
       "mappedBy": "abono"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "clase",
+        "alquiler"
+      ]
+    },
+    "notes": {
+      "type": "string"
     }
   }
 }

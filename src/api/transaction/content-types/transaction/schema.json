@@ -36,7 +36,8 @@
         "gateway-mp",
         "gateway-stripe",
         "dolar",
-        "multiple"
+        "multiple",
+        "mp"
       ]
     },
     "date": {
