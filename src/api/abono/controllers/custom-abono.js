@@ -79,6 +79,7 @@ async function checkConflicts(baseDate, weeks_ahead, start_time, duration, court
 
 // Helper to create reservations
 async function createReservations(successfulDates, abonoId, user, court, venue, coach, sellerId, duration, product, student_amount, payment_method) {
+  console.log(student_amount, 'student_amount in createReservations');
   for (const { dateStr, startStr, endStr } of successfulDates) {
     await strapi.entityService.create('api::reservation.reservation', {
       data: {
@@ -170,7 +171,7 @@ module.exports = {
     const productService = strapi.service('api::product.custom-product');
     const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
 
-    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, payment_method);
+    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, null,payment_method);
 
     // ✅ Create a log entry for the create action
     await createLogEntry('creado', abono.id, sellerId);
