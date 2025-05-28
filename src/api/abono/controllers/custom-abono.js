@@ -248,7 +248,8 @@ module.exports = {
       venue,
       weeks_ahead, 
       abonoId, 
-      user
+      user, 
+      notes
     } = ctx.request.body.data;
 
 
@@ -281,14 +282,15 @@ module.exports = {
         start_date,
         weeks_ahead,
         payment_method,
-        renovation_date: format(renovationDate, 'yyyy-MM-dd')
+        renovation_date: format(renovationDate, 'yyyy-MM-dd'), 
+        notes
       }
     });
 
     const productService = strapi.service('api::product.custom-product');
     const product = await productService.findProductByDurationAndType(duration, 'abono', payment_method);
 
-    await createReservations(successfulDates, abono.id, user, courtId, venue, coach, sellerId, duration, product);
+    await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, null,payment_method);
 
     // ✅ Create a log entry for the update action
     await createLogEntry('renovado', abono.id, sellerId);
@@ -391,6 +393,7 @@ module.exports = {
       sellerId,
       student_amount,
       abonoId,
+      notes
     } = ctx.request.body;
 
     try {
@@ -420,6 +423,7 @@ module.exports = {
           weeks_ahead,
           payment_method,
           renovation_date: format(renovationDate, 'yyyy-MM-dd'),
+          notes
         },
       });
 
@@ -428,7 +432,7 @@ module.exports = {
       const productService = strapi.service('api::product.custom-product');
       const product = await productService.findProductByDurationAndType(duration, 'clase', payment_method, start_time, venue, courtId, student_amount);
 
-      await createReservations(successfulDates, abono.id, user, courtId, venue, coach, sellerId, duration, product, student_amount);
+       await createReservations(successfulDates, abono.id, user, court, venue, coach, sellerId, duration, product, student_amount, payment_method);
 
       await createLogEntry('renovado', abono.id, sellerId);
 
