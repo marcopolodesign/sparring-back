@@ -20,6 +20,15 @@ module.exports = {
       },
     },
 
-      
+    {
+      method: 'GET',
+      path: '/reports/daily-reservation-sales',
+      handler: 'reports.getDailyReservationSales',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+
   ],
 };

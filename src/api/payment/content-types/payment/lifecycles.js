@@ -161,7 +161,10 @@ module.exports = {
             // 1) Traemos la transacción
             const transaction = await strapi.entityService.findOne(
                 'api::transaction.transaction',
-                transactionId
+                transactionId,
+                {
+                    populate: ['reservation'] // Ensure reservation is populated
+                }
             );
             if (!transaction) {
                 throw new Error(`Transaction #${transactionId} not found for Payment #${result.id}`);
@@ -224,14 +227,46 @@ module.exports = {
                     action: 'payment.created',
                     description:
                         `Pago #${result.id}: neto ARS ${amountToAdd}, ` +
-                        `descuento ARS ${disc}, aplicado a Txn #${transactionId} el ${when}. ` +
-                        `Status: ${isFullyPaid ? 'Paid' : 'PartiallyPaid'}`,
+                        `descuento ARS ${disc}, aplicado a transacción #${transactionId} el ${when}. ` +
+                        `estado: ${isFullyPaid ? 'Pagado' : 'Pago parcial'}`,
                     timestamp: new Date(),
                     user: params.data.payer || null,
                     transaction: transactionId,
                     payment: result.id,
                 },
             });
+
+
+            const reservationId = transaction.reservation?.id;
+            if (reservationId) {
+                await strapi.entityService.update(
+                    'api::reservation.reservation',
+                    reservationId,
+                    {
+                        data: {
+                            status: 'confirmed',
+                        },
+                    }
+                );
+    
+                strapi.log.info(`Reservation #${reservationId} marked as confirmed for Transaction #${transactionId}`);
+    
+                await strapi.entityService.create('api::log-entry.log-entry', {
+                    data: {
+                        action: 'reservation.confirmed',
+                        description: `Reserva #${reservationId} confirmada con el pago #${result.id} realizado el ${when}.`,
+                        timestamp: new Date(),
+                        user: params.data.payer || null,
+                        transaction: transactionId,
+                        reservation: reservationId,
+                    },
+                });
+    
+                strapi.log.info(`Log entry created for Reservation #${reservationId} confirmation.`);
+            } else {
+                strapi.log.warn(`Transaction #${transactionId} does not have an associated reservation.`);
+            }
+            
 
         } catch (error) {
             strapi.log.error(`Error processing Payment #${result.id}:`, error);
