@@ -1734,6 +1734,7 @@ export interface ApiReservationReservation extends Schema.CollectionType {
       'oneToOne',
       'api::abono.abono'
     >;
+    has_upfront_payment: Attribute.Decimal;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

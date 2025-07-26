@@ -133,6 +133,52 @@ module.exports = {
         data: transactionDetails,
       });
 
+      if (params.data.has_upfront_payed != null) {
+        await strapi.entityService.update('api::transaction.transaction', tx.id, {
+          data: { status: 'PartiallyPaid' },
+        });
+
+
+          // --- Create payment for upfront amount ---
+          const paymentData = {
+            amount: params.data.has_upfront_payed,
+            net_amount: params.data.has_upfront_payed,
+            payment_method: 'transferencia',
+            status: "approved",
+            transaction: tx.id,
+            reservation: result.id,
+            payer: params.data.owner,
+            hasCashDiscount: false,
+            discount_percent: 0,
+            discount_amount: 0,
+            createdAt: new Date().toISOString(),
+            publishedAt: new Date().toISOString(), 
+          };
+
+  const payment = await strapi.entityService.create('api::payment.payment', {
+    // @ts-ignore
+    data: paymentData,
+  });
+
+  strapi.log.info(`Payment #${payment.id} created for upfront amount on reservation #${result.id}`);
+
+  // Log the payment creation
+  await strapi.entityService.create('api::log-entry.log-entry', {
+    data: {
+      action: 'payment.created',
+      description: `Pago #${payment.id} creado por el monto upfront (${params.data.has_upfront_payment}) para la reserva #${result.id}`,
+      timestamp: new Date(),
+      user: params.data.owner,
+      reservation: result.id,
+      transaction: tx.id,
+      payment: payment.id,
+    },
+  });
+
+
+        strapi.log.info(`Transaction #${tx.id} marked as PartiallyPaid due to has_upfront_payment.`);
+      }
+
       // Check if a log entry for transaction.created already exists
       const existingTransactionLog = await strapi.entityService.findMany('api::log-entry.log-entry', {
         filters: {

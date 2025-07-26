@@ -116,6 +116,9 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::abono.abono"
+    },
+    "has_upfront_payment": {
+      "type": "decimal"
     }
   }
 }

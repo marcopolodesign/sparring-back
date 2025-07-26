@@ -1188,6 +1188,8 @@ module.exports = createCoreController('api::reservation.reservation', ({ strapi 
   },
 
   async createReserve(ctx) {
+
+    // este es el upfront de la web para reservar
     try {
         const {
             date,
