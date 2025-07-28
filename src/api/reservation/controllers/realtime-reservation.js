@@ -20,7 +20,7 @@ module.exports = {
     try {
       // 1. “now” in local TZ and +20 minutes
       const now = toZonedTime(new Date(), TIME_ZONE);
-      const nowPlus10 = toZonedTime(addMinutes(new Date(), 10), TIME_ZONE);
+      const nowPlus25 = toZonedTime(addMinutes(new Date(), 25), TIME_ZONE);
 
       // 2. Build yyyy-MM-dd for filtering
       const today      = format(now, 'yyyy-MM-dd');
@@ -28,7 +28,7 @@ module.exports = {
 
       console.log('Target date:', targetDate);
       console.log('Now:', now);
-      console.log('Now + 10min:', nowPlus10);
+      console.log('Now + 25min:', nowPlus25);
 
       // 3. Fetch non-cancelled reservations for those tracks on targetDate
       const reservations = await strapi.entityService.findMany(
@@ -54,7 +54,7 @@ module.exports = {
         const startLocal = parseISO(`${r.date}T${r.start_time}`);
         const endLocal   = parseISO(`${r.date}T${r.end_time}`);
 
-        if (startLocal <= nowPlus10 && endLocal >= now) {
+        if (startLocal <= nowPlus25 && endLocal >= now) {
           const tId = r.court.id;
           const existingStart = closestByTrack[tId]
             ? parseISO(`${closestByTrack[tId].date}T${closestByTrack[tId].start_time}`)
