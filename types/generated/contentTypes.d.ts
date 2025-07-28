@@ -1550,6 +1550,11 @@ export interface ApiPaymentPayment extends Schema.CollectionType {
       'manyToOne',
       'api::cash-register.cash-register'
     >;
+    chargeback_of: Attribute.Relation<
+      'api::payment.payment',
+      'oneToOne',
+      'api::payment.payment'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

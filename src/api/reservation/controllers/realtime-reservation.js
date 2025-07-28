@@ -27,8 +27,10 @@ module.exports = {
       const targetDate = date || today;
 
       console.log('Target date:', targetDate);
-      console.log('Now:', now);
-      console.log('Now + 25min:', nowPlus25);
+      console.log('TIME_ZONE:', TIME_ZONE);
+      console.log('Now:', format(now, 'yyyy-MM-dd HH:mm:ss', { timeZone: TIME_ZONE }));
+      console.log('Now + 25min!!!:', format(nowPlus25, 'yyyy-MM-dd HH:mm:ss', { timeZone: TIME_ZONE }));
+
 
       // 3. Fetch non-cancelled reservations for those tracks on targetDate
       const reservations = await strapi.entityService.findMany(
@@ -46,15 +48,16 @@ module.exports = {
         }
       );
 
-      console.log('Fetched reservations:', reservations);
+      // console.log('Fetched reservations:', reservations);
 
       // 4. Find the closest upcoming reservation per track
       const closestByTrack = {};
       for (const r of reservations) {
-        const startLocal = parseISO(`${r.date}T${r.start_time}`);
-        const endLocal   = parseISO(`${r.date}T${r.end_time}`);
+        const startLocal = toZonedTime(parseISO(`${r.date}T${r.start_time}`), TIME_ZONE);
+        const endLocal   = toZonedTime(parseISO(`${r.date}T${r.end_time}`), TIME_ZONE);
+        const endWithGrace = addMinutes(endLocal, 30);
 
-        if (startLocal <= nowPlus25 && endLocal >= now) {
+        if (startLocal <= nowPlus25 && endWithGrace >= now) {
           const tId = r.court.id;
           const existingStart = closestByTrack[tId]
             ? parseISO(`${closestByTrack[tId].date}T${closestByTrack[tId].start_time}`)
@@ -65,6 +68,8 @@ module.exports = {
           }
         }
       }
+
+      console.log('Closest reservations by track:', closestByTrack);
 
       // 5. For each track’s closest reservation, load products & compute total
       const processed = [];

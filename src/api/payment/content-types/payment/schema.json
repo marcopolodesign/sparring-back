@@ -79,6 +79,11 @@
       "relation": "manyToOne",
       "target": "api::cash-register.cash-register",
       "inversedBy": "payments"
+    },
+    "chargeback_of": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::payment.payment"
     }
   }
 }
