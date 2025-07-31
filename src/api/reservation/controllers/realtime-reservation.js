@@ -18,9 +18,8 @@ module.exports = {
     trackIds = trackIds.split(',');
 
     try {
-      // 1. “now” in local TZ and +20 minutes
+            // 1. "now" in local TZ (for realtime reservations)
       const now = toZonedTime(new Date(), TIME_ZONE);
-      const nowPlus25 = toZonedTime(addMinutes(new Date(), 25), TIME_ZONE);
 
       // 2. Build yyyy-MM-dd for filtering
       const today      = format(now, 'yyyy-MM-dd');
@@ -29,7 +28,7 @@ module.exports = {
       console.log('Target date:', targetDate);
       console.log('TIME_ZONE:', TIME_ZONE);
       console.log('Now:', format(now, 'yyyy-MM-dd HH:mm:ss', { timeZone: TIME_ZONE }));
-      console.log('Now + 25min!!!:', format(nowPlus25, 'yyyy-MM-dd HH:mm:ss', { timeZone: TIME_ZONE }));
+      console.log('Now + 5min:', format(addMinutes(now, 5), 'yyyy-MM-dd HH:mm:ss', { timeZone: TIME_ZONE }));
 
 
       // 3. Fetch non-cancelled reservations for those tracks on targetDate
@@ -57,7 +56,14 @@ module.exports = {
         const endLocal   = toZonedTime(parseISO(`${r.date}T${r.end_time}`), TIME_ZONE);
         const endWithGrace = addMinutes(endLocal, 30);
 
-        if (startLocal <= nowPlus25 && endWithGrace >= now) {
+        // Show reservations that are:
+        // 1. Currently active (started but not yet ended + grace period)
+        // 2. Starting very soon (within 5 minutes from now)
+        const nowPlus5 = addMinutes(now, 5);
+        const isCurrentlyActive = startLocal <= now && endWithGrace >= now;
+        const isStartingSoon = startLocal > now && startLocal <= nowPlus5;
+        
+        if (isCurrentlyActive || isStartingSoon) {
           const tId = r.court.id;
           const existingStart = closestByTrack[tId]
             ? parseISO(`${closestByTrack[tId].date}T${closestByTrack[tId].start_time}`)
