@@ -53,9 +53,11 @@ module.exports = {
       // 4. Find the closest upcoming reservation per track
       const closestByTrack = {};
       for (const r of reservations) {
-        const startLocal = toZonedTime(parseISO(`${r.date}T${r.start_time}`), TIME_ZONE);
-        const endLocal   = toZonedTime(parseISO(`${r.date}T${r.end_time}`), TIME_ZONE);
-        const endWithGrace = addMinutes(endLocal, 30);
+
+        // los horarios ya están en hora local, no es necesario convertirlos
+        const startLocal = parseISO(`${r.date}T${r.start_time}`);
+        const endLocal = parseISO(`${r.date}T${r.end_time}`);
+         const endWithGrace = addMinutes(endLocal, 30);
 
         console.log(`Checking reservation ${r.id} for track ${r.court.id}:`);
 
